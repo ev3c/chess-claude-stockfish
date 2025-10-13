@@ -75,11 +75,6 @@
                         </div>
                     </div>
                 </div>
-
-                <div class="panel">
-                    <h2>Historial de Movimientos</h2>
-                    <div id="move-history" class="move-history"></div>
-                </div>
             </div>
 
             <div class="board-container">
@@ -95,6 +90,15 @@
                        <div id="thinking-indicator" class="thinking-indicator" style="display: none;">
                            <div class="spinner"></div>
                            <p>La IA está calculando...</p>
+                       </div>
+                       
+                       <!-- Historial de movimientos con navegación -->
+                       <div class="move-navigator">
+                           <button id="nav-first" class="nav-btn" title="Ir al inicio">⏮</button>
+                           <button id="nav-prev" class="nav-btn" title="Movimiento anterior">◀</button>
+                           <div id="move-history-display" class="move-history-display"></div>
+                           <button id="nav-next" class="nav-btn" title="Siguiente movimiento">▶</button>
+                           <button id="nav-last" class="nav-btn" title="Ir al final">⏭</button>
                        </div>
             </div>
 

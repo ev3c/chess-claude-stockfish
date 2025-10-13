@@ -10,6 +10,9 @@ let incrementPerMove = 2; // segundos de incremento
 let whiteTime = 180; // segundos
 let blackTime = 180; // segundos
 let clockInterval = null;
+let lastMoveSquares = { from: null, to: null }; // Guardar último movimiento para resaltar
+let currentMoveIndex = -1; // Índice del movimiento actual en visualización (-1 = posición actual)
+let gameStateSnapshots = []; // Estados del juego en cada movimiento
 
 // Lichess API
 let lichessReady = true; // API siempre disponible
@@ -93,85 +96,168 @@ async function getLichessBestMove() {
     }
 }
 
-// Análisis local simple (fallback)
+// Valores de las piezas
+const PIECE_VALUES = {
+    'pawn': 100,
+    'knight': 320,
+    'bishop': 330,
+    'rook': 500,
+    'queen': 900,
+    'king': 20000
+};
+
+// Tablas de posición para peones (bonifica posiciones centrales y avanzadas)
+const PAWN_TABLE = [
+    [0,  0,  0,  0,  0,  0,  0,  0],
+    [50, 50, 50, 50, 50, 50, 50, 50],
+    [10, 10, 20, 30, 30, 20, 10, 10],
+    [5,  5, 10, 25, 25, 10,  5,  5],
+    [0,  0,  0, 20, 20,  0,  0,  0],
+    [5, -5,-10,  0,  0,-10, -5,  5],
+    [5, 10, 10,-20,-20, 10, 10,  5],
+    [0,  0,  0,  0,  0,  0,  0,  0]
+];
+
+// Tabla para caballos (bonifica el centro)
+const KNIGHT_TABLE = [
+    [-50,-40,-30,-30,-30,-30,-40,-50],
+    [-40,-20,  0,  0,  0,  0,-20,-40],
+    [-30,  0, 10, 15, 15, 10,  0,-30],
+    [-30,  5, 15, 20, 20, 15,  5,-30],
+    [-30,  0, 15, 20, 20, 15,  0,-30],
+    [-30,  5, 10, 15, 15, 10,  5,-30],
+    [-40,-20,  0,  5,  5,  0,-20,-40],
+    [-50,-40,-30,-30,-30,-30,-40,-50]
+];
+
+// Tabla para alfiles (bonifica diagonales largas)
+const BISHOP_TABLE = [
+    [-20,-10,-10,-10,-10,-10,-10,-20],
+    [-10,  0,  0,  0,  0,  0,  0,-10],
+    [-10,  0,  5, 10, 10,  5,  0,-10],
+    [-10,  5,  5, 10, 10,  5,  5,-10],
+    [-10,  0, 10, 10, 10, 10,  0,-10],
+    [-10, 10, 10, 10, 10, 10, 10,-10],
+    [-10,  5,  0,  0,  0,  0,  5,-10],
+    [-20,-10,-10,-10,-10,-10,-10,-20]
+];
+
+// Tabla para torres (bonifica filas 7 y columnas abiertas)
+const ROOK_TABLE = [
+    [ 0,  0,  0,  0,  0,  0,  0,  0],
+    [ 5, 10, 10, 10, 10, 10, 10,  5],
+    [-5,  0,  0,  0,  0,  0,  0, -5],
+    [-5,  0,  0,  0,  0,  0,  0, -5],
+    [-5,  0,  0,  0,  0,  0,  0, -5],
+    [-5,  0,  0,  0,  0,  0,  0, -5],
+    [-5,  0,  0,  0,  0,  0,  0, -5],
+    [ 0,  0,  0,  5,  5,  0,  0,  0]
+];
+
+// Tabla para la reina (bonifica control central)
+const QUEEN_TABLE = [
+    [-20,-10,-10, -5, -5,-10,-10,-20],
+    [-10,  0,  0,  0,  0,  0,  0,-10],
+    [-10,  0,  5,  5,  5,  5,  0,-10],
+    [ -5,  0,  5,  5,  5,  5,  0, -5],
+    [  0,  0,  5,  5,  5,  5,  0, -5],
+    [-10,  5,  5,  5,  5,  5,  0,-10],
+    [-10,  0,  5,  0,  0,  0,  0,-10],
+    [-20,-10,-10, -5, -5,-10,-10,-20]
+];
+
+// Tabla para el rey en medio juego (bonifica enroque)
+const KING_MIDDLE_TABLE = [
+    [-30,-40,-40,-50,-50,-40,-40,-30],
+    [-30,-40,-40,-50,-50,-40,-40,-30],
+    [-30,-40,-40,-50,-50,-40,-40,-30],
+    [-30,-40,-40,-50,-50,-40,-40,-30],
+    [-20,-30,-30,-40,-40,-30,-30,-20],
+    [-10,-20,-20,-20,-20,-20,-20,-10],
+    [ 20, 20,  0,  0,  0,  0, 20, 20],
+    [ 20, 30, 10,  0,  0, 10, 30, 20]
+];
+
+// Análisis local mejorado (fallback)
 async function getLocalBestMove() {
-    console.log('Usando análisis local como fallback');
+    console.log('Usando análisis local mejorado - Nivel:', aiDifficulty);
     
     // Obtener todos los movimientos válidos
-    const allMoves = [];
-    
-    for (let row = 0; row < 8; row++) {
-        for (let col = 0; col < 8; col++) {
-            const piece = game.getPiece(row, col);
-            if (piece && piece.color === game.currentTurn) {
-                const validMoves = game.getValidMoves(row, col);
-                validMoves.forEach(move => {
-                    allMoves.push({
-                        fromRow: row,
-                        fromCol: col,
-                        toRow: move.row,
-                        toCol: move.col,
-                        uci: moveToUCI(row, col, move.row, move.col)
-                    });
-                });
-            }
-        }
-    }
+    const allMoves = getAllPossibleMoves(game.currentTurn);
     
     if (allMoves.length === 0) {
         throw new Error('No hay movimientos válidos');
     }
     
-    // Seleccionar movimiento según nivel de dificultad
-    let selectedMove;
+    // Determinar profundidad de búsqueda según nivel
+    let depth = 1;
+    let useFullEval = true;
+    let randomnessFactor = 0;
     
-    if (aiDifficulty <= 5) {
-        // Nivel bajo: movimiento aleatorio
-        selectedMove = allMoves[Math.floor(Math.random() * allMoves.length)];
+    if (aiDifficulty <= 3) {
+        // Muy fácil: movimientos casi aleatorios
+        depth = 1;
+        useFullEval = false;
+        randomnessFactor = 0.8;
+    } else if (aiDifficulty <= 5) {
+        // Fácil: evaluación básica
+        depth = 1;
+        useFullEval = false;
+        randomnessFactor = 0.5;
+    } else if (aiDifficulty <= 8) {
+        // Principiante: evaluación completa, poca profundidad
+        depth = 1;
+        useFullEval = true;
+        randomnessFactor = 0.3;
     } else if (aiDifficulty <= 12) {
-        // Nivel medio: preferir capturas
-        const captures = allMoves.filter(m => game.getPiece(m.toRow, m.toCol) !== null);
-        selectedMove = captures.length > 0 
-            ? captures[Math.floor(Math.random() * captures.length)]
-            : allMoves[Math.floor(Math.random() * allMoves.length)];
+        // Intermedio: búsqueda a profundidad 2
+        depth = 2;
+        useFullEval = true;
+        randomnessFactor = 0.15;
+    } else if (aiDifficulty <= 16) {
+        // Avanzado: búsqueda a profundidad 2 (optimizado)
+        depth = 2;
+        useFullEval = true;
+        randomnessFactor = 0.05;
     } else {
-        // Nivel alto: evaluar posiciones (simple)
-        selectedMove = await evaluateBestMove(allMoves);
+        // Experto/Maestro: búsqueda a profundidad 3 (optimizado)
+        depth = 3;
+        useFullEval = true;
+        randomnessFactor = 0;
     }
     
-    return selectedMove.uci;
-}
-
-// Evaluación simple de movimientos
-async function evaluateBestMove(moves) {
-    let bestMove = moves[0];
+    console.log(`Evaluando con profundidad ${depth}, aleatoriedad ${randomnessFactor}`);
+    
+    // Evaluar movimientos (con límite de tiempo implícito)
+    let bestMove = null;
     let bestScore = -Infinity;
     
-    for (const move of moves) {
-        let score = 0;
+    // Ordenar movimientos: primero capturas para evaluación más rápida
+    allMoves.sort((a, b) => {
+        const captureA = game.getPiece(a.toRow, a.toCol) ? PIECE_VALUES[game.getPiece(a.toRow, a.toCol).type] || 0 : 0;
+        const captureB = game.getPiece(b.toRow, b.toCol) ? PIECE_VALUES[game.getPiece(b.toRow, b.toCol).type] || 0 : 0;
+        return captureB - captureA;
+    });
+    
+    // Limitar movimientos evaluados en niveles bajos/medios
+    const maxMovesToEvaluate = depth > 2 ? 20 : (depth > 1 ? 30 : allMoves.length);
+    const movesToEvaluate = allMoves.slice(0, Math.min(allMoves.length, maxMovesToEvaluate));
+    
+    for (const move of movesToEvaluate) {
+        let score;
         
-        // Bonus por capturar piezas
-        const capturedPiece = game.getPiece(move.toRow, move.toCol);
-        if (capturedPiece) {
-            const pieceValues = {
-                'pawn': 1,
-                'knight': 3,
-                'bishop': 3,
-                'rook': 5,
-                'queen': 9,
-                'king': 0
-            };
-            score += pieceValues[capturedPiece.type] || 0;
+        if (useFullEval && depth > 1) {
+            // Minimax con profundidad
+            score = evaluateMoveWithMinimax(move, depth, game.currentTurn);
+        } else {
+            // Evaluación simple
+            score = evaluateMoveSimple(move, useFullEval);
         }
         
-        // Bonus por controlar el centro
-        const centerSquares = [[3,3], [3,4], [4,3], [4,4]];
-        if (centerSquares.some(([r,c]) => r === move.toRow && c === move.toCol)) {
-            score += 0.5;
+        // Añadir aleatoriedad según nivel
+        if (randomnessFactor > 0) {
+            score += (Math.random() - 0.5) * randomnessFactor * 200;
         }
-        
-        // Añadir algo de aleatoriedad
-        score += Math.random() * 0.3;
         
         if (score > bestScore) {
             bestScore = score;
@@ -179,7 +265,254 @@ async function evaluateBestMove(moves) {
         }
     }
     
-    return bestMove;
+    console.log(`Mejor movimiento encontrado con score: ${bestScore}`);
+    return bestMove.uci;
+}
+
+// Obtener todos los movimientos posibles para un color
+function getAllPossibleMoves(color) {
+    const allMoves = [];
+    
+    for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+            const piece = game.getPiece(row, col);
+            if (piece && piece.color === color) {
+                const validMoves = game.getValidMoves(row, col);
+                validMoves.forEach(move => {
+                    allMoves.push({
+                        fromRow: row,
+                        fromCol: col,
+                        toRow: move.row,
+                        toCol: move.col,
+                        piece: piece,
+                        uci: moveToUCI(row, col, move.row, move.col)
+                    });
+                });
+            }
+        }
+    }
+    
+    return allMoves;
+}
+
+// Evaluación simple de un movimiento
+function evaluateMoveSimple(move, useFullEval) {
+    let score = 0;
+    
+    // Captura de pieza
+    const capturedPiece = game.getPiece(move.toRow, move.toCol);
+    if (capturedPiece) {
+        score += PIECE_VALUES[capturedPiece.type] || 0;
+    }
+    
+    if (useFullEval) {
+        // Bonificar control del centro
+        const centerSquares = [[3,3], [3,4], [4,3], [4,4]];
+        if (centerSquares.some(([r,c]) => r === move.toRow && c === move.toCol)) {
+            score += 30;
+        }
+        
+        // Bonificar desarrollo (mover piezas desde posición inicial)
+        const isBackRank = (move.fromRow === 0 || move.fromRow === 7);
+        if (isBackRank && move.piece.type !== 'pawn') {
+            score += 10;
+        }
+    }
+    
+    return score;
+}
+
+// Minimax con evaluación de posición (optimizado)
+function evaluateMoveWithMinimax(move, depth, maximizingColor) {
+    // Guardar estado actual completo (sin usar makeMove para evitar guardar en historial)
+    const savedBoard = game.board.map(row => [...row]);
+    const savedTurn = game.currentTurn;
+    const savedCaptured = {
+        white: [...game.capturedPieces.white],
+        black: [...game.capturedPieces.black]
+    };
+    const savedEnPassant = game.enPassantTarget ? { ...game.enPassantTarget } : null;
+    const savedCastling = JSON.parse(JSON.stringify(game.castlingRights));
+    
+    // Simular el movimiento directamente SIN guardar en historial
+    simulateMove(move.fromRow, move.fromCol, move.toRow, move.toCol);
+    
+    // Evaluar la posición resultante
+    let score;
+    if (depth <= 1) {
+        score = evaluatePosition(maximizingColor);
+    } else {
+        // Continuar búsqueda
+        score = minimax(depth - 1, -Infinity, Infinity, false, maximizingColor);
+    }
+    
+    // Restaurar estado completo
+    game.board = savedBoard;
+    game.currentTurn = savedTurn;
+    game.capturedPieces = savedCaptured;
+    game.enPassantTarget = savedEnPassant;
+    game.castlingRights = savedCastling;
+    
+    return score;
+}
+
+// Simular movimiento sin guardar en historial (solo para IA)
+function simulateMove(fromRow, fromCol, toRow, toCol) {
+    const piece = game.board[fromRow][fromCol];
+    const capturedPiece = game.board[toRow][toCol];
+    
+    // Capturar pieza si existe
+    if (capturedPiece) {
+        game.capturedPieces[game.currentTurn].push(capturedPiece.piece);
+    }
+    
+    // Mover la pieza
+    game.board[toRow][toCol] = piece;
+    game.board[fromRow][fromCol] = null;
+    
+    // Cambiar turno
+    game.currentTurn = game.currentTurn === 'white' ? 'black' : 'white';
+}
+
+// Algoritmo Minimax con poda alpha-beta (optimizado)
+function minimax(depth, alpha, beta, isMaximizing, maximizingColor) {
+    if (depth === 0) {
+        return evaluatePosition(maximizingColor);
+    }
+    
+    const currentColor = game.currentTurn;
+    const moves = getAllPossibleMoves(currentColor);
+    
+    if (moves.length === 0) {
+        // Jaque mate o ahogado
+        if (game.gameOver) {
+            return isMaximizing ? -100000 : 100000;
+        }
+        return 0;
+    }
+    
+    // Ordenar movimientos: primero capturas (mejora poda alpha-beta)
+    moves.sort((a, b) => {
+        const captureA = game.getPiece(a.toRow, a.toCol) ? 1 : 0;
+        const captureB = game.getPiece(b.toRow, b.toCol) ? 1 : 0;
+        return captureB - captureA;
+    });
+    
+    // Limitar número de movimientos evaluados en niveles intermedios
+    const movesToEvaluate = depth > 1 ? moves.slice(0, Math.min(moves.length, 25)) : moves;
+    
+    if (isMaximizing) {
+        let maxScore = -Infinity;
+        for (const move of movesToEvaluate) {
+            const savedBoard = game.board.map(row => [...row]);
+            const savedTurn = game.currentTurn;
+            const savedCaptured = {
+                white: [...game.capturedPieces.white],
+                black: [...game.capturedPieces.black]
+            };
+            const savedEnPassant = game.enPassantTarget ? { ...game.enPassantTarget } : null;
+            const savedCastling = JSON.parse(JSON.stringify(game.castlingRights));
+            
+            // Simular sin guardar en historial
+            simulateMove(move.fromRow, move.fromCol, move.toRow, move.toCol);
+            const score = minimax(depth - 1, alpha, beta, false, maximizingColor);
+            
+            game.board = savedBoard;
+            game.currentTurn = savedTurn;
+            game.capturedPieces = savedCaptured;
+            game.enPassantTarget = savedEnPassant;
+            game.castlingRights = savedCastling;
+            
+            maxScore = Math.max(maxScore, score);
+            alpha = Math.max(alpha, score);
+            if (beta <= alpha) break; // Poda alpha-beta
+        }
+        return maxScore;
+    } else {
+        let minScore = Infinity;
+        for (const move of movesToEvaluate) {
+            const savedBoard = game.board.map(row => [...row]);
+            const savedTurn = game.currentTurn;
+            const savedCaptured = {
+                white: [...game.capturedPieces.white],
+                black: [...game.capturedPieces.black]
+            };
+            const savedEnPassant = game.enPassantTarget ? { ...game.enPassantTarget } : null;
+            const savedCastling = JSON.parse(JSON.stringify(game.castlingRights));
+            
+            // Simular sin guardar en historial
+            simulateMove(move.fromRow, move.fromCol, move.toRow, move.toCol);
+            const score = minimax(depth - 1, alpha, beta, true, maximizingColor);
+            
+            game.board = savedBoard;
+            game.currentTurn = savedTurn;
+            game.capturedPieces = savedCaptured;
+            game.enPassantTarget = savedEnPassant;
+            game.castlingRights = savedCastling;
+            
+            minScore = Math.min(minScore, score);
+            beta = Math.min(beta, score);
+            if (beta <= alpha) break; // Poda alpha-beta
+        }
+        return minScore;
+    }
+}
+
+// Evaluación completa de la posición
+function evaluatePosition(forColor) {
+    let score = 0;
+    
+    for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+            const piece = game.getPiece(row, col);
+            if (!piece) continue;
+            
+            const pieceValue = PIECE_VALUES[piece.type] || 0;
+            const positionBonus = getPositionBonus(piece.type, row, col, piece.color);
+            
+            const totalValue = pieceValue + positionBonus;
+            
+            if (piece.color === forColor) {
+                score += totalValue;
+            } else {
+                score -= totalValue;
+            }
+        }
+    }
+    
+    return score;
+}
+
+// Obtener bonus de posición según tipo de pieza
+function getPositionBonus(pieceType, row, col, color) {
+    // Invertir fila para negras
+    const evalRow = color === 'white' ? row : 7 - row;
+    
+    let table;
+    switch(pieceType) {
+        case 'pawn':
+            table = PAWN_TABLE;
+            break;
+        case 'knight':
+            table = KNIGHT_TABLE;
+            break;
+        case 'bishop':
+            table = BISHOP_TABLE;
+            break;
+        case 'rook':
+            table = ROOK_TABLE;
+            break;
+        case 'queen':
+            table = QUEEN_TABLE;
+            break;
+        case 'king':
+            table = KING_MIDDLE_TABLE;
+            break;
+        default:
+            return 0;
+    }
+    
+    return table[evalRow][col];
 }
 
 // Inicializar la aplicación
@@ -225,6 +558,12 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('load-game').addEventListener('click', loadGame);
     document.getElementById('export-pgn').addEventListener('click', exportPGN);
 
+    // Navegación del historial
+    document.getElementById('nav-first').addEventListener('click', goToFirstMove);
+    document.getElementById('nav-prev').addEventListener('click', goToPreviousMove);
+    document.getElementById('nav-next').addEventListener('click', goToNextMove);
+    document.getElementById('nav-last').addEventListener('click', goToLastMove);
+
     // Iniciar primera partida
     applyBoardTheme();
     startNewGame();
@@ -238,6 +577,8 @@ async function getAIMove() {
 function startNewGame() {
     game = new ChessGame();
     selectedSquare = null;
+    lastMoveSquares = { from: null, to: null }; // Resetear último movimiento
+    currentMoveIndex = -1; // Resetear navegación de historial
     
     // Resetear reloj (siempre activo)
     stopClock();
@@ -257,7 +598,7 @@ function startNewGame() {
     
     // Si el jugador es negras y es modo IA, la IA mueve primero
     if (gameMode === 'vs-ai' && playerColor === 'black') {
-        setTimeout(() => makeAIMove(), 500);
+        setTimeout(() => makeAIMove(), 800);
     }
 
     // Iniciar reloj (siempre activo)
@@ -555,6 +896,18 @@ function renderBoard() {
             const isLight = (displayRow + displayCol) % 2 === 0;
             square.classList.add(isLight ? 'light' : 'dark');
             
+            // Resaltar último movimiento
+            if (lastMoveSquares.from && 
+                lastMoveSquares.from.row === displayRow && 
+                lastMoveSquares.from.col === displayCol) {
+                square.classList.add('last-move');
+            }
+            if (lastMoveSquares.to && 
+                lastMoveSquares.to.row === displayRow && 
+                lastMoveSquares.to.col === displayCol) {
+                square.classList.add('last-move');
+            }
+            
             // Agregar coordenadas en la esquina superior derecha
             const coordinate = document.createElement('span');
             coordinate.className = 'square-coordinate';
@@ -629,6 +982,13 @@ function handleSquareClick(row, col) {
         if (targetMove) {
             // Realizar el movimiento
             const result = game.makeMove(selectedSquare.row, selectedSquare.col, row, col);
+            
+            // Guardar último movimiento para resaltar
+            lastMoveSquares = {
+                from: { row: selectedSquare.row, col: selectedSquare.col },
+                to: { row: row, col: col }
+            };
+            
             selectedSquare = null;
             
             // Agregar incremento al jugador que acaba de mover
@@ -643,7 +1003,7 @@ function handleSquareClick(row, col) {
             
             // Turno de la IA solo en modo IA
             if (gameMode === 'vs-ai' && !game.gameOver && game.currentTurn !== playerColor) {
-                setTimeout(() => makeAIMove(), 500);
+                setTimeout(() => makeAIMove(), 800);
             }
 
             // Verificar puzzle
@@ -734,20 +1094,161 @@ function updateCapturedPieces() {
 }
 
 function updateMoveHistory() {
-    const historyElement = document.getElementById('move-history');
-    historyElement.innerHTML = '';
+    const historyDisplay = document.getElementById('move-history-display');
+    if (!historyDisplay) return;
     
-    game.moveHistory.forEach((move, index) => {
-        const moveElement = document.createElement('div');
-        moveElement.className = 'move-entry';
-        const moveNumber = Math.floor(index / 2) + 1;
-        const color = index % 2 === 0 ? 'Blancas' : 'Negras';
-        moveElement.textContent = `${moveNumber}. ${color}: ${move}`;
-        historyElement.appendChild(moveElement);
-    });
+    historyDisplay.innerHTML = '';
     
-    // Scroll al final
-    historyElement.scrollTop = historyElement.scrollHeight;
+    if (!game || !game.moveHistory || game.moveHistory.length === 0) {
+        historyDisplay.innerHTML = '<span style="color: #999; font-size: 0.85rem;">No hay movimientos</span>';
+        updateNavigationButtons();
+        return;
+    }
+    
+    // Agrupar movimientos por turno completo (blancas + negras)
+    for (let i = 0; i < game.moveHistory.length; i += 2) {
+        const moveNumber = Math.floor(i / 2) + 1;
+        const whiteMove = game.moveHistory[i];
+        const blackMove = game.moveHistory[i + 1];
+        
+        // Movimiento de blancas
+        const whiteMoveItem = document.createElement('span');
+        whiteMoveItem.className = 'move-item';
+        whiteMoveItem.textContent = `${moveNumber}. ${whiteMove}`;
+        whiteMoveItem.dataset.index = i;
+        if (currentMoveIndex === i) {
+            whiteMoveItem.classList.add('active');
+        }
+        whiteMoveItem.addEventListener('click', () => goToMove(i));
+        historyDisplay.appendChild(whiteMoveItem);
+        
+        // Movimiento de negras (si existe)
+        if (blackMove) {
+            const blackMoveItem = document.createElement('span');
+            blackMoveItem.className = 'move-item';
+            blackMoveItem.textContent = blackMove;
+            blackMoveItem.dataset.index = i + 1;
+            if (currentMoveIndex === i + 1) {
+                blackMoveItem.classList.add('active');
+            }
+            blackMoveItem.addEventListener('click', () => goToMove(i + 1));
+            historyDisplay.appendChild(blackMoveItem);
+        }
+    }
+    
+    // Si estamos en la posición actual (última)
+    if (currentMoveIndex === -1 || currentMoveIndex === game.moveHistory.length - 1) {
+        const items = historyDisplay.querySelectorAll('.move-item');
+        if (items.length > 0) {
+            items[items.length - 1].classList.add('active');
+        }
+    }
+    
+    // Scroll al movimiento activo
+    const activeItem = historyDisplay.querySelector('.move-item.active');
+    if (activeItem) {
+        activeItem.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+    
+    updateNavigationButtons();
+}
+
+function updateNavigationButtons() {
+    const navFirst = document.getElementById('nav-first');
+    const navPrev = document.getElementById('nav-prev');
+    const navNext = document.getElementById('nav-next');
+    const navLast = document.getElementById('nav-last');
+    
+    const hasHistory = game && game.moveHistory && game.moveHistory.length > 0;
+    const atStart = currentMoveIndex === -1 || currentMoveIndex === 0;
+    const atEnd = currentMoveIndex === -1 || currentMoveIndex >= game.moveHistory.length - 1;
+    
+    navFirst.disabled = !hasHistory || atStart;
+    navPrev.disabled = !hasHistory || atStart;
+    navNext.disabled = !hasHistory || atEnd;
+    navLast.disabled = !hasHistory || atEnd;
+}
+
+function goToFirstMove() {
+    if (!game || !game.gameStateHistory || game.gameStateHistory.length === 0) return;
+    
+    currentMoveIndex = 0;
+    restoreGameState(0);
+    updateMoveHistory();
+}
+
+function goToPreviousMove() {
+    if (!game || !game.gameStateHistory) return;
+    
+    if (currentMoveIndex === -1) {
+        currentMoveIndex = game.moveHistory.length - 1;
+    }
+    
+    if (currentMoveIndex > 0) {
+        currentMoveIndex--;
+        restoreGameState(currentMoveIndex);
+        updateMoveHistory();
+    }
+}
+
+function goToNextMove() {
+    if (!game || !game.gameStateHistory) return;
+    
+    if (currentMoveIndex === -1) return;
+    
+    if (currentMoveIndex < game.moveHistory.length - 1) {
+        currentMoveIndex++;
+        restoreGameState(currentMoveIndex);
+        updateMoveHistory();
+    } else {
+        // Volver a la posición actual
+        currentMoveIndex = -1;
+        restoreGameState(game.gameStateHistory.length - 1);
+        updateMoveHistory();
+    }
+}
+
+function goToLastMove() {
+    if (!game || !game.gameStateHistory) return;
+    
+    currentMoveIndex = -1;
+    restoreGameState(game.gameStateHistory.length - 1);
+    updateMoveHistory();
+}
+
+function goToMove(moveIndex) {
+    if (!game || !game.gameStateHistory) return;
+    
+    currentMoveIndex = moveIndex;
+    restoreGameState(moveIndex);
+    updateMoveHistory();
+}
+
+function restoreGameState(stateIndex) {
+    if (!game || !game.gameStateHistory || stateIndex < 0) return;
+    
+    // Obtener el estado guardado ANTES del movimiento (stateIndex + 1 porque guardamos antes de mover)
+    const targetStateIndex = stateIndex;
+    
+    if (targetStateIndex >= game.gameStateHistory.length) {
+        // Restaurar posición actual (última)
+        targetStateIndex = game.gameStateHistory.length - 1;
+    }
+    
+    const state = game.gameStateHistory[targetStateIndex];
+    if (!state) return;
+    
+    // Restaurar el estado del juego
+    game.board = JSON.parse(JSON.stringify(state.board));
+    game.currentTurn = state.currentTurn;
+    game.capturedPieces = JSON.parse(JSON.stringify(state.capturedPieces));
+    game.enPassantTarget = state.enPassantTarget ? { ...state.enPassantTarget } : null;
+    game.castlingRights = JSON.parse(JSON.stringify(state.castlingRights));
+    game.gameOver = state.gameOver;
+    
+    // Actualizar la visualización
+    renderBoard();
+    updateCapturedPieces();
 }
 
 function handleGameResult(result) {
@@ -773,11 +1274,20 @@ async function makeAIMove() {
             const move = parseUCIMove(bestMove);
         
             if (move) {
+                // Guardar último movimiento para resaltar
+                lastMoveSquares = {
+                    from: { row: move.fromRow, col: move.fromCol },
+                    to: { row: move.toRow, col: move.toCol }
+                };
+                
                 const result = game.makeMove(move.fromRow, move.fromCol, move.toRow, move.toCol);
                 
                 // Agregar incremento al jugador que acaba de mover
                 addTimeIncrement();
             
+                // Pequeña pausa antes de actualizar el tablero para efecto visual
+                await new Promise(resolve => setTimeout(resolve, 200));
+                
                 renderBoard();
                 updateCapturedPieces();
                 updateMoveHistory();

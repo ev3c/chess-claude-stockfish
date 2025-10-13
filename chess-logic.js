@@ -250,23 +250,71 @@ class ChessGame {
 
     canCastle(row, col, side) {
         const piece = this.getPiece(row, col);
-        if (!this.castlingRights[piece.color][side]) return false;
-        if (this.isInCheck(piece.color)) return false;
-
-        const direction = side === 'kingside' ? 1 : -1;
-        const squares = side === 'kingside' ? 2 : 3;
-
-        // Verificar que los cuadrados estén vacíos
-        for (let i = 1; i <= squares; i++) {
-            if (this.getPiece(row, col + i * direction)) return false;
+        
+        // Verificar derechos de enroque
+        if (!this.castlingRights[piece.color][side]) {
+            return false;
+        }
+        
+        // No se puede enrocar si el rey está en jaque
+        if (this.isInCheck(piece.color)) {
+            return false;
         }
 
-        // Verificar que el rey no pase por jaque
-        for (let i = 1; i <= 2; i++) {
-            if (this.wouldBeInCheck(row, col, row, col + i * direction)) return false;
+        if (side === 'kingside') {
+            // Verificar que la torre esté en su lugar
+            const rook = this.getPiece(row, 7);
+            if (!rook || rook.type !== 'rook' || rook.color !== piece.color) {
+                return false;
+            }
+            
+            // Enroque corto: verificar f y g están vacías (columnas 5 y 6)
+            if (this.getPiece(row, col + 1) || this.getPiece(row, col + 2)) {
+                return false;
+            }
+            
+            // Verificar que el rey no pase por jaque en f y g
+            if (this.wouldBeInCheckSimple(row, col, row, col + 1, piece.color) ||
+                this.wouldBeInCheckSimple(row, col, row, col + 2, piece.color)) {
+                return false;
+            }
+        } else {
+            // Verificar que la torre esté en su lugar
+            const rook = this.getPiece(row, 0);
+            if (!rook || rook.type !== 'rook' || rook.color !== piece.color) {
+                return false;
+            }
+            
+            // Enroque largo: verificar b, c y d están vacías (columnas 1, 2 y 3)
+            if (this.getPiece(row, col - 1) || this.getPiece(row, col - 2) || this.getPiece(row, col - 3)) {
+                return false;
+            }
+            
+            // Verificar que el rey no pase por jaque en d y c
+            if (this.wouldBeInCheckSimple(row, col, row, col - 1, piece.color) ||
+                this.wouldBeInCheckSimple(row, col, row, col - 2, piece.color)) {
+                return false;
+            }
         }
 
         return true;
+    }
+
+    wouldBeInCheckSimple(fromRow, fromCol, toRow, toCol, color) {
+        // Simular el movimiento sin usar getValidMoves para evitar recursión
+        const originalPiece = this.board[fromRow][fromCol];
+        const capturedPiece = this.board[toRow][toCol];
+        
+        this.board[toRow][toCol] = originalPiece;
+        this.board[fromRow][fromCol] = null;
+
+        const inCheck = this.isInCheck(color);
+
+        // Restaurar el tablero
+        this.board[fromRow][fromCol] = originalPiece;
+        this.board[toRow][toCol] = capturedPiece;
+
+        return inCheck;
     }
 
     wouldBeInCheck(fromRow, fromCol, toRow, toCol) {
@@ -405,15 +453,24 @@ class ChessGame {
 
         // Guardar estado completo antes del movimiento
         this.saveGameState();
-
-        // Guardar en historial
-        const notation = this.getMoveNotation(fromRow, fromCol, toRow, toCol, piece, capturedPiece);
-        this.moveHistory.push(notation);
+        
+        // Generar notación ANTES de cualquier cambio en el tablero
+        let notation = this.getMoveNotation(fromRow, fromCol, toRow, toCol, piece, capturedPiece);
         
         // Guardar en formato UCI para Stockfish
         const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
         const uciMove = files[fromCol] + (8 - fromRow) + files[toCol] + (8 - toRow);
         this.moveHistoryUCI.push(uciMove);
+
+        // Actualizar derechos de enroque ANTES de mover piezas
+        if (piece.type === 'king') {
+            this.castlingRights[piece.color].kingside = false;
+            this.castlingRights[piece.color].queenside = false;
+        }
+        if (piece.type === 'rook') {
+            if (fromCol === 0) this.castlingRights[piece.color].queenside = false;
+            if (fromCol === 7) this.castlingRights[piece.color].kingside = false;
+        }
 
         // Actualizar en passant
         this.enPassantTarget = null;
@@ -422,6 +479,11 @@ class ChessGame {
                 row: (fromRow + toRow) / 2,
                 col: fromCol
             };
+        }
+
+        // Capturar pieza si existe
+        if (capturedPiece) {
+            this.capturedPieces[this.currentTurn].push(capturedPiece.piece);
         }
 
         // Manejar en passant
@@ -434,7 +496,11 @@ class ChessGame {
             }
         }
 
-        // Manejar enroque
+        // Realizar el movimiento del rey/pieza
+        this.board[toRow][toCol] = piece;
+        this.board[fromRow][fromCol] = null;
+
+        // Manejar enroque (mover la torre DESPUÉS de mover el rey)
         if (move.castling) {
             const rookCol = move.castling === 'kingside' ? 7 : 0;
             const newRookCol = move.castling === 'kingside' ? toCol - 1 : toCol + 1;
@@ -442,46 +508,35 @@ class ChessGame {
             this.board[toRow][rookCol] = null;
         }
 
-        // Actualizar derechos de enroque
-        if (piece.type === 'king') {
-            this.castlingRights[piece.color].kingside = false;
-            this.castlingRights[piece.color].queenside = false;
-        }
-        if (piece.type === 'rook') {
-            if (fromCol === 0) this.castlingRights[piece.color].queenside = false;
-            if (fromCol === 7) this.castlingRights[piece.color].kingside = false;
-        }
-
-        // Realizar el movimiento
-        if (capturedPiece) {
-            this.capturedPieces[this.currentTurn].push(capturedPiece.piece);
-        }
-
-        this.board[toRow][toCol] = piece;
-        this.board[fromRow][fromCol] = null;
-
         // Promoción de peón
         if (piece.type === 'pawn' && (toRow === 0 || toRow === 7)) {
             this.promotePawn(toRow, toCol);
+            // Actualizar notación con promoción
+            notation += '=Q';
         }
 
         // Cambiar turno
         this.currentTurn = this.currentTurn === 'white' ? 'black' : 'white';
 
-        // Verificar fin del juego
+        // Verificar fin del juego y agregar símbolos
+        let gameStatus = { status: 'normal' };
+        
         if (this.isCheckmate()) {
             this.gameOver = true;
-            return { status: 'checkmate', winner: piece.color };
-        }
-        if (this.isStalemate()) {
+            notation += '#'; // Símbolo de jaque mate
+            gameStatus = { status: 'checkmate', winner: piece.color };
+        } else if (this.isStalemate()) {
             this.gameOver = true;
-            return { status: 'stalemate' };
+            gameStatus = { status: 'stalemate' };
+        } else if (this.isInCheck(this.currentTurn)) {
+            notation += '+'; // Símbolo de jaque
+            gameStatus = { status: 'check' };
         }
-        if (this.isInCheck(this.currentTurn)) {
-            return { status: 'check' };
-        }
+        
+        // Guardar en historial con símbolos de jaque
+        this.moveHistory.push(notation);
 
-        return { status: 'normal' };
+        return gameStatus;
     }
 
     promotePawn(row, col) {
@@ -493,16 +548,37 @@ class ChessGame {
 
     getMoveNotation(fromRow, fromCol, toRow, toCol, piece, capturedPiece) {
         const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-        const fromSquare = files[fromCol] + (8 - fromRow);
         const toSquare = files[toCol] + (8 - toRow);
         
         let notation = '';
-        if (piece.type !== 'pawn') {
-            notation += piece.type[0].toUpperCase();
+        
+        // Notación algebraica estándar
+        if (piece.type === 'pawn') {
+            // Peón: solo mostrar captura si es necesario
+            if (capturedPiece) {
+                notation += files[fromCol] + 'x' + toSquare;
+            } else {
+                notation += toSquare;
+            }
+        } else if (piece.type === 'king') {
+            // Verificar enroque
+            if (Math.abs(fromCol - toCol) === 2) {
+                notation = toCol > fromCol ? 'O-O' : 'O-O-O';
+            } else {
+                notation = 'K' + (capturedPiece ? 'x' : '') + toSquare;
+            }
+        } else {
+            // Otras piezas: letra + casilla destino
+            const pieceSymbols = {
+                'queen': 'Q',
+                'rook': 'R',
+                'bishop': 'B',
+                'knight': 'N'
+            };
+            notation = pieceSymbols[piece.type];
+            if (capturedPiece) notation += 'x';
+            notation += toSquare;
         }
-        notation += fromSquare;
-        notation += capturedPiece ? 'x' : '-';
-        notation += toSquare;
         
         return notation;
     }
