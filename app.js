@@ -5,7 +5,7 @@ let apiKey = '';
 let gameMode = 'vs-ai'; // vs-ai, vs-human, puzzle
 let aiDifficulty = 'advanced';
 let boardTheme = 'classic';
-let clockEnabled = false;
+let clockEnabled = true; // Reloj siempre activado
 let timePerPlayer = 10; // minutos
 let whiteTime = 600; // segundos
 let blackTime = 600; // segundos
@@ -59,11 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
         boardTheme = e.target.value;
         localStorage.setItem('board_theme', boardTheme);
         applyBoardTheme();
-    });
-    document.getElementById('enable-clock').addEventListener('change', (e) => {
-        clockEnabled = e.target.checked;
-        document.getElementById('clock-settings').style.display = clockEnabled ? 'block' : 'none';
-        document.getElementById('chess-clock').style.display = clockEnabled ? 'flex' : 'none';
     });
     document.getElementById('time-per-player').addEventListener('change', (e) => {
         timePerPlayer = parseInt(e.target.value);
@@ -158,13 +153,11 @@ function startNewGame() {
     game = new ChessGame();
     selectedSquare = null;
     
-    // Resetear reloj
-    if (clockEnabled) {
-        stopClock();
-        whiteTime = timePerPlayer * 60;
-        blackTime = timePerPlayer * 60;
-        updateClockDisplay();
-    }
+    // Resetear reloj (siempre activo)
+    stopClock();
+    whiteTime = timePerPlayer * 60;
+    blackTime = timePerPlayer * 60;
+    updateClockDisplay();
 
     // Modo puzzle
     if (gameMode === 'puzzle') {
@@ -182,8 +175,8 @@ function startNewGame() {
         setTimeout(() => makeClaudeMove(), 500);
     }
 
-    // Iniciar reloj si está habilitado
-    if (clockEnabled && !game.gameOver) {
+    // Iniciar reloj (siempre activo)
+    if (!game.gameOver) {
         startClock();
     }
 }

@@ -378,7 +378,23 @@ header h1 {
 .chess-clock {
     display: flex;
     gap: 10px;
-    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+.clock-controls {
+    margin-top: 10px;
+}
+
+.clock-controls label {
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.clock-controls input {
+    width: 100%;
 }
 
 .clock-player {
