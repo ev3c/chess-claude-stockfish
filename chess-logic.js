@@ -20,6 +20,7 @@ class ChessGame {
         this.currentTurn = 'white';
         this.selectedSquare = null;
         this.moveHistory = [];
+        this.moveHistoryUCI = []; // Historial en formato UCI para Stockfish
         this.capturedPieces = { white: [], black: [] };
         this.gameOver = false;
         this.enPassantTarget = null;
@@ -408,6 +409,11 @@ class ChessGame {
         // Guardar en historial
         const notation = this.getMoveNotation(fromRow, fromCol, toRow, toCol, piece, capturedPiece);
         this.moveHistory.push(notation);
+        
+        // Guardar en formato UCI para Stockfish
+        const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+        const uciMove = files[fromCol] + (8 - fromRow) + files[toCol] + (8 - toRow);
+        this.moveHistoryUCI.push(uciMove);
 
         // Actualizar en passant
         this.enPassantTarget = null;
@@ -567,6 +573,7 @@ class ChessGame {
         this.castlingRights = previousState.castlingRights;
         this.gameOver = previousState.gameOver;
         this.moveHistory.pop();
+        this.moveHistoryUCI.pop();
 
         return true;
     }

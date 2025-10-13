@@ -1,12 +1,12 @@
-# ♔ Ajedrez vs Claude ♚
+# ♔ Ajedrez con IA ♚
 
-Una aplicación web interactiva para jugar al ajedrez contra la inteligencia artificial de Claude (Anthropic).
+Una aplicación web interactiva para jugar al ajedrez contra el motor de Lichess (Stockfish).
 
 ## 🎮 Características
 
 ### Funcionalidades Principales
 - **Interfaz gráfica moderna**: Tablero de ajedrez visual con diseño responsivo
-- **IA avanzada**: Juega contra Claude 3.5 Sonnet, uno de los modelos más avanzados de Anthropic
+- **IA avanzada**: Juega contra el motor de Lichess, basado en Stockfish, el motor de ajedrez más potente del mundo
 - **Piezas clásicas**: Símbolos Unicode estándar (♔♚) - el formato más usado mundialmente
 - **Doble sistema de coordenadas**: 
   - Coordenadas en cada casilla (esquina superior derecha)
@@ -19,14 +19,13 @@ Una aplicación web interactiva para jugar al ajedrez contra la inteligencia art
   - Detección de jaque, jaque mate y ahogado
 
 ### Modos de Juego
-- **vs Claude (IA)**: Juega contra la inteligencia artificial con 4 niveles de dificultad
+- **vs IA (Lichess)**: Juega contra el motor de ajedrez con múltiples niveles de dificultad (1-20)
 - **Humano vs Humano**: Modo local para jugar contra otra persona
 - **Modo Entrenamiento**: Resuelve puzzles de ajedrez para mejorar tus habilidades
 
 ### Características Avanzadas
 - **⬅ Deshacer Movimiento**: Retrocede uno o más movimientos
-- **💡 Sugerencias**: Claude te ayuda sugiriendo el mejor movimiento
-- **📊 Análisis de Partidas**: Análisis detallado de tus partidas con Claude
+- **💡 Sugerencias de IA**: El motor te ayuda sugiriendo el mejor movimiento
 - **💾 Guardar/Cargar Partidas**: Guarda tus partidas en el navegador y retómalas después
 - **📄 Exportar PGN**: Exporta tus partidas en formato PGN estándar
 - **🎨 Temas de Tablero**: 5 temas de colores diferentes (Clásico, Madera, Azul, Verde, Gris)
@@ -38,7 +37,7 @@ Una aplicación web interactiva para jugar al ajedrez contra la inteligencia art
 ## 📋 Requisitos
 
 - Un navegador web moderno (Chrome, Firefox, Edge, Safari)
-- Una API Key de Anthropic (Claude)
+- Conexión a internet (para usar la API de Lichess)
 
 ## 🚀 Instalación
 
@@ -65,26 +64,13 @@ npx http-server -p 8000
 
 📖 **Si tienes problemas:** Abre `LEEME_PRIMERO.html` para instrucciones visuales paso a paso.
 
-## 🔑 Configuración de la API Key
-
-1. Visita [console.anthropic.com](https://console.anthropic.com/) para obtener tu API Key
-2. En la aplicación, ingresa tu API Key en el campo de configuración
-3. **Haz clic en "Probar Conexión"** para verificar que funciona correctamente
-4. Si la prueba es exitosa, haz clic en "Guardar API Key"
-5. Tu API Key se guardará localmente en tu navegador (no se comparte con nadie)
-
-⚠️ **Importante**: Tu API Key se almacena en el localStorage de tu navegador. Nunca la compartas con nadie.
-
-💡 **Consejo**: Siempre prueba la conexión antes de guardar para asegurarte de que la API Key es válida.
-
 ## 🎯 Cómo Jugar
 
 1. **Configuración inicial**:
-   - Ingresa tu API Key de Anthropic
    - Selecciona el modo de juego (vs IA, vs Humano, o Entrenamiento)
-   - Si juegas contra la IA, elige el nivel de dificultad
+   - Si juegas contra la IA, elige el nivel de dificultad (1-20)
    - Selecciona tu color (Blancas o Negras)
-   - Opcional: Activa el reloj de ajedrez y configura el tiempo
+   - Configura el control de tiempo del reloj de ajedrez
    - Opcional: Cambia el tema del tablero a tu preferencia
    - Haz clic en "Nueva Partida"
 
@@ -94,15 +80,14 @@ npx http-server -p 8000
    - Las coordenadas del tablero (a-h y 1-8) te ayudan a identificar cada casilla
    - Haz clic en una casilla resaltada para mover la pieza
 
-3. **Turno de Claude** (modo vs IA):
-   - Claude pensará automáticamente su movimiento
-   - Verás un indicador de "Claude está pensando..."
+3. **Turno de la IA** (modo vs IA):
+   - La IA pensará automáticamente su movimiento usando el motor de Lichess
+   - Verás un indicador mientras la IA está calculando
    - El movimiento se ejecutará automáticamente
 
 4. **Usar características avanzadas**:
    - **Deshacer**: Haz clic en "⬅ Deshacer Movimiento" para retroceder
-   - **Sugerencia**: Haz clic en "💡 Sugerencia" para que Claude te aconseje
-   - **Analizar**: Haz clic en "📊 Analizar Partida" para un análisis detallado
+   - **Sugerencia**: Haz clic en "💡 Sugerencia de IA" para obtener el mejor movimiento
    - **Guardar**: Haz clic en "💾 Guardar Partida" para guardar tu progreso
    - **Cargar**: Haz clic en "📂 Cargar Partida" para continuar una partida guardada
    - **Exportar**: Haz clic en "📄 Exportar PGN" para descargar la partida
@@ -134,7 +119,7 @@ Chess-claude/
 - **HTML5**: Estructura de la aplicación
 - **CSS3**: Diseño moderno con gradientes y animaciones
 - **JavaScript (Vanilla)**: Lógica del juego y comunicación con la API
-- **Anthropic Claude API**: Inteligencia artificial para los movimientos
+- **Lichess Cloud Eval API**: Motor de ajedrez basado en Stockfish para análisis y movimientos
 
 ## 🎨 Características Técnicas
 
@@ -147,15 +132,14 @@ Chess-claude/
 - Sistema de historial de estados para deshacer movimientos
 - Exportación a formato FEN para representación de posiciones
 
-### Integración con Claude
-- Comunicación con la API de Anthropic usando `fetch`
-- Descripción detallada del tablero en formato legible
-- Análisis de movimientos válidos
-- Parsing de respuestas JSON de Claude
+### Integración con Lichess API
+- Comunicación con la API de Lichess Cloud Eval usando `fetch`
+- Conversión de posiciones a formato FEN
+- Obtención de mejores movimientos desde el servidor de Lichess
+- Sistema de fallback local para cuando la API no está disponible
 - Manejo de errores y validación de movimientos
-- Sistema de dificultad ajustable mediante prompts personalizados
-- Modo de sugerencias para ayudar al jugador
-- Análisis de partidas con evaluación detallada
+- Sistema de dificultad ajustable (niveles 1-20)
+- Modo de sugerencias usando el motor de Lichess
 
 ### Interfaz de Usuario
 - Diseño responsivo que se adapta a diferentes tamaños de pantalla
@@ -176,33 +160,34 @@ Chess-claude/
 
 ### Sistema de Notación
 
-El juego utiliza un sistema de coordenadas interno (0-7 para filas y columnas) y lo convierte a notación algebraica estándar (a1-h8) para la comunicación con Claude.
+El juego utiliza un sistema de coordenadas interno (0-7 para filas y columnas) y lo convierte a:
+- Notación FEN para representar posiciones
+- Notación UCI para comunicarse con la API de Lichess
+- Notación algebraica estándar (a1-h8) para visualización
 
 ### Generación de Movimientos
 
-Claude recibe:
+La API de Lichess recibe:
 - Posición actual en formato FEN
-- Descripción textual del tablero
-- Lista de todos los movimientos válidos disponibles
 
-Y responde con un movimiento en formato JSON: `{"from": "e2", "to": "e4"}`
+Y responde con:
+- Mejor movimiento en notación UCI (ej: "e2e4")
+- Evaluación de la posición (ventaja de cada color)
+- Variantes principales (líneas de juego)
 
 ## 🐛 Solución de Problemas
 
-### Error: "Error al comunicarse con Claude"
-
-**Primero:** Usa el botón **"Probar Conexión"** para diagnosticar el problema exacto.
+### Error: "Error al obtener movimiento"
 
 **Problemas comunes:**
 
-1. **API Key inválida (Error 401)**
-   - Verifica que copiaste la API Key correctamente
-   - Genera una nueva en [console.anthropic.com](https://console.anthropic.com/)
-   - Asegúrate de que no tenga espacios al inicio o final
+1. **Sin conexión a internet**
+   - Verifica tu conexión a internet
+   - La API de Lichess requiere conexión para funcionar
 
-2. **Límite de uso excedido (Error 429)**
-   - Revisa tus créditos en console.anthropic.com
-   - Agrega un método de pago si es necesario
+2. **API de Lichess no disponible**
+   - El juego usa automáticamente un motor local simple como fallback
+   - Los movimientos serán básicos pero funcionales
 
 3. **Error de red (CORS)**
    - Si abres el archivo con `file:///`, usa un servidor local
@@ -210,11 +195,9 @@ Y responde con un movimiento en formato JSON: `{"from": "e2", "to": "e4"}`
    - Node.js: `npx http-server`
    - Luego abre `http://localhost:8000` o `http://localhost:8080`
 
-4. **Sin conexión a internet**
-   - Verifica tu conexión
-   - Intenta abrir anthropic.com en otra pestaña
-
-**Guía completa:** Ver archivo `SOLUCION_PROBLEMAS.md` para instrucciones detalladas.
+4. **El juego no responde**
+   - Recarga la página (F5)
+   - Verifica que estés usando un navegador moderno
 
 ---
 
@@ -229,25 +212,24 @@ Y responde con un movimiento en formato JSON: `{"from": "e2", "to": "e4"}`
 
 ## 📝 Notas
 
-- El juego utiliza la API de Claude 3.5 Sonnet, que ofrece un rendimiento excelente en ajedrez
-- Los movimientos de Claude pueden tardar unos segundos dependiendo de la carga de la API
+- El juego utiliza la API gratuita de Lichess Cloud Eval, basada en Stockfish
+- Los movimientos analizados por Lichess pueden tardar unos segundos
+- Si la API no está disponible, el juego usa un motor local simple como fallback
 - La aplicación no tiene backend; todo se ejecuta en el navegador
+- No se requiere API Key ni autenticación
 
 ## ✨ Últimas Actualizaciones
 
-### Versión 3.0 - Octubre 2025 🎉
-**¡GRAN ACTUALIZACIÓN!** Todas las características solicitadas han sido implementadas:
+### Versión 3.1 - Octubre 2025 🎉
+**¡MIGRACIÓN A LICHESS API!**
 
-- ✅ **Deshacer Movimiento**: Sistema completo para retroceder movimientos
-- ✅ **Selector de Nivel de Dificultad**: 4 niveles (Principiante a Experto)
-- ✅ **Análisis de Partidas**: Análisis detallado con Claude AI
-- ✅ **Guardado y Carga**: Guarda y recupera partidas desde localStorage
-- ✅ **Modo Humano vs Humano**: Juega localmente contra otra persona
-- ✅ **Sugerencias de Movimientos**: Claude te ayuda cuando lo necesites
-- ✅ **Temas de Tablero**: 5 hermosos temas de colores
-- ✅ **Exportación PGN**: Exporta partidas en formato estándar
-- ✅ **Modo Entrenamiento**: Resuelve puzzles de ajedrez
-- ✅ **Reloj de Ajedrez**: Sistema de tiempo configurable
+- ✅ **Motor Lichess**: Ahora usa la API de Lichess (Stockfish) en lugar de Claude
+- ✅ **Sin API Key**: No se requiere autenticación, totalmente gratuito
+- ✅ **Fallback Local**: Motor simple local si la API no está disponible
+- ✅ **20 Niveles de Dificultad**: Desde principiante hasta gran maestro
+- ✅ **Más Confiable**: Sin problemas de carga de Stockfish como Web Worker
+- ✅ **Reloj de Ajedrez**: Controles de tiempo estándar (Bullet, Blitz, Rápidas, Clásicas)
+- ✅ **Todas las características anteriores**: Deshacer, guardar/cargar, PGN, puzzles, temas
 
 ### Versión 2.2 - Octubre 2025
 - ✅ **Diseño simplificado**: Solo piezas clásicas (las más usadas mundialmente)
@@ -278,11 +260,12 @@ Creado con ❤️ para disfrutar del ajedrez con inteligencia artificial.
 
 ## 🙏 Agradecimientos
 
-- Anthropic por proporcionar la API de Claude
+- Lichess por proporcionar su API gratuita y abierta
+- El proyecto Stockfish por el motor de ajedrez más potente del mundo
 - La comunidad de ajedrez por las reglas y convenciones estándar
 - Los símbolos Unicode de ajedrez que hacen posible una interfaz visual sin imágenes
 
 ---
 
-¡Disfruta jugando contra Claude! ♟️
+¡Disfruta jugando contra el mejor motor de ajedrez! ♟️
 

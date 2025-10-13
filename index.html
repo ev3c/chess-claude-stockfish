@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ajedrez vs Claude</title>
+    <title>Ajedrez con IA - Lichess</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>♔ Ajedrez vs Claude ♚</h1>
-            <p class="subtitle">Juega contra la inteligencia artificial</p>
+            <h1>♔ Ajedrez con IA ♚</h1>
+            <p class="subtitle">Juega contra el motor de Lichess (Stockfish)</p>
+            <p id="stockfish-status" class="stockfish-status">✅ Motor listo</p>
         </header>
 
         <div class="game-container">
@@ -18,29 +19,24 @@
                 <div class="panel">
                     <h2>Configuración</h2>
                     <div class="config-section">
-                        <label for="api-key">API Key de Anthropic:</label>
-                        <input type="password" id="api-key" placeholder="sk-ant-...">
-                        <button id="save-key" class="btn btn-primary">Guardar API Key</button>
-                        <button id="test-key" class="btn btn-primary">Probar Conexión</button>
-                        <p class="info-text">Tu API key se guarda localmente en tu navegador</p>
-                    </div>
-                    
-                    <div class="config-section">
                         <label>Modo de Juego:</label>
-                        <select id="game-mode" class="select">
-                            <option value="vs-ai">vs Claude (IA)</option>
-                            <option value="vs-human">Humano vs Humano</option>
-                            <option value="puzzle">Modo Entrenamiento</option>
-                        </select>
+                           <select id="game-mode" class="select">
+                               <option value="vs-ai">vs IA (Lichess)</option>
+                               <option value="vs-human">Humano vs Humano</option>
+                               <option value="puzzle">Modo Entrenamiento</option>
+                           </select>
                     </div>
 
                     <div class="config-section" id="ai-settings">
-                        <label>Nivel de Dificultad IA:</label>
+                        <label>Nivel de Dificultad:</label>
                         <select id="ai-difficulty" class="select">
-                            <option value="beginner">Principiante</option>
-                            <option value="intermediate">Intermedio</option>
-                            <option value="advanced">Avanzado</option>
-                            <option value="expert">Experto</option>
+                            <option value="1">Nivel 1 - Muy Fácil</option>
+                            <option value="3">Nivel 3 - Fácil</option>
+                            <option value="5">Nivel 5 - Principiante</option>
+                            <option value="8">Nivel 8 - Intermedio</option>
+                            <option value="12">Nivel 12 - Avanzado</option>
+                            <option value="16">Nivel 16 - Experto</option>
+                            <option value="20" selected>Nivel 20 - Maestro</option>
                         </select>
                     </div>
                     
@@ -96,10 +92,10 @@
                         </div>
                     </div>
                 </div>
-                <div id="thinking-indicator" class="thinking-indicator" style="display: none;">
-                    <div class="spinner"></div>
-                    <p>Claude está pensando...</p>
-                </div>
+                       <div id="thinking-indicator" class="thinking-indicator" style="display: none;">
+                           <div class="spinner"></div>
+                           <p>La IA está calculando...</p>
+                       </div>
             </div>
 
             <div class="sidebar sidebar-right">
@@ -143,15 +139,14 @@
                     </div>
                 </div>
 
-                <div class="panel">
-                    <h2>Acciones</h2>
-                    <button id="undo-move" class="btn btn-primary">⬅ Deshacer Movimiento</button>
-                    <button id="hint-move" class="btn btn-primary">💡 Sugerencia</button>
-                    <button id="analyze-game" class="btn btn-primary">📊 Analizar Partida</button>
-                    <button id="save-game" class="btn btn-primary">💾 Guardar Partida</button>
-                    <button id="load-game" class="btn btn-primary">📂 Cargar Partida</button>
-                    <button id="export-pgn" class="btn btn-primary">📄 Exportar PGN</button>
-                </div>
+                       <div class="panel">
+                           <h2>Acciones</h2>
+                           <button id="undo-move" class="btn btn-primary">⬅ Deshacer Movimiento</button>
+                           <button id="hint-move" class="btn btn-primary">💡 Sugerencia de IA</button>
+                           <button id="save-game" class="btn btn-primary">💾 Guardar Partida</button>
+                           <button id="load-game" class="btn btn-primary">📂 Cargar Partida</button>
+                           <button id="export-pgn" class="btn btn-primary">📄 Exportar PGN</button>
+                       </div>
             </div>
         </div>
     </div>
