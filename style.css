@@ -393,8 +393,14 @@ header h1 {
     font-size: 0.9rem;
 }
 
-.clock-controls input {
+.clock-controls select {
     width: 100%;
+    cursor: pointer;
+}
+
+.clock-controls optgroup {
+    font-weight: 600;
+    font-style: normal;
 }
 
 .clock-player {

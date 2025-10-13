@@ -6,9 +6,10 @@ let gameMode = 'vs-ai'; // vs-ai, vs-human, puzzle
 let aiDifficulty = 'advanced';
 let boardTheme = 'classic';
 let clockEnabled = true; // Reloj siempre activado
-let timePerPlayer = 10; // minutos
-let whiteTime = 600; // segundos
-let blackTime = 600; // segundos
+let timePerPlayer = 3; // minutos (base)
+let incrementPerMove = 2; // segundos de incremento
+let whiteTime = 180; // segundos
+let blackTime = 180; // segundos
 let clockInterval = null;
 
 // Puzzles predefinidos
@@ -60,8 +61,10 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('board_theme', boardTheme);
         applyBoardTheme();
     });
-    document.getElementById('time-per-player').addEventListener('change', (e) => {
-        timePerPlayer = parseInt(e.target.value);
+    document.getElementById('time-control').addEventListener('change', (e) => {
+        const [minutes, increment] = e.target.value.split('+').map(Number);
+        timePerPlayer = minutes;
+        incrementPerMove = increment;
     });
 
     // Botones de acciones
@@ -165,7 +168,6 @@ function startNewGame() {
     }
     
     renderBoard();
-    updateGameStatus();
     updateCapturedPieces();
     updateMoveHistory();
     updateUndoButton();
@@ -223,7 +225,6 @@ function undoMove() {
     }
 
     renderBoard();
-    updateGameStatus();
     updateCapturedPieces();
     updateMoveHistory();
     updateUndoButton();
@@ -355,7 +356,6 @@ function loadGame() {
         playerColor = savedGame.playerColor;
 
         renderBoard();
-        updateGameStatus();
         updateCapturedPieces();
         updateMoveHistory();
         
@@ -555,8 +555,10 @@ function handleSquareClick(row, col) {
             const result = game.makeMove(selectedSquare.row, selectedSquare.col, row, col);
             selectedSquare = null;
             
+            // Agregar incremento al jugador que acaba de mover
+            addTimeIncrement();
+            
             renderBoard();
-            updateGameStatus();
             updateCapturedPieces();
             updateMoveHistory();
             updateUndoButton();
@@ -632,18 +634,18 @@ function highlightValidMoves(row, col) {
     });
 }
 
-function updateGameStatus() {
-    const turnElement = document.getElementById('current-turn');
-    const stateElement = document.getElementById('game-state');
+function addTimeIncrement() {
+    // Agregar incremento al jugador que acaba de hacer el movimiento
+    // El turno ya cambió, así que agregamos al jugador contrario
+    const previousPlayer = game.currentTurn === 'white' ? 'black' : 'white';
     
-    turnElement.textContent = game.currentTurn === 'white' ? 'Blancas' : 'Negras';
-    
-    if (game.gameOver) {
-        stateElement.textContent = 'Juego terminado';
-    } else if (game.isInCheck(game.currentTurn)) {
-        stateElement.textContent = '¡Jaque!';
-    } else {
-        stateElement.textContent = 'En progreso';
+    if (incrementPerMove > 0) {
+        if (previousPlayer === 'white') {
+            whiteTime += incrementPerMove;
+        } else {
+            blackTime += incrementPerMove;
+        }
+        updateClockDisplay();
     }
 }
 
@@ -699,8 +701,10 @@ async function makeClaudeMove() {
         if (move) {
             const result = game.makeMove(move.fromRow, move.fromCol, move.toRow, move.toCol);
             
+            // Agregar incremento al jugador que acaba de mover
+            addTimeIncrement();
+            
             renderBoard();
-            updateGameStatus();
             updateCapturedPieces();
             updateMoveHistory();
             
