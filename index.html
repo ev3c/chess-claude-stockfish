@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajedrez vs Claude</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>♔ Ajedrez vs Claude ♚</h1>
+            <p class="subtitle">Juega contra la inteligencia artificial</p>
+        </header>
+
+        <div class="game-container">
+            <div class="sidebar">
+                <div class="panel">
+                    <h2>Configuración</h2>
+                    <div class="config-section">
+                        <label for="api-key">API Key de Anthropic:</label>
+                        <input type="password" id="api-key" placeholder="sk-ant-...">
+                        <button id="save-key" class="btn btn-primary">Guardar API Key</button>
+                        <button id="test-key" class="btn btn-primary">Probar Conexión</button>
+                        <p class="info-text">Tu API key se guarda localmente en tu navegador</p>
+                    </div>
+                    
+                    <div class="config-section">
+                        <label>Tu Color:</label>
+                        <select id="player-color" class="select">
+                            <option value="white">Blancas</option>
+                            <option value="black">Negras</option>
+                        </select>
+                    </div>
+
+                    <button id="new-game" class="btn btn-success">Nueva Partida</button>
+                </div>
+
+                <div class="panel">
+                    <h2>Estado del Juego</h2>
+                    <div id="game-status" class="status">
+                        <p><strong>Turno:</strong> <span id="current-turn">Blancas</span></p>
+                        <p><strong>Estado:</strong> <span id="game-state">En progreso</span></p>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>Piezas Capturadas</h2>
+                    <div class="captured">
+                        <div class="captured-section">
+                            <strong>Blancas:</strong>
+                            <div id="captured-white"></div>
+                        </div>
+                        <div class="captured-section">
+                            <strong>Negras:</strong>
+                            <div id="captured-black"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>Historial de Movimientos</h2>
+                    <div id="move-history" class="move-history"></div>
+                </div>
+            </div>
+
+            <div class="board-container">
+                <div class="board-wrapper">
+                    <div class="board-with-coords">
+                        <div class="rank-labels" id="rank-labels-left"></div>
+                        <div class="board-and-files">
+                            <div id="chess-board" class="chess-board"></div>
+                            <div class="file-labels" id="file-labels-bottom"></div>
+                        </div>
+                    </div>
+                </div>
+                <div id="thinking-indicator" class="thinking-indicator" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Claude está pensando...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="chess-logic.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
+

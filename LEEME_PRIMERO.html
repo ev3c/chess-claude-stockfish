@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instrucciones - Ajedrez vs Claude</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        .alert {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 6px;
+        }
+        .alert-error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+        }
+        .alert-success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+        .step {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .step h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        .step-number {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: #667eea;
+            color: white;
+            text-align: center;
+            line-height: 30px;
+            border-radius: 50%;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        code {
+            background: #2d3748;
+            color: #68d391;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        .code-block {
+            background: #2d3748;
+            color: #68d391;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            margin: 10px 5px;
+            transition: background 0.3s;
+        }
+        .button:hover {
+            background: #5568d3;
+        }
+        .option {
+            background: white;
+            border: 2px solid #667eea;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+        }
+        .option h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        li {
+            margin: 8px 0;
+        }
+        .emoji {
+            font-size: 1.3em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>♔ Ajedrez vs Claude ♚</h1>
+        <p class="subtitle">Guía de Instalación Paso a Paso</p>
+
+        <div class="alert alert-error">
+            <h3><span class="emoji">⚠️</span> PROBLEMA DETECTADO</h3>
+            <p>Has intentado abrir <code>index.html</code> directamente y obtuviste un error de CORS:</p>
+            <p><strong>"Access to fetch... has been blocked by CORS policy"</strong></p>
+            <p>Esto es normal y tiene solución fácil.</p>
+        </div>
+
+        <div class="alert alert-success">
+            <h3><span class="emoji">✅</span> SOLUCIÓN RÁPIDA (30 segundos)</h3>
+            <p><strong>Necesitas ejecutar un servidor local. Es muy fácil:</strong></p>
+        </div>
+
+        <div class="step">
+            <h2><span class="step-number">1</span> Elige Tu Sistema Operativo</h2>
+            
+            <div class="option">
+                <h3><span class="emoji">🪟</span> WINDOWS</h3>
+                <p>Haz doble clic en el archivo:</p>
+                <div class="code-block">servidor.bat</div>
+                <p>Se abrirá una ventana y el navegador automáticamente.</p>
+            </div>
+
+            <div class="option">
+                <h3><span class="emoji">🍎</span> macOS / LINUX</h3>
+                <p>Abre la Terminal en esta carpeta y ejecuta:</p>
+                <div class="code-block">chmod +x servidor.sh<br>./servidor.sh</div>
+                <p>O simplemente haz doble clic en <code>servidor.sh</code></p>
+            </div>
+        </div>
+
+        <div class="step">
+            <h2><span class="step-number">2</span> El Servidor se Iniciará Automáticamente</h2>
+            <p>Verás un mensaje como este:</p>
+            <div class="code-block">
+✓ Servidor iniciado en: http://localhost:8000<br>
+<br>
+┌────────────────────────────────────────┐<br>
+│  ABRE TU NAVEGADOR Y VE A:             │<br>
+│  http://localhost:8000                 │<br>
+└────────────────────────────────────────┘
+            </div>
+        </div>
+
+        <div class="step">
+            <h2><span class="step-number">3</span> Abre el Navegador</h2>
+            <p>Si no se abre automáticamente, ve manualmente a:</p>
+            <div class="code-block">http://localhost:8000</div>
+            <p><strong>¡Ya no habrá errores de CORS!</strong></p>
+        </div>
+
+        <div class="alert">
+            <h3><span class="emoji">❓</span> ¿Por Qué Necesito un Servidor?</h3>
+            <p>Los navegadores modernos bloquean las peticiones a APIs externas cuando abres archivos HTML directamente (<code>file:///</code>) por razones de seguridad.</p>
+            <p>Un servidor local (aunque sea en tu propia computadora) resuelve este problema.</p>
+        </div>
+
+        <hr style="margin: 30px 0; border: none; border-top: 2px solid #e0e0e0;">
+
+        <h2 style="color: #667eea; margin-bottom: 20px;"><span class="emoji">🔧</span> Método Manual (Si los Scripts no Funcionan)</h2>
+
+        <div class="option">
+            <h3>Opción A: Python (Recomendado)</h3>
+            <p><strong>1.</strong> Verifica si tienes Python instalado:</p>
+            <div class="code-block">python --version</div>
+            <p><strong>2.</strong> Si no lo tienes, descárgalo desde: <a href="https://www.python.org/downloads/" target="_blank">python.org</a></p>
+            <p><strong>3.</strong> Abre una terminal en la carpeta del juego y ejecuta:</p>
+            <div class="code-block">python -m http.server 8000</div>
+            <p><strong>4.</strong> Abre tu navegador en: <code>http://localhost:8000</code></p>
+        </div>
+
+        <div class="option">
+            <h3>Opción B: Node.js</h3>
+            <p><strong>1.</strong> Verifica si tienes Node.js instalado:</p>
+            <div class="code-block">node --version</div>
+            <p><strong>2.</strong> Si no lo tienes, descárgalo desde: <a href="https://nodejs.org/" target="_blank">nodejs.org</a></p>
+            <p><strong>3.</strong> Ejecuta en la carpeta del juego:</p>
+            <div class="code-block">npx http-server -p 8000</div>
+            <p><strong>4.</strong> Abre tu navegador en: <code>http://localhost:8000</code></p>
+        </div>
+
+        <div class="step">
+            <h2><span class="emoji">🎯</span> Una Vez que el Servidor Esté Funcionando</h2>
+            <ol>
+                <li>Ve a <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></li>
+                <li>Obtén tu API Key</li>
+                <li>En el juego, ingresa tu API Key</li>
+                <li>Haz clic en "Probar Conexión"</li>
+                <li>Si funciona, haz clic en "Guardar API Key"</li>
+                <li>¡Comienza a jugar! ♟️</li>
+            </ol>
+        </div>
+
+        <div class="alert alert-success">
+            <h3><span class="emoji">💡</span> CONSEJO IMPORTANTE</h3>
+            <p><strong>NO cierres la ventana del servidor</strong> mientras estés jugando. Si la cierras, el juego dejará de funcionar.</p>
+            <p>Para detener el servidor cuando termines: <code>Ctrl+C</code> en la ventana del terminal.</p>
+        </div>
+
+        <hr style="margin: 30px 0; border: none; border-top: 2px solid #e0e0e0;">
+
+        <h2 style="color: #667eea; margin-bottom: 15px;">¿Necesitas Más Ayuda?</h2>
+        <p>Revisa estos archivos:</p>
+        <ul>
+            <li><strong>INSTRUCCIONES_RAPIDAS.md</strong> - Solución rápida de 1 minuto</li>
+            <li><strong>SOLUCION_PROBLEMAS.md</strong> - Guía completa de troubleshooting</li>
+            <li><strong>README.md</strong> - Documentación completa del proyecto</li>
+        </ul>
+
+        <div style="text-align: center; margin-top: 40px; padding-top: 30px; border-top: 2px solid #e0e0e0;">
+            <p style="color: #666; font-size: 0.9rem;">Creado con ❤️ para disfrutar del ajedrez con IA</p>
+        </div>
+    </div>
+</body>
+</html>
+
