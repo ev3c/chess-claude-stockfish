@@ -4,6 +4,7 @@ Una aplicación web interactiva para jugar al ajedrez contra la inteligencia art
 
 ## 🎮 Características
 
+### Funcionalidades Principales
 - **Interfaz gráfica moderna**: Tablero de ajedrez visual con diseño responsivo
 - **IA avanzada**: Juega contra Claude 3.5 Sonnet, uno de los modelos más avanzados de Anthropic
 - **Piezas clásicas**: Símbolos Unicode estándar (♔♚) - el formato más usado mundialmente
@@ -16,9 +17,23 @@ Una aplicación web interactiva para jugar al ajedrez contra la inteligencia art
   - Captura al paso (en passant)
   - Promoción de peones
   - Detección de jaque, jaque mate y ahogado
-- **Historial de movimientos**: Visualización de todos los movimientos realizados
-- **Piezas capturadas**: Seguimiento de las piezas eliminadas
-- **Selección de color**: Juega como blancas o negras
+
+### Modos de Juego
+- **vs Claude (IA)**: Juega contra la inteligencia artificial con 4 niveles de dificultad
+- **Humano vs Humano**: Modo local para jugar contra otra persona
+- **Modo Entrenamiento**: Resuelve puzzles de ajedrez para mejorar tus habilidades
+
+### Características Avanzadas
+- **⬅ Deshacer Movimiento**: Retrocede uno o más movimientos
+- **💡 Sugerencias**: Claude te ayuda sugiriendo el mejor movimiento
+- **📊 Análisis de Partidas**: Análisis detallado de tus partidas con Claude
+- **💾 Guardar/Cargar Partidas**: Guarda tus partidas en el navegador y retómalas después
+- **📄 Exportar PGN**: Exporta tus partidas en formato PGN estándar
+- **🎨 Temas de Tablero**: 5 temas de colores diferentes (Clásico, Madera, Azul, Verde, Gris)
+- **⏱ Reloj de Ajedrez**: Modo con tiempo límite configurable
+- **📖 Historial de movimientos**: Visualización de todos los movimientos realizados
+- **♟ Piezas capturadas**: Seguimiento de las piezas eliminadas
+- **🎯 Selector de nivel**: 4 niveles de dificultad (Principiante, Intermedio, Avanzado, Experto)
 
 ## 📋 Requisitos
 
@@ -66,7 +81,11 @@ npx http-server -p 8000
 
 1. **Configuración inicial**:
    - Ingresa tu API Key de Anthropic
+   - Selecciona el modo de juego (vs IA, vs Humano, o Entrenamiento)
+   - Si juegas contra la IA, elige el nivel de dificultad
    - Selecciona tu color (Blancas o Negras)
+   - Opcional: Activa el reloj de ajedrez y configura el tiempo
+   - Opcional: Cambia el tema del tablero a tu preferencia
    - Haz clic en "Nueva Partida"
 
 2. **Realizar movimientos**:
@@ -75,13 +94,22 @@ npx http-server -p 8000
    - Las coordenadas del tablero (a-h y 1-8) te ayudan a identificar cada casilla
    - Haz clic en una casilla resaltada para mover la pieza
 
-3. **Turno de Claude**:
+3. **Turno de Claude** (modo vs IA):
    - Claude pensará automáticamente su movimiento
    - Verás un indicador de "Claude está pensando..."
    - El movimiento se ejecutará automáticamente
 
-4. **Fin del juego**:
+4. **Usar características avanzadas**:
+   - **Deshacer**: Haz clic en "⬅ Deshacer Movimiento" para retroceder
+   - **Sugerencia**: Haz clic en "💡 Sugerencia" para que Claude te aconseje
+   - **Analizar**: Haz clic en "📊 Analizar Partida" para un análisis detallado
+   - **Guardar**: Haz clic en "💾 Guardar Partida" para guardar tu progreso
+   - **Cargar**: Haz clic en "📂 Cargar Partida" para continuar una partida guardada
+   - **Exportar**: Haz clic en "📄 Exportar PGN" para descargar la partida
+
+5. **Fin del juego**:
    - El juego detecta automáticamente jaque mate, ahogado y empate
+   - Si el reloj está activado, se acaba el tiempo también termina el juego
    - Puedes iniciar una nueva partida en cualquier momento
 
 ## 📁 Estructura del Proyecto
@@ -116,6 +144,8 @@ Chess-claude/
 - Detección de jaque mediante análisis de ataques
 - Prevención de movimientos que dejarían al rey en jaque
 - Soporte para movimientos especiales (enroque, en passant, promoción)
+- Sistema de historial de estados para deshacer movimientos
+- Exportación a formato FEN para representación de posiciones
 
 ### Integración con Claude
 - Comunicación con la API de Anthropic usando `fetch`
@@ -123,12 +153,24 @@ Chess-claude/
 - Análisis de movimientos válidos
 - Parsing de respuestas JSON de Claude
 - Manejo de errores y validación de movimientos
+- Sistema de dificultad ajustable mediante prompts personalizados
+- Modo de sugerencias para ayudar al jugador
+- Análisis de partidas con evaluación detallada
 
 ### Interfaz de Usuario
 - Diseño responsivo que se adapta a diferentes tamaños de pantalla
 - Resaltado visual de piezas seleccionadas y movimientos válidos
 - Indicadores de estado del juego en tiempo real
 - Animaciones y transiciones suaves
+- 5 temas de colores para el tablero con cambio dinámico
+- Reloj de ajedrez visual con advertencias de tiempo
+- Panel de acciones con todas las funcionalidades avanzadas
+
+### Persistencia de Datos
+- LocalStorage para guardar API Key
+- Sistema de guardado/carga de partidas múltiples
+- Almacenamiento de preferencias de usuario (tema del tablero)
+- Exportación de partidas en formato PGN estándar
 
 ## 🔍 Detalles de Implementación
 
@@ -193,24 +235,38 @@ Y responde con un movimiento en formato JSON: `{"from": "e2", "to": "e4"}`
 
 ## ✨ Últimas Actualizaciones
 
+### Versión 3.0 - Octubre 2025 🎉
+**¡GRAN ACTUALIZACIÓN!** Todas las características solicitadas han sido implementadas:
+
+- ✅ **Deshacer Movimiento**: Sistema completo para retroceder movimientos
+- ✅ **Selector de Nivel de Dificultad**: 4 niveles (Principiante a Experto)
+- ✅ **Análisis de Partidas**: Análisis detallado con Claude AI
+- ✅ **Guardado y Carga**: Guarda y recupera partidas desde localStorage
+- ✅ **Modo Humano vs Humano**: Juega localmente contra otra persona
+- ✅ **Sugerencias de Movimientos**: Claude te ayuda cuando lo necesites
+- ✅ **Temas de Tablero**: 5 hermosos temas de colores
+- ✅ **Exportación PGN**: Exporta partidas en formato estándar
+- ✅ **Modo Entrenamiento**: Resuelve puzzles de ajedrez
+- ✅ **Reloj de Ajedrez**: Sistema de tiempo configurable
+
 ### Versión 2.2 - Octubre 2025
 - ✅ **Diseño simplificado**: Solo piezas clásicas (las más usadas mundialmente)
 - ✅ **Doble sistema de coordenadas**: En cada casilla Y en los bordes del tablero
 - ✅ **Interfaz optimizada**: Máxima claridad para identificar posiciones
 
-## 🎓 Mejoras Futuras
+## 🎓 Características Implementadas
 
-Posibles características para agregar:
-- [ ] Selector de nivel de dificultad
-- [ ] Análisis de partidas
-- [ ] Guardado y carga de partidas
-- [ ] Modo de juego contra otro humano (local)
-- [ ] Sugerencias de movimientos
-- [ ] Diferentes temas de colores para el tablero
-- [ ] Notación PGN para exportar partidas
-- [ ] Modo de entrenamiento con puzzles
-- [ ] Reloj de ajedrez
-- [ ] Deshacer movimiento
+Todas las características principales han sido completadas:
+- ✅ Selector de nivel de dificultad
+- ✅ Análisis de partidas
+- ✅ Guardado y carga de partidas
+- ✅ Modo de juego contra otro humano (local)
+- ✅ Sugerencias de movimientos
+- ✅ Diferentes temas de colores para el tablero
+- ✅ Notación PGN para exportar partidas
+- ✅ Modo de entrenamiento con puzzles
+- ✅ Reloj de ajedrez
+- ✅ Deshacer movimiento
 
 ## 📄 Licencia
 

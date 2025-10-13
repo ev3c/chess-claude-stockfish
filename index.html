@@ -14,7 +14,7 @@
         </header>
 
         <div class="game-container">
-            <div class="sidebar">
+            <div class="sidebar sidebar-left">
                 <div class="panel">
                     <h2>Configuración</h2>
                     <div class="config-section">
@@ -26,11 +26,51 @@
                     </div>
                     
                     <div class="config-section">
+                        <label>Modo de Juego:</label>
+                        <select id="game-mode" class="select">
+                            <option value="vs-ai">vs Claude (IA)</option>
+                            <option value="vs-human">Humano vs Humano</option>
+                            <option value="puzzle">Modo Entrenamiento</option>
+                        </select>
+                    </div>
+
+                    <div class="config-section" id="ai-settings">
+                        <label>Nivel de Dificultad IA:</label>
+                        <select id="ai-difficulty" class="select">
+                            <option value="beginner">Principiante</option>
+                            <option value="intermediate">Intermedio</option>
+                            <option value="advanced">Avanzado</option>
+                            <option value="expert">Experto</option>
+                        </select>
+                    </div>
+                    
+                    <div class="config-section">
                         <label>Tu Color:</label>
                         <select id="player-color" class="select">
                             <option value="white">Blancas</option>
                             <option value="black">Negras</option>
                         </select>
+                    </div>
+
+                    <div class="config-section">
+                        <label>Tema del Tablero:</label>
+                        <select id="board-theme" class="select">
+                            <option value="classic">Clásico</option>
+                            <option value="wood">Madera</option>
+                            <option value="blue">Azul</option>
+                            <option value="green">Verde</option>
+                            <option value="gray">Gris</option>
+                        </select>
+                    </div>
+
+                    <div class="config-section">
+                        <label>
+                            <input type="checkbox" id="enable-clock"> Reloj de Ajedrez
+                        </label>
+                        <div id="clock-settings" style="display: none; margin-top: 10px;">
+                            <label for="time-per-player">Minutos por jugador:</label>
+                            <input type="number" id="time-per-player" min="1" max="60" value="10" class="select">
+                        </div>
                     </div>
 
                     <button id="new-game" class="btn btn-success">Nueva Partida</button>
@@ -41,6 +81,16 @@
                     <div id="game-status" class="status">
                         <p><strong>Turno:</strong> <span id="current-turn">Blancas</span></p>
                         <p><strong>Estado:</strong> <span id="game-state">En progreso</span></p>
+                    </div>
+                    <div id="chess-clock" class="chess-clock" style="display: none;">
+                        <div class="clock-player">
+                            <div class="clock-label">Blancas</div>
+                            <div class="clock-time" id="white-time">10:00</div>
+                        </div>
+                        <div class="clock-player">
+                            <div class="clock-label">Negras</div>
+                            <div class="clock-time" id="black-time">10:00</div>
+                        </div>
                     </div>
                 </div>
 
@@ -77,6 +127,18 @@
                 <div id="thinking-indicator" class="thinking-indicator" style="display: none;">
                     <div class="spinner"></div>
                     <p>Claude está pensando...</p>
+                </div>
+            </div>
+
+            <div class="sidebar sidebar-right">
+                <div class="panel">
+                    <h2>Acciones</h2>
+                    <button id="undo-move" class="btn btn-primary">⬅ Deshacer Movimiento</button>
+                    <button id="hint-move" class="btn btn-primary">💡 Sugerencia</button>
+                    <button id="analyze-game" class="btn btn-primary">📊 Analizar Partida</button>
+                    <button id="save-game" class="btn btn-primary">💾 Guardar Partida</button>
+                    <button id="load-game" class="btn btn-primary">📂 Cargar Partida</button>
+                    <button id="export-pgn" class="btn btn-primary">📄 Exportar PGN</button>
                 </div>
             </div>
         </div>

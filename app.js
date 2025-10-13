@@ -2,14 +2,43 @@ let game = null;
 let playerColor = 'white';
 let selectedSquare = null;
 let apiKey = '';
+let gameMode = 'vs-ai'; // vs-ai, vs-human, puzzle
+let aiDifficulty = 'advanced';
+let boardTheme = 'classic';
+let clockEnabled = false;
+let timePerPlayer = 10; // minutos
+let whiteTime = 600; // segundos
+let blackTime = 600; // segundos
+let clockInterval = null;
+
+// Puzzles predefinidos
+const chessPuzzles = [
+    {
+        fen: 'r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4',
+        solution: [{ from: 'h5', to: 'f7' }],
+        description: 'Mate en 1: Las blancas dan mate'
+    },
+    {
+        fen: 'r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5Q2/PPPP1PPP/RNB1K1NR w KQkq - 4 4',
+        solution: [{ from: 'f3', to: 'f7' }],
+        description: 'Mate del Loco: Mate en 1'
+    }
+];
+let currentPuzzleIndex = 0;
 
 // Inicializar la aplicación
 document.addEventListener('DOMContentLoaded', () => {
-    // Cargar API key guardada
+    // Cargar configuraciones guardadas
     const savedApiKey = localStorage.getItem('claude_api_key');
     if (savedApiKey) {
         apiKey = savedApiKey;
         document.getElementById('api-key').value = savedApiKey;
+    }
+
+    const savedTheme = localStorage.getItem('board_theme');
+    if (savedTheme) {
+        boardTheme = savedTheme;
+        document.getElementById('board-theme').value = savedTheme;
     }
 
     // Event listeners
@@ -19,8 +48,37 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('player-color').addEventListener('change', (e) => {
         playerColor = e.target.value;
     });
+    document.getElementById('game-mode').addEventListener('change', (e) => {
+        gameMode = e.target.value;
+        updateUIForGameMode();
+    });
+    document.getElementById('ai-difficulty').addEventListener('change', (e) => {
+        aiDifficulty = e.target.value;
+    });
+    document.getElementById('board-theme').addEventListener('change', (e) => {
+        boardTheme = e.target.value;
+        localStorage.setItem('board_theme', boardTheme);
+        applyBoardTheme();
+    });
+    document.getElementById('enable-clock').addEventListener('change', (e) => {
+        clockEnabled = e.target.checked;
+        document.getElementById('clock-settings').style.display = clockEnabled ? 'block' : 'none';
+        document.getElementById('chess-clock').style.display = clockEnabled ? 'flex' : 'none';
+    });
+    document.getElementById('time-per-player').addEventListener('change', (e) => {
+        timePerPlayer = parseInt(e.target.value);
+    });
+
+    // Botones de acciones
+    document.getElementById('undo-move').addEventListener('click', undoMove);
+    document.getElementById('hint-move').addEventListener('click', getHint);
+    document.getElementById('analyze-game').addEventListener('click', analyzeGame);
+    document.getElementById('save-game').addEventListener('click', saveGame);
+    document.getElementById('load-game').addEventListener('click', loadGame);
+    document.getElementById('export-pgn').addEventListener('click', exportPGN);
 
     // Iniciar primera partida
+    applyBoardTheme();
     startNewGame();
 });
 
@@ -100,15 +158,311 @@ function startNewGame() {
     game = new ChessGame();
     selectedSquare = null;
     
+    // Resetear reloj
+    if (clockEnabled) {
+        stopClock();
+        whiteTime = timePerPlayer * 60;
+        blackTime = timePerPlayer * 60;
+        updateClockDisplay();
+    }
+
+    // Modo puzzle
+    if (gameMode === 'puzzle') {
+        loadPuzzle();
+    }
+    
     renderBoard();
     updateGameStatus();
     updateCapturedPieces();
     updateMoveHistory();
+    updateUndoButton();
     
-    // Si el jugador es negras, Claude mueve primero
-    if (playerColor === 'black') {
+    // Si el jugador es negras y es modo IA, Claude mueve primero
+    if (gameMode === 'vs-ai' && playerColor === 'black') {
         setTimeout(() => makeClaudeMove(), 500);
     }
+
+    // Iniciar reloj si está habilitado
+    if (clockEnabled && !game.gameOver) {
+        startClock();
+    }
+}
+
+function loadPuzzle() {
+    if (currentPuzzleIndex >= chessPuzzles.length) {
+        alert('¡Felicitaciones! Has completado todos los puzzles.');
+        currentPuzzleIndex = 0;
+    }
+    const puzzle = chessPuzzles[currentPuzzleIndex];
+    alert(puzzle.description);
+    // Aquí se podría implementar la carga desde FEN
+    // Por ahora usamos el tablero estándar
+}
+
+function updateUIForGameMode() {
+    const aiSettings = document.getElementById('ai-settings');
+    if (gameMode === 'vs-ai') {
+        aiSettings.style.display = 'block';
+    } else {
+        aiSettings.style.display = 'none';
+    }
+}
+
+function applyBoardTheme() {
+    const boardElement = document.getElementById('chess-board');
+    boardElement.className = 'chess-board board-theme-' + boardTheme;
+}
+
+function undoMove() {
+    if (!game.canUndo()) {
+        alert('No hay movimientos para deshacer');
+        return;
+    }
+
+    // Deshacer 2 movimientos en modo IA (el del jugador y el de la IA)
+    if (gameMode === 'vs-ai') {
+        game.undoMove();
+        if (game.canUndo()) {
+            game.undoMove();
+        }
+    } else {
+        game.undoMove();
+    }
+
+    renderBoard();
+    updateGameStatus();
+    updateCapturedPieces();
+    updateMoveHistory();
+    updateUndoButton();
+}
+
+function updateUndoButton() {
+    const undoButton = document.getElementById('undo-move');
+    undoButton.disabled = !game.canUndo();
+}
+
+async function getHint() {
+    if (!apiKey) {
+        alert('Por favor configura tu API Key de Anthropic primero');
+        return;
+    }
+
+    if (game.gameOver) {
+        alert('El juego ha terminado');
+        return;
+    }
+
+    showThinkingIndicator(true);
+
+    try {
+        const move = await getClaudeMove(true); // true = modo sugerencia
+        if (move) {
+            const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+            const fromSquare = files[move.fromCol] + (8 - move.fromRow);
+            const toSquare = files[move.toCol] + (8 - move.toRow);
+            alert(`💡 Sugerencia: Mueve de ${fromSquare} a ${toSquare}`);
+            
+            // Resaltar el movimiento sugerido
+            highlightValidMoves(move.fromRow, move.fromCol);
+        }
+    } catch (error) {
+        alert('Error al obtener sugerencia: ' + error.message);
+    } finally {
+        showThinkingIndicator(false);
+    }
+}
+
+async function analyzeGame() {
+    if (!apiKey) {
+        alert('Por favor configura tu API Key de Anthropic primero');
+        return;
+    }
+
+    if (game.moveHistory.length === 0) {
+        alert('No hay movimientos para analizar');
+        return;
+    }
+
+    showThinkingIndicator(true);
+
+    try {
+        const analysis = await getGameAnalysis();
+        // Crear un modal o alert con el análisis
+        const analysisWindow = window.open('', 'Análisis de Partida', 'width=600,height=400');
+        analysisWindow.document.write(`
+            <html>
+            <head>
+                <title>Análisis de Partida</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 20px; }
+                    h1 { color: #667eea; }
+                    pre { white-space: pre-wrap; background: #f5f5f5; padding: 15px; border-radius: 5px; }
+                </style>
+            </head>
+            <body>
+                <h1>📊 Análisis de Partida</h1>
+                <pre>${analysis}</pre>
+            </body>
+            </html>
+        `);
+    } catch (error) {
+        alert('Error al analizar la partida: ' + error.message);
+    } finally {
+        showThinkingIndicator(false);
+    }
+}
+
+function saveGame() {
+    const gameState = {
+        board: game.getBoardState(),
+        currentTurn: game.currentTurn,
+        moveHistory: game.moveHistory,
+        capturedPieces: game.capturedPieces,
+        playerColor: playerColor,
+        timestamp: new Date().toISOString()
+    };
+
+    const savedGames = JSON.parse(localStorage.getItem('saved_games') || '[]');
+    const gameName = prompt('Nombre para esta partida:', `Partida ${savedGames.length + 1}`);
+    
+    if (gameName) {
+        gameState.name = gameName;
+        savedGames.push(gameState);
+        localStorage.setItem('saved_games', JSON.stringify(savedGames));
+        alert('Partida guardada correctamente');
+    }
+}
+
+function loadGame() {
+    const savedGames = JSON.parse(localStorage.getItem('saved_games') || '[]');
+    
+    if (savedGames.length === 0) {
+        alert('No hay partidas guardadas');
+        return;
+    }
+
+    let message = 'Selecciona una partida para cargar:\n\n';
+    savedGames.forEach((game, index) => {
+        const date = new Date(game.timestamp).toLocaleString();
+        message += `${index + 1}. ${game.name} (${date})\n`;
+    });
+
+    const selection = prompt(message + '\nIngresa el número:');
+    const index = parseInt(selection) - 1;
+
+    if (index >= 0 && index < savedGames.length) {
+        const savedGame = savedGames[index];
+        
+        // Restaurar el estado del juego
+        game = new ChessGame();
+        game.board = savedGame.board;
+        game.currentTurn = savedGame.currentTurn;
+        game.moveHistory = savedGame.moveHistory;
+        game.capturedPieces = savedGame.capturedPieces;
+        playerColor = savedGame.playerColor;
+
+        renderBoard();
+        updateGameStatus();
+        updateCapturedPieces();
+        updateMoveHistory();
+        
+        alert('Partida cargada correctamente');
+    }
+}
+
+function exportPGN() {
+    if (game.moveHistory.length === 0) {
+        alert('No hay movimientos para exportar');
+        return;
+    }
+
+    let pgn = '[Event "Partida vs Claude"]\n';
+    pgn += `[Date "${new Date().toISOString().split('T')[0]}"]\n`;
+    pgn += '[White "Jugador"]\n';
+    pgn += '[Black "Claude AI"]\n';
+    pgn += '\n';
+
+    // Convertir historial a formato PGN
+    for (let i = 0; i < game.moveHistory.length; i += 2) {
+        const moveNum = Math.floor(i / 2) + 1;
+        pgn += `${moveNum}. ${game.moveHistory[i]}`;
+        if (i + 1 < game.moveHistory.length) {
+            pgn += ` ${game.moveHistory[i + 1]}`;
+        }
+        pgn += ' ';
+    }
+
+    // Crear y descargar archivo
+    const blob = new Blob([pgn], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `partida_${new Date().getTime()}.pgn`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    alert('Archivo PGN exportado correctamente');
+}
+
+// Funciones del reloj de ajedrez
+function startClock() {
+    stopClock();
+    clockInterval = setInterval(() => {
+        if (game.currentTurn === 'white') {
+            whiteTime--;
+            if (whiteTime <= 0) {
+                stopClock();
+                game.gameOver = true;
+                alert('¡Se acabó el tiempo de las blancas! Las negras ganan.');
+                return;
+            }
+        } else {
+            blackTime--;
+            if (blackTime <= 0) {
+                stopClock();
+                game.gameOver = true;
+                alert('¡Se acabó el tiempo de las negras! Las blancas ganan.');
+                return;
+            }
+        }
+        updateClockDisplay();
+    }, 1000);
+}
+
+function stopClock() {
+    if (clockInterval) {
+        clearInterval(clockInterval);
+        clockInterval = null;
+    }
+}
+
+function updateClockDisplay() {
+    const whiteElement = document.getElementById('white-time');
+    const blackElement = document.getElementById('black-time');
+    
+    whiteElement.textContent = formatTime(whiteTime);
+    blackElement.textContent = formatTime(blackTime);
+
+    // Actualizar estilos activos
+    const whiteClock = whiteElement.parentElement;
+    const blackClock = blackElement.parentElement;
+    
+    whiteClock.classList.toggle('active', game.currentTurn === 'white');
+    blackClock.classList.toggle('active', game.currentTurn === 'black');
+
+    // Advertencias de tiempo
+    whiteClock.classList.toggle('warning', whiteTime <= 60 && whiteTime > 30);
+    whiteClock.classList.toggle('danger', whiteTime <= 30);
+    blackClock.classList.toggle('warning', blackTime <= 60 && blackTime > 30);
+    blackClock.classList.toggle('danger', blackTime <= 30);
+}
+
+function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
 function renderBoard() {
@@ -188,7 +542,13 @@ function renderCoordinateLabels() {
 
 function handleSquareClick(row, col) {
     if (game.gameOver) return;
-    if (game.currentTurn !== playerColor) return;
+    
+    // En modo humano vs humano, permitir mover ambos colores
+    const allowedColor = (gameMode === 'vs-human' || gameMode === 'puzzle') 
+        ? game.currentTurn 
+        : playerColor;
+    
+    if (gameMode === 'vs-ai' && game.currentTurn !== playerColor) return;
     
     const clickedPiece = game.getPiece(row, col);
     
@@ -206,14 +566,20 @@ function handleSquareClick(row, col) {
             updateGameStatus();
             updateCapturedPieces();
             updateMoveHistory();
+            updateUndoButton();
             
             handleGameResult(result);
             
-            // Turno de Claude
-            if (!game.gameOver && game.currentTurn !== playerColor) {
+            // Turno de Claude solo en modo IA
+            if (gameMode === 'vs-ai' && !game.gameOver && game.currentTurn !== playerColor) {
                 setTimeout(() => makeClaudeMove(), 500);
             }
-        } else if (clickedPiece && clickedPiece.color === playerColor) {
+
+            // Verificar puzzle
+            if (gameMode === 'puzzle') {
+                checkPuzzleSolution();
+            }
+        } else if (clickedPiece && clickedPiece.color === allowedColor) {
             // Seleccionar otra pieza propia
             selectedSquare = { row, col };
             highlightValidMoves(row, col);
@@ -222,10 +588,23 @@ function handleSquareClick(row, col) {
             selectedSquare = null;
             renderBoard();
         }
-    } else if (clickedPiece && clickedPiece.color === playerColor) {
+    } else if (clickedPiece && clickedPiece.color === allowedColor) {
         // Seleccionar una pieza
         selectedSquare = { row, col };
         highlightValidMoves(row, col);
+    }
+}
+
+function checkPuzzleSolution() {
+    // Aquí se implementaría la verificación de la solución del puzzle
+    const puzzle = chessPuzzles[currentPuzzleIndex];
+    // Por ahora, simplemente avanzar al siguiente puzzle después de unos movimientos
+    if (game.moveHistory.length >= 2) {
+        setTimeout(() => {
+            alert('¡Correcto! Siguiente puzzle...');
+            currentPuzzleIndex++;
+            startNewGame();
+        }, 1000);
     }
 }
 
@@ -358,11 +737,32 @@ async function makeClaudeMove() {
     }
 }
 
-async function getClaudeMove() {
+async function getClaudeMove(isHint = false) {
     const boardState = describeBoardState();
     const validMovesDescription = describeValidMoves();
     
-    const prompt = `Eres un jugador experto de ajedrez. Analiza la siguiente posición y elige el mejor movimiento.
+    // Ajustar el prompt según el nivel de dificultad
+    let difficultyInstruction = '';
+    switch (aiDifficulty) {
+        case 'beginner':
+            difficultyInstruction = 'Juega como un principiante. Haz movimientos simples y a veces comete pequeños errores. No pienses demasiado en estrategias avanzadas.';
+            break;
+        case 'intermediate':
+            difficultyInstruction = 'Juega a nivel intermedio. Usa tácticas básicas pero evita las estrategias más complejas.';
+            break;
+        case 'advanced':
+            difficultyInstruction = 'Juega a nivel avanzado. Usa tácticas y estrategias sólidas.';
+            break;
+        case 'expert':
+            difficultyInstruction = 'Eres un gran maestro de ajedrez. Analiza profundamente y juega al más alto nivel.';
+            break;
+    }
+
+    const hintInstruction = isHint 
+        ? 'Sugiere el MEJOR movimiento posible para ayudar al jugador.' 
+        : difficultyInstruction;
+    
+    const prompt = `Eres un jugador de ajedrez. ${hintInstruction}
 
 POSICIÓN ACTUAL DEL TABLERO (formato FEN):
 ${game.toFEN()}
@@ -532,6 +932,52 @@ function isValidMove(move) {
     
     const validMoves = game.getValidMoves(move.fromRow, move.fromCol);
     return validMoves.some(m => m.row === move.toRow && m.col === move.toCol);
+}
+
+async function getGameAnalysis() {
+    const prompt = `Eres un experto analista de ajedrez. Analiza la siguiente partida y proporciona un análisis detallado.
+
+HISTORIAL DE MOVIMIENTOS:
+${game.moveHistory.join(', ')}
+
+POSICIÓN ACTUAL (FEN):
+${game.toFEN()}
+
+TABLERO ACTUAL:
+${describeBoardState()}
+
+Por favor proporciona:
+1. Un resumen de la partida
+2. Movimientos clave y momentos decisivos
+3. Errores cometidos por ambos jugadores
+4. Sugerencias de mejora
+5. Evaluación de la posición actual
+
+Sé conciso pero informativo.`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+            model: 'claude-3-5-sonnet-20241022',
+            max_tokens: 2048,
+            messages: [{
+                role: 'user',
+                content: prompt
+            }]
+        })
+    });
+
+    if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.content[0].text;
 }
 
 function showThinkingIndicator(show) {

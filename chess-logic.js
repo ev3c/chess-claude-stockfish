@@ -27,6 +27,8 @@ class ChessGame {
             white: { kingside: true, queenside: true },
             black: { kingside: true, queenside: true }
         };
+        this.boardHistory = []; // Para deshacer movimientos
+        this.gameStateHistory = []; // Para guardar estados completos
     }
 
     initializeBoard() {
@@ -400,6 +402,9 @@ class ChessGame {
 
         if (!move) return false;
 
+        // Guardar estado completo antes del movimiento
+        this.saveGameState();
+
         // Guardar en historial
         const notation = this.getMoveNotation(fromRow, fromCol, toRow, toCol, piece, capturedPiece);
         this.moveHistory.push(notation);
@@ -538,6 +543,36 @@ class ChessGame {
         };
         const char = chars[piece.type];
         return piece.color === 'white' ? char.toUpperCase() : char;
+    }
+
+    saveGameState() {
+        this.gameStateHistory.push({
+            board: JSON.parse(JSON.stringify(this.board)),
+            currentTurn: this.currentTurn,
+            capturedPieces: JSON.parse(JSON.stringify(this.capturedPieces)),
+            enPassantTarget: this.enPassantTarget ? { ...this.enPassantTarget } : null,
+            castlingRights: JSON.parse(JSON.stringify(this.castlingRights)),
+            gameOver: this.gameOver
+        });
+    }
+
+    undoMove() {
+        if (this.gameStateHistory.length === 0) return false;
+
+        const previousState = this.gameStateHistory.pop();
+        this.board = previousState.board;
+        this.currentTurn = previousState.currentTurn;
+        this.capturedPieces = previousState.capturedPieces;
+        this.enPassantTarget = previousState.enPassantTarget;
+        this.castlingRights = previousState.castlingRights;
+        this.gameOver = previousState.gameOver;
+        this.moveHistory.pop();
+
+        return true;
+    }
+
+    canUndo() {
+        return this.gameStateHistory.length > 0;
     }
 }
 
