@@ -669,7 +669,141 @@ header h1 {
     }
 }
 
-@media (max-width: 600px) {
+/* Media query para smartphone horizontal (landscape) - usar visualización desktop */
+@media (max-height: 700px) and (orientation: landscape) and (min-width: 600px) {
+    body {
+        padding: 10px;
+    }
+
+    header h1 {
+        font-size: 1.8rem;
+        margin-bottom: 5px;
+    }
+
+    .subtitle {
+        font-size: 0.9rem;
+    }
+
+    header {
+        margin-bottom: 15px;
+    }
+
+    .stockfish-status {
+        font-size: 0.8rem;
+        padding: 6px 12px;
+        margin-top: 5px;
+    }
+
+    /* Mantener layout desktop de 3 columnas */
+    .game-container {
+        display: flex;
+        flex-direction: row;
+        gap: 15px;
+        align-items: flex-start;
+        justify-content: center;
+    }
+
+    .sidebar {
+        flex: 0 0 220px;
+        order: initial;
+    }
+
+    .sidebar-left {
+        order: 1;
+    }
+
+    .board-container {
+        order: 2;
+    }
+
+    .sidebar-right {
+        order: 3;
+    }
+
+    /* Tablero tamaño medio */
+    .chess-board {
+        grid-template-columns: repeat(8, 50px);
+        grid-template-rows: repeat(8, 50px);
+    }
+    
+    .square {
+        width: 50px;
+        height: 50px;
+        font-size: 2.2rem;
+    }
+    
+    .rank-labels {
+        height: 400px;
+    }
+    
+    .rank-label {
+        height: 50px;
+        font-size: 0.85rem;
+    }
+    
+    .file-labels {
+        width: 400px;
+    }
+    
+    .file-label {
+        width: 50px;
+        font-size: 0.85rem;
+    }
+
+    /* Paneles más compactos */
+    .panel {
+        padding: 12px;
+    }
+
+    .panel h2 {
+        font-size: 1rem;
+        margin-bottom: 10px;
+    }
+
+    .config-section {
+        margin-bottom: 12px;
+    }
+
+    .btn {
+        padding: 8px;
+        font-size: 0.85rem;
+        margin-top: 6px;
+    }
+
+    /* Navegador de movimientos compacto */
+    .move-navigator {
+        padding: 8px;
+        gap: 6px;
+        max-width: 400px;
+    }
+    
+    .nav-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+    }
+    
+    .move-item {
+        font-size: 0.8rem;
+        padding: 4px 8px;
+    }
+
+    /* Reloj compacto */
+    .clock-time {
+        font-size: 1.2rem;
+    }
+
+    .clock-player {
+        padding: 8px;
+    }
+
+    .clock-label {
+        font-size: 0.75rem;
+    }
+}
+
+/* Media query SOLO para smartphone vertical (portrait) */
+@media (max-width: 600px) and (orientation: portrait) {
     header h1 {
         font-size: 2rem;
     }

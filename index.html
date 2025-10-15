@@ -10,8 +10,8 @@
     <div class="container">
         <header>
             <h1>♔ Ajedrez con IA ♚</h1>
-            <p class="subtitle">Juega contra el motor Stockfish</p>
-            <p id="stockfish-status" class="stockfish-status">⏳ Cargando motor Stockfish...</p>
+            <p class="subtitle">Juega contra un motor de ajedrez avanzado</p>
+            <p id="stockfish-status" class="stockfish-status">⏳ Cargando motor...</p>
         </header>
 
         <div class="game-container">
@@ -21,7 +21,7 @@
                     <div class="config-section">
                         <label>Modo de Juego:</label>
                            <select id="game-mode" class="select">
-                               <option value="vs-ai">vs IA (Stockfish)</option>
+                               <option value="vs-ai">vs IA</option>
                                <option value="vs-human">Humano vs Humano</option>
                                <option value="puzzle">Modo Entrenamiento</option>
                            </select>
@@ -155,7 +155,6 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/stockfish.js@10.0.2/stockfish.js"></script>
     <script src="chess-logic.js"></script>
     <script src="app.js"></script>
 </body>
