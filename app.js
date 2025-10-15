@@ -14,8 +14,10 @@ let lastMoveSquares = { from: null, to: null }; // Guardar último movimiento pa
 let currentMoveIndex = -1; // Índice del movimiento actual en visualización (-1 = posición actual)
 let gameStateSnapshots = []; // Estados del juego en cada movimiento
 
-// Lichess API
-let lichessReady = true; // API siempre disponible
+// Motor Stockfish
+let stockfish = null;
+let stockfishReady = false;
+let pendingMove = null;
 
 // Puzzles predefinidos
 const chessPuzzles = [
@@ -32,16 +34,75 @@ const chessPuzzles = [
 ];
 let currentPuzzleIndex = 0;
 
-// Inicializar motor (API de Lichess)
-async function initLichess() {
+// Inicializar motor Stockfish
+async function initStockfish() {
     try {
-        showStatus('✅ Motor Lichess listo', true, false);
-        console.log('✅ Usando API de Lichess - siempre disponible');
-        lichessReady = true;
+        showStatus('⏳ Inicializando motor Stockfish...', false, false);
+        console.log('Inicializando Stockfish...');
+        
+        // Crear instancia de Stockfish
+        if (typeof STOCKFISH === 'function') {
+            stockfish = STOCKFISH();
+        } else if (typeof Stockfish === 'function') {
+            stockfish = new Stockfish();
+        } else {
+            throw new Error('Stockfish no está disponible');
+        }
+        
+        // Configurar event listeners
+        stockfish.onmessage = function(event) {
+            const message = event.data || event;
+            console.log('Stockfish:', message);
+            
+            // Detectar cuando Stockfish está listo
+            if (message === 'uciok') {
+                stockfishReady = true;
+                showStatus('✅ Motor Stockfish listo', true, false);
+                console.log('✅ Stockfish inicializado correctamente');
+            }
+            
+            // Capturar el mejor movimiento
+            if (message.startsWith('bestmove')) {
+                const match = message.match(/bestmove\s+(\w+)/);
+                if (match && pendingMove) {
+                    const bestMove = match[1];
+                    console.log('Mejor movimiento recibido:', bestMove);
+                    pendingMove.resolve(bestMove);
+                    pendingMove = null;
+                }
+            }
+        };
+        
+        // Inicializar Stockfish con comandos UCI
+        stockfish.postMessage('uci');
+        
+        // Esperar a que esté listo (máximo 5 segundos)
+        await waitForStockfish();
+        
     } catch (error) {
-        console.error('Error al inicializar:', error);
-        showStatus('⚠️ Motor en modo local', false, false);
+        console.error('Error al inicializar Stockfish:', error);
+        showStatus('❌ Error al cargar Stockfish', false, true);
+        stockfishReady = false;
     }
+}
+
+// Esperar a que Stockfish esté listo
+function waitForStockfish() {
+    return new Promise((resolve, reject) => {
+        let attempts = 0;
+        const maxAttempts = 50;
+        
+        const checkReady = setInterval(() => {
+            attempts++;
+            if (stockfishReady) {
+                clearInterval(checkReady);
+                resolve();
+            } else if (attempts >= maxAttempts) {
+                clearInterval(checkReady);
+                reject(new Error('Timeout esperando Stockfish'));
+            }
+        }, 100);
+    });
 }
 
 function showStatus(message, isReady = false, isError = false) {
@@ -58,42 +119,60 @@ function showStatus(message, isReady = false, isError = false) {
     }
 }
 
-// Función para obtener el mejor movimiento usando Lichess API
-async function getLichessBestMove() {
+// Función para obtener el mejor movimiento usando Stockfish
+async function getStockfishBestMove() {
+    if (!stockfishReady || !stockfish) {
+        console.log('Stockfish no está listo, usando análisis local');
+        return await getLocalBestMove();
+    }
+    
     try {
         const fen = game.toFEN();
-        console.log('Obteniendo movimiento de Lichess para FEN:', fen);
+        console.log('Solicitando movimiento a Stockfish para FEN:', fen);
         
-        // Usar la API de Lichess Cloud Eval
-        const response = await fetch(`https://lichess.org/api/cloud-eval?fen=${encodeURIComponent(fen)}&multiPv=1`, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json'
-            }
+        // Configurar Stockfish según el nivel de dificultad
+        const skillLevel = Math.min(20, Math.max(0, aiDifficulty));
+        const thinkTime = calculateThinkTime(aiDifficulty);
+        
+        // Configurar nivel de habilidad
+        stockfish.postMessage(`setoption name Skill Level value ${skillLevel}`);
+        
+        // Enviar posición
+        stockfish.postMessage(`position fen ${fen}`);
+        
+        // Solicitar análisis
+        stockfish.postMessage(`go movetime ${thinkTime}`);
+        
+        // Crear promesa para esperar el resultado
+        return await new Promise((resolve, reject) => {
+            pendingMove = { resolve, reject };
+            
+            // Timeout de seguridad (15 segundos)
+            setTimeout(() => {
+                if (pendingMove) {
+                    console.log('Timeout esperando Stockfish, usando análisis local');
+                    pendingMove = null;
+                    resolve(getLocalBestMove());
+                }
+            }, 15000);
         });
         
-        if (!response.ok) {
-            throw new Error(`Lichess API error: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log('Respuesta de Lichess:', data);
-        
-        // Obtener el mejor movimiento de la respuesta
-        if (data.pvs && data.pvs.length > 0 && data.pvs[0].moves) {
-            const bestMove = data.pvs[0].moves.split(' ')[0];
-            console.log('Mejor movimiento:', bestMove);
-            return bestMove;
-        }
-        
-        // Si no hay análisis en la nube, hacer un análisis simple local
-        return await getLocalBestMove();
-        
     } catch (error) {
-        console.error('Error al obtener movimiento de Lichess:', error);
+        console.error('Error al obtener movimiento de Stockfish:', error);
         // Fallback a análisis local
         return await getLocalBestMove();
     }
+}
+
+// Calcular tiempo de pensamiento según nivel de dificultad
+function calculateThinkTime(difficulty) {
+    // Tiempo en milisegundos
+    if (difficulty <= 3) return 100;      // Muy rápido para niveles bajos
+    if (difficulty <= 5) return 200;      // Rápido
+    if (difficulty <= 8) return 500;      // Moderado
+    if (difficulty <= 12) return 1000;    // 1 segundo
+    if (difficulty <= 16) return 2000;    // 2 segundos
+    return 3000;                          // 3 segundos para nivel máximo
 }
 
 // Valores de las piezas
@@ -517,8 +596,8 @@ function getPositionBonus(pieceType, row, col, color) {
 
 // Inicializar la aplicación
 document.addEventListener('DOMContentLoaded', () => {
-    // Inicializar motor Lichess
-    initLichess();
+    // Inicializar motor Stockfish
+    initStockfish();
 
     // Cargar configuraciones guardadas
     const savedTheme = localStorage.getItem('board_theme');
@@ -571,7 +650,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Función para obtener movimientos de la IA
 async function getAIMove() {
-    return await getLichessBestMove();
+    return await getStockfishBestMove();
 }
 
 function startNewGame() {

@@ -1,12 +1,12 @@
 # ♔ Ajedrez con IA ♚
 
-Una aplicación web interactiva para jugar al ajedrez contra el motor de Lichess (Stockfish).
+Una aplicación web interactiva para jugar al ajedrez contra el motor Stockfish.
 
 ## 🎮 Características
 
 ### Funcionalidades Principales
 - **Interfaz gráfica moderna**: Tablero de ajedrez visual con diseño responsivo
-- **IA avanzada**: Juega contra el motor de Lichess, basado en Stockfish, el motor de ajedrez más potente del mundo
+- **IA avanzada**: Juega contra Stockfish, el motor de ajedrez más potente del mundo, ejecutándose directamente en tu navegador
 - **Piezas clásicas**: Símbolos Unicode estándar (♔♚) - el formato más usado mundialmente
 - **Doble sistema de coordenadas**: 
   - Coordenadas en cada casilla (esquina superior derecha)
@@ -19,7 +19,7 @@ Una aplicación web interactiva para jugar al ajedrez contra el motor de Lichess
   - Detección de jaque, jaque mate y ahogado
 
 ### Modos de Juego
-- **vs IA (Lichess)**: Juega contra el motor de ajedrez con múltiples niveles de dificultad (1-20)
+- **vs IA (Stockfish)**: Juega contra el motor de ajedrez con múltiples niveles de dificultad (1-20)
 - **Humano vs Humano**: Modo local para jugar contra otra persona
 - **Modo Entrenamiento**: Resuelve puzzles de ajedrez para mejorar tus habilidades
 
@@ -37,7 +37,7 @@ Una aplicación web interactiva para jugar al ajedrez contra el motor de Lichess
 ## 📋 Requisitos
 
 - Un navegador web moderno (Chrome, Firefox, Edge, Safari)
-- Conexión a internet (para usar la API de Lichess)
+- No requiere instalación adicional ni conexión a internet (Stockfish se ejecuta en el navegador)
 
 ## 🚀 Instalación
 
@@ -60,7 +60,7 @@ python -m http.server 8000
 npx http-server -p 8000
 ```
 
-**¿Por qué un servidor?** Por seguridad, los navegadores bloquean las peticiones API cuando abres archivos HTML directamente. El servidor local resuelve este problema.
+**¿Por qué un servidor?** Por seguridad, los navegadores tienen restricciones al abrir archivos HTML directamente. El servidor local resuelve este problema y garantiza el funcionamiento correcto.
 
 📖 **Si tienes problemas:** Abre `LEEME_PRIMERO.html` para instrucciones visuales paso a paso.
 
@@ -81,7 +81,7 @@ npx http-server -p 8000
    - Haz clic en una casilla resaltada para mover la pieza
 
 3. **Turno de la IA** (modo vs IA):
-   - La IA pensará automáticamente su movimiento usando el motor de Lichess
+   - La IA pensará automáticamente su movimiento usando el motor Stockfish
    - Verás un indicador mientras la IA está calculando
    - El movimiento se ejecutará automáticamente
 
@@ -118,8 +118,8 @@ Chess-claude/
 
 - **HTML5**: Estructura de la aplicación
 - **CSS3**: Diseño moderno con gradientes y animaciones
-- **JavaScript (Vanilla)**: Lógica del juego y comunicación con la API
-- **Lichess Cloud Eval API**: Motor de ajedrez basado en Stockfish para análisis y movimientos
+- **JavaScript (Vanilla)**: Lógica del juego y comunicación con el motor
+- **Stockfish.js**: Motor de ajedrez Stockfish compilado a JavaScript/WebAssembly para ejecución en el navegador
 
 ## 🎨 Características Técnicas
 
@@ -132,14 +132,14 @@ Chess-claude/
 - Sistema de historial de estados para deshacer movimientos
 - Exportación a formato FEN para representación de posiciones
 
-### Integración con Lichess API
-- Comunicación con la API de Lichess Cloud Eval usando `fetch`
-- Conversión de posiciones a formato FEN
-- Obtención de mejores movimientos desde el servidor de Lichess
-- Sistema de fallback local para cuando la API no está disponible
+### Integración con Stockfish
+- Comunicación directa con el motor Stockfish usando protocolo UCI
+- Conversión de posiciones a formato FEN completo
+- Obtención de mejores movimientos en tiempo real
+- Sistema de fallback local para análisis rápido si es necesario
 - Manejo de errores y validación de movimientos
-- Sistema de dificultad ajustable (niveles 1-20)
-- Modo de sugerencias usando el motor de Lichess
+- Sistema de dificultad ajustable (niveles 1-20) con configuración de Skill Level
+- Modo de sugerencias usando el motor Stockfish
 
 ### Interfaz de Usuario
 - Diseño responsivo que se adapta a diferentes tamaños de pantalla
@@ -161,35 +161,39 @@ Chess-claude/
 ### Sistema de Notación
 
 El juego utiliza un sistema de coordenadas interno (0-7 para filas y columnas) y lo convierte a:
-- Notación FEN para representar posiciones
-- Notación UCI para comunicarse con la API de Lichess
+- Notación FEN completa para representar posiciones (6 campos: piezas, turno, enroque, en passant, medios movimientos, movimiento)
+- Notación UCI para comunicarse con Stockfish (protocolo estándar)
 - Notación algebraica estándar (a1-h8) para visualización
 
 ### Generación de Movimientos
 
-La API de Lichess recibe:
-- Posición actual en formato FEN
+El motor Stockfish recibe:
+- Posición actual en formato FEN completo
+- Nivel de habilidad (Skill Level 0-20)
+- Tiempo de análisis (movetime en milisegundos)
 
 Y responde con:
 - Mejor movimiento en notación UCI (ej: "e2e4")
-- Evaluación de la posición (ventaja de cada color)
-- Variantes principales (líneas de juego)
+- Información de análisis (profundidad, score, nodos evaluados)
+- Variantes principales durante el cálculo
 
 ## 🐛 Solución de Problemas
 
-### Error: "Error al obtener movimiento"
+### Error: "Motor Stockfish no se carga"
 
 **Problemas comunes:**
 
-1. **Sin conexión a internet**
-   - Verifica tu conexión a internet
-   - La API de Lichess requiere conexión para funcionar
-
-2. **API de Lichess no disponible**
+1. **Error al cargar Stockfish.js**
+   - Asegúrate de tener conexión a internet para cargar la biblioteca desde CDN
+   - Verifica que no haya bloqueadores de scripts activos
    - El juego usa automáticamente un motor local simple como fallback
-   - Los movimientos serán básicos pero funcionales
 
-3. **Error de red (CORS)**
+2. **Stockfish tarda en inicializar**
+   - Espera unos segundos, el motor necesita cargarse completamente
+   - Verás "⏳ Cargando motor Stockfish..." mientras se inicializa
+   - Una vez listo verás "✅ Motor Stockfish listo"
+
+3. **Error de servidor local (CORS)**
    - Si abres el archivo con `file:///`, usa un servidor local
    - Python: `python -m http.server 8000`
    - Node.js: `npx http-server`
@@ -198,6 +202,7 @@ Y responde con:
 4. **El juego no responde**
    - Recarga la página (F5)
    - Verifica que estés usando un navegador moderno
+   - Revisa la consola del navegador (F12) para ver mensajes de error
 
 ---
 
@@ -212,24 +217,33 @@ Y responde con:
 
 ## 📝 Notas
 
-- El juego utiliza la API gratuita de Lichess Cloud Eval, basada en Stockfish
-- Los movimientos analizados por Lichess pueden tardar unos segundos
-- Si la API no está disponible, el juego usa un motor local simple como fallback
+- El juego utiliza Stockfish.js, una versión del motor Stockfish compilada a JavaScript/WebAssembly
+- Stockfish se ejecuta completamente en tu navegador, sin necesidad de servidor
+- Los movimientos pueden tardar de 0.1 a 3 segundos según el nivel de dificultad
+- Si Stockfish no se carga, el juego usa un motor local simple como fallback
 - La aplicación no tiene backend; todo se ejecuta en el navegador
 - No se requiere API Key ni autenticación
+- Funciona sin conexión a internet una vez cargado (excepto la descarga inicial del script)
 
 ## ✨ Últimas Actualizaciones
 
-### Versión 3.1 - Octubre 2025 🎉
-**¡MIGRACIÓN A LICHESS API!**
+### Versión 4.0 - Octubre 2025 🎉
+**¡MOTOR STOCKFISH NATIVO!**
 
-- ✅ **Motor Lichess**: Ahora usa la API de Lichess (Stockfish) en lugar de Claude
-- ✅ **Sin API Key**: No se requiere autenticación, totalmente gratuito
-- ✅ **Fallback Local**: Motor simple local si la API no está disponible
-- ✅ **20 Niveles de Dificultad**: Desde principiante hasta gran maestro
-- ✅ **Más Confiable**: Sin problemas de carga de Stockfish como Web Worker
+- ✅ **Stockfish Directo**: Ahora usa el motor Stockfish.js ejecutándose en el navegador
+- ✅ **Sin API**: No depende de servicios externos, todo funciona localmente
+- ✅ **Más Rápido**: Respuesta inmediata sin latencia de red
+- ✅ **Más Potente**: Acceso completo al motor Stockfish con todas sus capacidades
+- ✅ **20 Niveles de Dificultad**: Control fino con Skill Level (0-20)
+- ✅ **Configuración FEN Completa**: Soporte completo para todas las reglas (enroque, en passant, etc.)
+- ✅ **Fallback Inteligente**: Motor local simple si Stockfish no se carga
 - ✅ **Reloj de Ajedrez**: Controles de tiempo estándar (Bullet, Blitz, Rápidas, Clásicas)
 - ✅ **Todas las características anteriores**: Deshacer, guardar/cargar, PGN, puzzles, temas
+
+### Versión 3.1 - Octubre 2025
+**Migración a Lichess API**
+- ✅ Uso de API externa de Lichess
+- ✅ Sin API Key requerida
 
 ### Versión 2.2 - Octubre 2025
 - ✅ **Diseño simplificado**: Solo piezas clásicas (las más usadas mundialmente)
@@ -260,8 +274,8 @@ Creado con ❤️ para disfrutar del ajedrez con inteligencia artificial.
 
 ## 🙏 Agradecimientos
 
-- Lichess por proporcionar su API gratuita y abierta
 - El proyecto Stockfish por el motor de ajedrez más potente del mundo
+- Stockfish.js por la compilación a JavaScript/WebAssembly
 - La comunidad de ajedrez por las reglas y convenciones estándar
 - Los símbolos Unicode de ajedrez que hacen posible una interfaz visual sin imágenes
 

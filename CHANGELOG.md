@@ -1,6 +1,70 @@
-# 📝 Changelog - Ajedrez vs Claude
+# 📝 Changelog - Ajedrez con IA
 
 Todos los cambios notables en este proyecto serán documentados en este archivo.
+
+---
+
+## [4.0.0] - 2025-10-15
+
+### 🎉 MIGRACIÓN A STOCKFISH NATIVO
+
+#### ✨ Agregado
+- **Motor Stockfish Directo**: Integración completa con Stockfish.js
+  - Ejecución local en el navegador (JavaScript/WebAssembly)
+  - Sin dependencia de APIs externas
+  - Respuesta inmediata sin latencia de red
+  - Comunicación mediante protocolo UCI estándar
+
+- **Configuración Avanzada de Stockfish**
+  - Control de nivel de habilidad (Skill Level 0-20)
+  - Configuración de tiempo de análisis según dificultad
+  - Fallback automático a motor local si Stockfish no carga
+
+- **FEN Completo**: Implementación completa del formato FEN
+  - 6 campos completos: posición, turno, enroque, en passant, medio movimientos, movimiento completo
+  - Soporte correcto para todos los derechos de enroque
+  - Casilla en passant correctamente implementada
+  - Compatible con cualquier software de ajedrez
+
+#### 🔧 Mejorado
+- **Rendimiento**: Mucho más rápido sin latencia de red
+- **Confiabilidad**: No depende de servicios externos
+- **Privacidad**: Todo se ejecuta localmente en el navegador
+- **Compatibilidad**: Funciona offline una vez cargado
+- **Potencia**: Acceso completo a las capacidades de Stockfish
+
+#### 📚 Documentación
+- Actualizado `README.md` con información de Stockfish.js
+- Actualizada sección de instalación y requisitos
+- Actualizada sección de solución de problemas
+- Agregadas notas sobre ejecución local
+
+#### 💻 Técnico
+- Removida dependencia de Lichess Cloud Eval API
+- Agregado Stockfish.js desde CDN
+- Implementación de protocolo UCI
+- Sistema de promesas para comunicación con Stockfish
+- Manejo de mensajes UCI (uci, uciok, bestmove)
+- Timeout de seguridad para movimientos
+- Sistema mejorado de fallback
+
+#### 🗑️ Eliminado
+- Función `getLichessBestMove()` (reemplazada por `getStockfishBestMove()`)
+- Variable `lichessReady` (reemplazada por `stockfishReady`)
+- Dependencia de API externa de Lichess
+
+---
+
+## [3.1.0] - 2025-10-14
+
+### ✨ Agregado
+- Migración a Lichess Cloud Eval API
+- Motor basado en Stockfish sin necesidad de API Key
+- Sin requerimientos de autenticación
+
+### 🔧 Mejorado
+- Más confiable que versiones anteriores
+- Sin problemas de carga de Stockfish como Web Worker
 
 ---
 

@@ -590,6 +590,7 @@ class ChessGame {
     toFEN() {
         let fen = '';
         
+        // 1. Posición de piezas
         for (let row = 0; row < 8; row++) {
             let emptyCount = 0;
             for (let col = 0; col < 8; col++) {
@@ -613,7 +614,32 @@ class ChessGame {
             }
         }
         
+        // 2. Turno actual
         fen += ' ' + (this.currentTurn === 'white' ? 'w' : 'b');
+        
+        // 3. Derechos de enroque
+        let castling = '';
+        if (this.castlingRights.white.kingside) castling += 'K';
+        if (this.castlingRights.white.queenside) castling += 'Q';
+        if (this.castlingRights.black.kingside) castling += 'k';
+        if (this.castlingRights.black.queenside) castling += 'q';
+        fen += ' ' + (castling || '-');
+        
+        // 4. Casilla en passant
+        if (this.enPassantTarget) {
+            const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+            const epSquare = files[this.enPassantTarget.col] + (8 - this.enPassantTarget.row);
+            fen += ' ' + epSquare;
+        } else {
+            fen += ' -';
+        }
+        
+        // 5. Contador de medio movimiento (regla de 50 movimientos) - simplificado a 0
+        fen += ' 0';
+        
+        // 6. Número de movimiento completo
+        const fullMoveNumber = Math.floor(this.moveHistory.length / 2) + 1;
+        fen += ' ' + fullMoveNumber;
         
         return fen;
     }
