@@ -538,6 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Botones de acciones
+    document.getElementById('resume-game').addEventListener('click', resumeGame);
     document.getElementById('undo-move').addEventListener('click', undoMove);
     document.getElementById('hint-move').addEventListener('click', getHint);
     document.getElementById('save-game').addEventListener('click', saveGame);
@@ -550,6 +551,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('nav-next').addEventListener('click', goToNextMove);
     document.getElementById('nav-last').addEventListener('click', goToLastMove);
 
+    // Verificar si hay una partida en curso para reanudar
+    checkForGameInProgress();
+    
     // Iniciar primera partida
     applyBoardTheme();
     startNewGame();
@@ -561,6 +565,9 @@ async function getAIMove() {
 }
 
 function startNewGame() {
+    // Limpiar el guardado automático al iniciar nueva partida
+    clearAutoSavedGame();
+    
     game = new ChessGame();
     selectedSquare = null;
     lastMoveSquares = { from: null, to: null }; // Resetear último movimiento
@@ -802,6 +809,133 @@ function exportPGN() {
     alert('Archivo PGN exportado correctamente');
 }
 
+// Funciones para reanudar partida
+function checkForGameInProgress() {
+    const autoSavedGame = localStorage.getItem('auto_saved_game');
+    const resumeButton = document.getElementById('resume-game');
+    
+    if (autoSavedGame) {
+        // Hay una partida en curso, mostrar el botón
+        resumeButton.style.display = 'block';
+    } else {
+        resumeButton.style.display = 'none';
+    }
+}
+
+function resumeGame() {
+    const autoSavedGame = localStorage.getItem('auto_saved_game');
+    
+    if (!autoSavedGame) {
+        alert('No hay partida en curso para reanudar');
+        return;
+    }
+    
+    try {
+        const savedState = JSON.parse(autoSavedGame);
+        
+        // Restaurar todas las configuraciones
+        playerColor = savedState.playerColor;
+        gameMode = savedState.gameMode;
+        aiDifficulty = savedState.aiDifficulty;
+        boardTheme = savedState.boardTheme;
+        timePerPlayer = savedState.timePerPlayer;
+        incrementPerMove = savedState.incrementPerMove;
+        whiteTime = savedState.whiteTime;
+        blackTime = savedState.blackTime;
+        lastMoveSquares = savedState.lastMoveSquares || { from: null, to: null };
+        currentMoveIndex = savedState.currentMoveIndex || -1;
+        
+        // Actualizar UI con las configuraciones
+        document.getElementById('player-color').value = playerColor;
+        document.getElementById('game-mode').value = gameMode;
+        document.getElementById('ai-difficulty').value = aiDifficulty;
+        document.getElementById('board-theme').value = boardTheme;
+        
+        const timeControl = `${timePerPlayer}+${incrementPerMove}`;
+        const timeControlSelect = document.getElementById('time-control');
+        const options = Array.from(timeControlSelect.options);
+        const matchingOption = options.find(opt => opt.value === timeControl);
+        if (matchingOption) {
+            timeControlSelect.value = timeControl;
+        }
+        
+        updateUIForGameMode();
+        applyBoardTheme();
+        
+        // Restaurar el estado del juego
+        game = new ChessGame();
+        game.board = savedState.board;
+        game.currentTurn = savedState.currentTurn;
+        game.moveHistory = savedState.moveHistory || [];
+        game.capturedPieces = savedState.capturedPieces;
+        game.enPassantTarget = savedState.enPassantTarget || null;
+        game.castlingRights = savedState.castlingRights;
+        game.gameOver = savedState.gameOver || false;
+        game.gameStateHistory = savedState.gameStateHistory || [];
+        
+        // Actualizar visualización
+        renderBoard();
+        updateCapturedPieces();
+        updateMoveHistory();
+        updateUndoButton();
+        updateClockDisplay();
+        
+        // Reiniciar el reloj si el juego no ha terminado
+        if (!game.gameOver) {
+            startClock();
+        }
+        
+        alert('Partida reanudada correctamente');
+    } catch (error) {
+        console.error('Error al reanudar partida:', error);
+        alert('Error al reanudar la partida');
+        localStorage.removeItem('auto_saved_game');
+        checkForGameInProgress();
+    }
+}
+
+function autoSaveGame() {
+    if (!game || game.gameOver) {
+        // Si el juego terminó, limpiar el guardado automático
+        clearAutoSavedGame();
+        return;
+    }
+    
+    const gameState = {
+        board: game.board,
+        currentTurn: game.currentTurn,
+        moveHistory: game.moveHistory || [],
+        capturedPieces: game.capturedPieces,
+        enPassantTarget: game.enPassantTarget,
+        castlingRights: game.castlingRights,
+        gameOver: game.gameOver,
+        gameStateHistory: game.gameStateHistory || [],
+        playerColor: playerColor,
+        gameMode: gameMode,
+        aiDifficulty: aiDifficulty,
+        boardTheme: boardTheme,
+        timePerPlayer: timePerPlayer,
+        incrementPerMove: incrementPerMove,
+        whiteTime: whiteTime,
+        blackTime: blackTime,
+        lastMoveSquares: lastMoveSquares,
+        currentMoveIndex: currentMoveIndex,
+        timestamp: new Date().toISOString()
+    };
+    
+    try {
+        localStorage.setItem('auto_saved_game', JSON.stringify(gameState));
+        checkForGameInProgress();
+    } catch (error) {
+        console.error('Error al guardar automáticamente:', error);
+    }
+}
+
+function clearAutoSavedGame() {
+    localStorage.removeItem('auto_saved_game');
+    checkForGameInProgress();
+}
+
 // Funciones del reloj de ajedrez
 function startClock() {
     stopClock();
@@ -811,6 +945,7 @@ function startClock() {
             if (whiteTime <= 0) {
                 stopClock();
                 game.gameOver = true;
+                clearAutoSavedGame();
                 alert('¡Se acabó el tiempo de las blancas! Las negras ganan.');
                 return;
             }
@@ -819,6 +954,7 @@ function startClock() {
             if (blackTime <= 0) {
                 stopClock();
                 game.gameOver = true;
+                clearAutoSavedGame();
                 alert('¡Se acabó el tiempo de las negras! Las blancas ganan.');
                 return;
             }
@@ -984,6 +1120,9 @@ function handleSquareClick(row, col) {
             updateCapturedPieces();
             updateMoveHistory();
             updateUndoButton();
+            
+            // Guardar automáticamente el estado
+            autoSaveGame();
             
             handleGameResult(result);
             
@@ -1240,10 +1379,18 @@ function restoreGameState(stateIndex) {
 function handleGameResult(result) {
     if (result.status === 'checkmate') {
         const winner = result.winner === 'white' ? 'Blancas' : 'Negras';
+        // Detener el reloj
+        stopClock();
+        // Limpiar guardado automático cuando el juego termina
+        clearAutoSavedGame();
         setTimeout(() => {
             alert(`¡Jaque mate! ${winner} ganan.`);
         }, 300);
     } else if (result.status === 'stalemate') {
+        // Detener el reloj
+        stopClock();
+        // Limpiar guardado automático cuando el juego termina
+        clearAutoSavedGame();
         setTimeout(() => {
             alert('¡Tablas por ahogado!');
         }, 300);
@@ -1278,6 +1425,9 @@ async function makeAIMove() {
                 updateCapturedPieces();
                 updateMoveHistory();
                 updateUndoButton();
+                
+                // Guardar automáticamente el estado
+                autoSaveGame();
             
                 handleGameResult(result);
             } else {
