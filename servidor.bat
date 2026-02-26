@@ -2,7 +2,7 @@
 chcp 65001 >nul
 cls
 echo ╔════════════════════════════════════════════════╗
-echo ║   🎮 AJEDREZ VS CLAUDE - SERVIDOR LOCAL 🎮    ║
+echo ║   ♔ AJEDREZ CON IA - SERVIDOR LOCAL ♚         ║
 echo ╚════════════════════════════════════════════════╝
 echo.
 echo Iniciando servidor local...

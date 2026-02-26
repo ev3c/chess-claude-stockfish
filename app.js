@@ -34,31 +34,26 @@ const chessPuzzles = [
 ];
 let currentPuzzleIndex = 0;
 
-// Inicializar motor de ajedrez (Motor local mejorado)
+// Inicializar motor de ajedrez (Stockfish 17 vía API)
 async function initStockfish() {
     try {
-        showStatus('⏳ Inicializando motor de ajedrez...', false, false);
-        console.log('Inicializando motor de ajedrez local avanzado...');
+        showStatus('⏳ Conectando con Stockfish 17...', false, false);
+        console.log('Inicializando Stockfish 17 (Chess-API.com)...');
         
-        // Nota: Debido a restricciones CORS, usamos el motor local mejorado
-        // El motor local incluye:
-        // - Minimax con poda alpha-beta
-        // - Evaluación posicional completa
-        // - Búsqueda a profundidad variable (1-3)
-        // - Tablas de evaluación para cada tipo de pieza
-        // - 20 niveles de dificultad
+        // Verificar disponibilidad de la API
+        const testResponse = await fetch('https://chess-api.com/v1');
+        if (!testResponse.ok) {
+            throw new Error('API no disponible');
+        }
         
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Marcar como listo (motor local siempre disponible)
         stockfishReady = true;
-        showStatus('✅ Motor de ajedrez listo', true, false);
-        console.log('✅ Motor local inicializado - 20 niveles de dificultad disponibles');
+        showStatus('✅ Stockfish 17 conectado', true, false);
+        console.log('✅ Motor Stockfish 17 NNUE disponible - 20 niveles de dificultad');
         
     } catch (error) {
-        console.error('Error al inicializar:', error);
-        showStatus('✅ Motor básico listo', true, false);
-        stockfishReady = true; // Siempre disponible
+        console.error('Error al conectar con API de Stockfish, usando motor local:', error);
+        showStatus('✅ Motor local listo (Stockfish no disponible)', true, false);
+        stockfishReady = true;
     }
 }
 
@@ -76,10 +71,62 @@ function showStatus(message, isReady = false, isError = false) {
     }
 }
 
-// Función para obtener el mejor movimiento (Motor local mejorado)
+// Función para obtener el mejor movimiento (Stockfish 17 API + fallback local)
 async function getStockfishBestMove() {
     console.log('Motor de ajedrez - Nivel:', aiDifficulty);
+    
+    // Intentar usar Stockfish API (niveles 15-20)
+    if (aiDifficulty >= 15) {
+        try {
+            return await getStockfishAPIMove();
+        } catch (error) {
+            console.warn('Stockfish API falló, usando motor local:', error);
+            return await getLocalBestMove();
+        }
+    }
+    
+    // Usar motor local para niveles más bajos (más rápido)
     return await getLocalBestMove();
+}
+
+// Obtener movimiento desde Stockfish 17 API
+async function getStockfishAPIMove() {
+    console.log('Consultando Stockfish 17 API...');
+    
+    // Construir FEN de la posición actual
+    const fen = game.toFEN();
+    
+    // Mapear dificultad (15-20) a profundidad de búsqueda (10-18)
+    const depth = Math.min(18, 8 + aiDifficulty);
+    
+    const response = await fetch('https://chess-api.com/v1', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            fen: fen,
+            depth: depth
+        })
+    });
+    
+    if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    if (!data.move) {
+        throw new Error('No se recibió movimiento de la API');
+    }
+    
+    console.log('Stockfish 17 movimiento:', data.move, 'Evaluación:', data.eval);
+    return data.move;
+}
+
+// Convertir estado del juego a notación FEN (DEPRECADO - usar game.toFEN())
+function gameToFEN() {
+    return game.toFEN();
 }
 
 // Valores de las piezas
@@ -1379,21 +1426,19 @@ function restoreGameState(stateIndex) {
 function handleGameResult(result) {
     if (result.status === 'checkmate') {
         const winner = result.winner === 'white' ? 'Blancas' : 'Negras';
-        // Detener el reloj
         stopClock();
-        // Limpiar guardado automático cuando el juego termina
         clearAutoSavedGame();
         setTimeout(() => {
             alert(`¡Jaque mate! ${winner} ganan.`);
         }, 300);
     } else if (result.status === 'stalemate') {
-        // Detener el reloj
         stopClock();
-        // Limpiar guardado automático cuando el juego termina
         clearAutoSavedGame();
         setTimeout(() => {
             alert('¡Tablas por ahogado!');
         }, 300);
+    } else if (result.status === 'check') {
+        console.log('¡Jaque!');
     }
 }
 
