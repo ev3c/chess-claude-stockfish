@@ -14,6 +14,27 @@ const PIECES = {
     BLACK_PAWN: '♟'
 };
 
+// Función para obtener las piezas según el estilo seleccionado
+function getPieceSet() {
+    if (typeof pieceStyle !== 'undefined' && typeof PIECE_SETS !== 'undefined' && PIECE_SETS[pieceStyle]) {
+        return {
+            WHITE_KING: PIECE_SETS[pieceStyle].WHITE_KING,
+            WHITE_QUEEN: PIECE_SETS[pieceStyle].WHITE_QUEEN,
+            WHITE_ROOK: PIECE_SETS[pieceStyle].WHITE_ROOK,
+            WHITE_BISHOP: PIECE_SETS[pieceStyle].WHITE_BISHOP,
+            WHITE_KNIGHT: PIECE_SETS[pieceStyle].WHITE_KNIGHT,
+            WHITE_PAWN: PIECE_SETS[pieceStyle].WHITE_PAWN,
+            BLACK_KING: PIECE_SETS[pieceStyle].BLACK_KING,
+            BLACK_QUEEN: PIECE_SETS[pieceStyle].BLACK_QUEEN,
+            BLACK_ROOK: PIECE_SETS[pieceStyle].BLACK_ROOK,
+            BLACK_BISHOP: PIECE_SETS[pieceStyle].BLACK_BISHOP,
+            BLACK_KNIGHT: PIECE_SETS[pieceStyle].BLACK_KNIGHT,
+            BLACK_PAWN: PIECE_SETS[pieceStyle].BLACK_PAWN
+        };
+    }
+    return PIECES;
+}
+
 class ChessGame {
     constructor() {
         this.board = this.initializeBoard();
@@ -34,39 +55,40 @@ class ChessGame {
 
     initializeBoard() {
         const board = Array(8).fill(null).map(() => Array(8).fill(null));
+        const pieceSet = getPieceSet();
         
         // Piezas negras
         board[0] = [
-            { piece: PIECES.BLACK_ROOK, color: 'black', type: 'rook' },
-            { piece: PIECES.BLACK_KNIGHT, color: 'black', type: 'knight' },
-            { piece: PIECES.BLACK_BISHOP, color: 'black', type: 'bishop' },
-            { piece: PIECES.BLACK_QUEEN, color: 'black', type: 'queen' },
-            { piece: PIECES.BLACK_KING, color: 'black', type: 'king' },
-            { piece: PIECES.BLACK_BISHOP, color: 'black', type: 'bishop' },
-            { piece: PIECES.BLACK_KNIGHT, color: 'black', type: 'knight' },
-            { piece: PIECES.BLACK_ROOK, color: 'black', type: 'rook' }
+            { piece: pieceSet.BLACK_ROOK, color: 'black', type: 'rook' },
+            { piece: pieceSet.BLACK_KNIGHT, color: 'black', type: 'knight' },
+            { piece: pieceSet.BLACK_BISHOP, color: 'black', type: 'bishop' },
+            { piece: pieceSet.BLACK_QUEEN, color: 'black', type: 'queen' },
+            { piece: pieceSet.BLACK_KING, color: 'black', type: 'king' },
+            { piece: pieceSet.BLACK_BISHOP, color: 'black', type: 'bishop' },
+            { piece: pieceSet.BLACK_KNIGHT, color: 'black', type: 'knight' },
+            { piece: pieceSet.BLACK_ROOK, color: 'black', type: 'rook' }
         ];
         board[1] = Array(8).fill(null).map(() => ({ 
-            piece: PIECES.BLACK_PAWN, 
+            piece: pieceSet.BLACK_PAWN, 
             color: 'black', 
             type: 'pawn' 
         }));
         
         // Piezas blancas
         board[6] = Array(8).fill(null).map(() => ({ 
-            piece: PIECES.WHITE_PAWN, 
+            piece: pieceSet.WHITE_PAWN, 
             color: 'white', 
             type: 'pawn' 
         }));
         board[7] = [
-            { piece: PIECES.WHITE_ROOK, color: 'white', type: 'rook' },
-            { piece: PIECES.WHITE_KNIGHT, color: 'white', type: 'knight' },
-            { piece: PIECES.WHITE_BISHOP, color: 'white', type: 'bishop' },
-            { piece: PIECES.WHITE_QUEEN, color: 'white', type: 'queen' },
-            { piece: PIECES.WHITE_KING, color: 'white', type: 'king' },
-            { piece: PIECES.WHITE_BISHOP, color: 'white', type: 'bishop' },
-            { piece: PIECES.WHITE_KNIGHT, color: 'white', type: 'knight' },
-            { piece: PIECES.WHITE_ROOK, color: 'white', type: 'rook' }
+            { piece: pieceSet.WHITE_ROOK, color: 'white', type: 'rook' },
+            { piece: pieceSet.WHITE_KNIGHT, color: 'white', type: 'knight' },
+            { piece: pieceSet.WHITE_BISHOP, color: 'white', type: 'bishop' },
+            { piece: pieceSet.WHITE_QUEEN, color: 'white', type: 'queen' },
+            { piece: pieceSet.WHITE_KING, color: 'white', type: 'king' },
+            { piece: pieceSet.WHITE_BISHOP, color: 'white', type: 'bishop' },
+            { piece: pieceSet.WHITE_KNIGHT, color: 'white', type: 'knight' },
+            { piece: pieceSet.WHITE_ROOK, color: 'white', type: 'rook' }
         ];
         
         return board;
@@ -541,9 +563,9 @@ class ChessGame {
 
     promotePawn(row, col) {
         const piece = this.getPiece(row, col);
-        // Por defecto, promover a reina
+        const pieceSet = getPieceSet();
         piece.type = 'queen';
-        piece.piece = piece.color === 'white' ? PIECES.WHITE_QUEEN : PIECES.BLACK_QUEEN;
+        piece.piece = piece.color === 'white' ? pieceSet.WHITE_QUEEN : pieceSet.BLACK_QUEEN;
     }
 
     getMoveNotation(fromRow, fromCol, toRow, toCol, piece, capturedPiece) {

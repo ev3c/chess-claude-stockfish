@@ -10,21 +10,12 @@
     <div class="container">
         <header>
             <h1>♔ Ajedrez con IA ♚</h1>
-            <p id="stockfish-status" class="stockfish-status">⏳ Cargando motor...</p>
         </header>
 
         <div class="game-container">
             <div class="sidebar sidebar-left">
                 <div class="panel">
                     <h2>Configuración</h2>
-                    <div class="config-section">
-                        <label>Modo de Juego:</label>
-                           <select id="game-mode" class="select">
-                               <option value="vs-ai">vs IA</option>
-                               <option value="vs-human">Humano vs Humano</option>
-                               <option value="puzzle">Modo Entrenamiento</option>
-                           </select>
-                    </div>
 
                     <div class="config-section" id="ai-settings">
                         <label>Nivel de Dificultad:</label>
@@ -56,6 +47,18 @@
                             <option value="blue">Azul</option>
                             <option value="green">Verde</option>
                             <option value="gray">Gris</option>
+                        </select>
+                    </div>
+
+                    <div class="config-section">
+                        <label>Estilo de Piezas:</label>
+                        <select id="piece-style" class="select">
+                            <option value="classic">Clásico Unicode</option>
+                            <option value="cburnett">Cburnett (Lichess)</option>
+                            <option value="merida">Mérida</option>
+                            <option value="pixel">Pixel Art</option>
+                            <option value="fantasy">Fantasy</option>
+                            <option value="letter">Letras</option>
                         </select>
                     </div>
 
@@ -151,6 +154,25 @@
                            <button id="save-game" class="btn btn-primary">💾 Guardar Partida</button>
                            <button id="load-game" class="btn btn-primary">📂 Cargar Partida</button>
                            <button id="export-pgn" class="btn btn-primary">📄 Exportar PGN</button>
+                       </div>
+
+                       <div class="panel">
+                           <h2>📊 Estadísticas</h2>
+                           <div class="stats-container">
+                               <div class="stat-item stat-wins">
+                                   <div class="stat-label">Ganadas</div>
+                                   <div class="stat-value" id="stat-wins">0</div>
+                               </div>
+                               <div class="stat-item stat-draws">
+                                   <div class="stat-label">Tablas</div>
+                                   <div class="stat-value" id="stat-draws">0</div>
+                               </div>
+                               <div class="stat-item stat-losses">
+                                   <div class="stat-label">Perdidas</div>
+                                   <div class="stat-value" id="stat-losses">0</div>
+                               </div>
+                           </div>
+                           <button id="reset-stats" class="btn btn-secondary">🔄 Reiniciar Estadísticas</button>
                        </div>
             </div>
         </div>

@@ -4,6 +4,7 @@ let selectedSquare = null;
 let gameMode = 'vs-ai'; // vs-ai, vs-human, puzzle
 let aiDifficulty = 20; // Nivel Stockfish (0-20)
 let boardTheme = 'classic';
+let pieceStyle = 'classic'; // Estilo de piezas
 let clockEnabled = true; // Reloj siempre activado
 let timePerPlayer = 3; // minutos (base)
 let incrementPerMove = 2; // segundos de incremento
@@ -14,30 +15,34 @@ let lastMoveSquares = { from: null, to: null }; // Guardar último movimiento pa
 let currentMoveIndex = -1; // Índice del movimiento actual en visualización (-1 = posición actual)
 let gameStateSnapshots = []; // Estados del juego en cada movimiento
 
+// Estadísticas del jugador
+let stats = {
+    wins: 0,
+    draws: 0,
+    losses: 0
+};
+
 // Motor Stockfish
 let stockfish = null;
 let stockfishReady = false;
 let pendingMove = null;
 
-// Puzzles predefinidos
-const chessPuzzles = [
-    {
-        fen: 'r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4',
-        solution: [{ from: 'h5', to: 'f7' }],
-        description: 'Mate en 1: Las blancas dan mate'
-    },
-    {
-        fen: 'r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5Q2/PPPP1PPP/RNB1K1NR w KQkq - 4 4',
-        solution: [{ from: 'f3', to: 'f7' }],
-        description: 'Mate del Loco: Mate en 1'
+// Estilos de piezas disponibles (solo para el set clásico Unicode)
+const PIECE_SETS = {
+    classic: {
+        WHITE_KING: '♔', WHITE_QUEEN: '♕', WHITE_ROOK: '♖',
+        WHITE_BISHOP: '♗', WHITE_KNIGHT: '♘', WHITE_PAWN: '♙',
+        BLACK_KING: '♚', BLACK_QUEEN: '♛', BLACK_ROOK: '♜',
+        BLACK_BISHOP: '♝', BLACK_KNIGHT: '♞', BLACK_PAWN: '♟'
     }
-];
-let currentPuzzleIndex = 0;
+};
+
+// Sets de piezas SVG disponibles (desde carpeta pieces/)
+const SVG_PIECE_SETS = ['cburnett', 'merida', 'pixel', 'fantasy', 'letter'];
 
 // Inicializar motor de ajedrez (Stockfish 17 vía API)
 async function initStockfish() {
     try {
-        showStatus('⏳ Conectando con Stockfish 17...', false, false);
         console.log('Inicializando Stockfish 17 (Chess-API.com)...');
         
         // Verificar disponibilidad de la API
@@ -47,27 +52,11 @@ async function initStockfish() {
         }
         
         stockfishReady = true;
-        showStatus('✅ Stockfish 17 conectado', true, false);
         console.log('✅ Motor Stockfish 17 NNUE disponible - 20 niveles de dificultad');
         
     } catch (error) {
         console.error('Error al conectar con API de Stockfish, usando motor local:', error);
-        showStatus('✅ Motor local listo (Stockfish no disponible)', true, false);
         stockfishReady = true;
-    }
-}
-
-function showStatus(message, isReady = false, isError = false) {
-    console.log('Status:', message);
-    const statusElement = document.getElementById('stockfish-status');
-    if (statusElement) {
-        statusElement.textContent = message;
-        statusElement.classList.remove('ready', 'error');
-        if (isReady) {
-            statusElement.classList.add('ready');
-        } else if (isError) {
-            statusElement.classList.add('error');
-        }
     }
 }
 
@@ -548,40 +537,197 @@ function getPositionBonus(pieceType, row, col, color) {
     return table[evalRow][col];
 }
 
+// Guardar configuración en localStorage
+function saveSettings() {
+    const settings = {
+        playerColor: playerColor,
+        aiDifficulty: aiDifficulty,
+        boardTheme: boardTheme,
+        pieceStyle: pieceStyle,
+        timePerPlayer: timePerPlayer,
+        incrementPerMove: incrementPerMove
+    };
+    localStorage.setItem('chess_settings', JSON.stringify(settings));
+}
+
+// Cargar configuración guardada
+function loadSavedSettings() {
+    const savedSettings = localStorage.getItem('chess_settings');
+    
+    if (savedSettings) {
+        try {
+            const settings = JSON.parse(savedSettings);
+            
+            // Aplicar configuraciones (siempre vs-ai)
+            playerColor = settings.playerColor || 'white';
+            aiDifficulty = settings.aiDifficulty || 20;
+            boardTheme = settings.boardTheme || 'classic';
+            pieceStyle = settings.pieceStyle || 'classic';
+            timePerPlayer = settings.timePerPlayer || 3;
+            incrementPerMove = settings.incrementPerMove || 2;
+            
+            // Actualizar UI
+            document.getElementById('player-color').value = playerColor;
+            document.getElementById('ai-difficulty').value = aiDifficulty;
+            document.getElementById('board-theme').value = boardTheme;
+            document.getElementById('piece-style').value = pieceStyle;
+            
+            const timeControl = `${timePerPlayer}+${incrementPerMove}`;
+            const timeControlSelect = document.getElementById('time-control');
+            const options = Array.from(timeControlSelect.options);
+            const matchingOption = options.find(opt => opt.value === timeControl);
+            if (matchingOption) {
+                timeControlSelect.value = timeControl;
+            }
+            
+        } catch (error) {
+            console.error('Error al cargar configuración:', error);
+        }
+    }
+}
+
+// Mostrar mensaje centrado en el tablero
+function showMessage(message, type = 'info', duration = 3000) {
+    // Crear overlay si no existe
+    let overlay = document.getElementById('message-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'message-overlay';
+        overlay.className = 'message-overlay';
+        document.body.appendChild(overlay);
+        
+        // Permitir cerrar haciendo clic en el overlay
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                hideMessage();
+            }
+        });
+    }
+    
+    // Crear mensaje
+    const messageBox = document.createElement('div');
+    messageBox.className = `message-box message-${type}`;
+    
+    const messageText = document.createElement('div');
+    messageText.className = 'message-text';
+    messageText.textContent = message;
+    messageBox.appendChild(messageText);
+    
+    // Añadir botón de cerrar si el mensaje es permanente
+    if (duration === 0) {
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'message-close-btn';
+        closeBtn.textContent = '✕';
+        closeBtn.onclick = hideMessage;
+        messageBox.appendChild(closeBtn);
+    }
+    
+    // Limpiar mensajes anteriores
+    overlay.innerHTML = '';
+    overlay.appendChild(messageBox);
+    overlay.style.display = 'flex';
+    
+    // Ocultar automáticamente después de la duración (si no es permanente)
+    if (duration > 0) {
+        setTimeout(() => {
+            overlay.style.display = 'none';
+        }, duration);
+    }
+}
+
+// Ocultar mensaje
+function hideMessage() {
+    const overlay = document.getElementById('message-overlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+}
+
+// Cargar estadísticas
+function loadStats() {
+    const savedStats = localStorage.getItem('chess_stats');
+    if (savedStats) {
+        try {
+            stats = JSON.parse(savedStats);
+        } catch (error) {
+            console.error('Error al cargar estadísticas:', error);
+            stats = { wins: 0, draws: 0, losses: 0 };
+        }
+    }
+    updateStatsDisplay();
+}
+
+// Guardar estadísticas
+function saveStats() {
+    localStorage.setItem('chess_stats', JSON.stringify(stats));
+    updateStatsDisplay();
+}
+
+// Actualizar visualización de estadísticas
+function updateStatsDisplay() {
+    document.getElementById('stat-wins').textContent = stats.wins;
+    document.getElementById('stat-draws').textContent = stats.draws;
+    document.getElementById('stat-losses').textContent = stats.losses;
+}
+
+// Registrar resultado de partida
+function recordGameResult(result) {
+    if (result === 'win') {
+        stats.wins++;
+    } else if (result === 'draw') {
+        stats.draws++;
+    } else if (result === 'loss') {
+        stats.losses++;
+    }
+    saveStats();
+}
+
+// Reiniciar estadísticas
+function resetStats() {
+    if (confirm('¿Estás seguro de que quieres reiniciar las estadísticas?')) {
+        stats = { wins: 0, draws: 0, losses: 0 };
+        saveStats();
+        showMessage('Estadísticas reiniciadas', 'success', 2000);
+    }
+}
+
 // Inicializar la aplicación
 document.addEventListener('DOMContentLoaded', () => {
     // Inicializar motor Stockfish
     initStockfish();
 
     // Cargar configuraciones guardadas
-    const savedTheme = localStorage.getItem('board_theme');
-    if (savedTheme) {
-        boardTheme = savedTheme;
-        document.getElementById('board-theme').value = savedTheme;
-    }
+    loadSavedSettings();
+    
+    // Cargar estadísticas
+    loadStats();
 
     // Event listeners
     document.getElementById('new-game').addEventListener('click', startNewGame);
     document.getElementById('player-color').addEventListener('change', (e) => {
         playerColor = e.target.value;
-    });
-    document.getElementById('game-mode').addEventListener('change', (e) => {
-        gameMode = e.target.value;
-        updateUIForGameMode();
+        saveSettings();
     });
     document.getElementById('ai-difficulty').addEventListener('change', (e) => {
         aiDifficulty = parseInt(e.target.value);
         console.log('Nivel de dificultad cambiado a:', aiDifficulty);
+        saveSettings();
     });
     document.getElementById('board-theme').addEventListener('change', (e) => {
         boardTheme = e.target.value;
-        localStorage.setItem('board_theme', boardTheme);
+        saveSettings();
         applyBoardTheme();
+    });
+    document.getElementById('piece-style').addEventListener('change', (e) => {
+        pieceStyle = e.target.value;
+        saveSettings();
+        renderBoard();
     });
     document.getElementById('time-control').addEventListener('change', (e) => {
         const [minutes, increment] = e.target.value.split('+').map(Number);
         timePerPlayer = minutes;
         incrementPerMove = increment;
+        saveSettings();
     });
 
     // Botones de acciones
@@ -591,6 +737,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('save-game').addEventListener('click', saveGame);
     document.getElementById('load-game').addEventListener('click', loadGame);
     document.getElementById('export-pgn').addEventListener('click', exportPGN);
+    
+    // Estadísticas
+    document.getElementById('reset-stats').addEventListener('click', resetStats);
 
     // Navegación del historial
     document.getElementById('nav-first').addEventListener('click', goToFirstMove);
@@ -617,74 +766,45 @@ function startNewGame() {
     
     game = new ChessGame();
     selectedSquare = null;
-    lastMoveSquares = { from: null, to: null }; // Resetear último movimiento
-    currentMoveIndex = -1; // Resetear navegación de historial
+    lastMoveSquares = { from: null, to: null };
+    currentMoveIndex = -1;
     
-    // Resetear reloj (siempre activo)
+    // Resetear reloj
     stopClock();
     whiteTime = timePerPlayer * 60;
     blackTime = timePerPlayer * 60;
     updateClockDisplay();
-
-    // Modo puzzle
-    if (gameMode === 'puzzle') {
-        loadPuzzle();
-    }
     
     renderBoard();
     updateCapturedPieces();
     updateMoveHistory();
     updateUndoButton();
     
-    // Si el jugador es negras y es modo IA, la IA mueve primero
-    if (gameMode === 'vs-ai' && playerColor === 'black') {
+    // Si el jugador es negras, la IA mueve primero
+    if (playerColor === 'black') {
         setTimeout(() => makeAIMove(), 800);
     }
 
-    // Iniciar reloj (siempre activo)
+    // Iniciar reloj
     if (!game.gameOver) {
         startClock();
     }
 }
 
-function loadPuzzle() {
-    if (currentPuzzleIndex >= chessPuzzles.length) {
-        alert('¡Felicitaciones! Has completado todos los puzzles.');
-        currentPuzzleIndex = 0;
-    }
-    const puzzle = chessPuzzles[currentPuzzleIndex];
-    alert(puzzle.description);
-    // Aquí se podría implementar la carga desde FEN
-    // Por ahora usamos el tablero estándar
-}
-
-function updateUIForGameMode() {
-    const aiSettings = document.getElementById('ai-settings');
-    if (gameMode === 'vs-ai') {
-        aiSettings.style.display = 'block';
-    } else {
-        aiSettings.style.display = 'none';
-    }
-}
-
 function applyBoardTheme() {
     const boardElement = document.getElementById('chess-board');
-    boardElement.className = 'chess-board board-theme-' + boardTheme;
+    boardElement.className = 'chess-board board-theme-' + boardTheme + ' piece-style-' + pieceStyle;
 }
 
 function undoMove() {
     if (!game.canUndo()) {
-        alert('No hay movimientos para deshacer');
+        showMessage('No hay movimientos para deshacer', 'warning', 2000);
         return;
     }
 
-    // Deshacer 2 movimientos en modo IA (el del jugador y el de la IA)
-    if (gameMode === 'vs-ai') {
-        game.undoMove();
-        if (game.canUndo()) {
-            game.undoMove();
-        }
-    } else {
+    // Deshacer 2 movimientos (el del jugador y el de la IA)
+    game.undoMove();
+    if (game.canUndo()) {
         game.undoMove();
     }
 
@@ -701,7 +821,7 @@ function updateUndoButton() {
 
 async function getHint() {
     if (game.gameOver) {
-        alert('El juego ha terminado');
+        showMessage('El juego ha terminado', 'warning', 2000);
         return;
     }
     
@@ -712,7 +832,7 @@ async function getHint() {
         if (bestMove) {
             const fromSquare = bestMove.substring(0, 2);
             const toSquare = bestMove.substring(2, 4);
-            alert(`💡 Sugerencia: Mueve de ${fromSquare} a ${toSquare}`);
+            showMessage(`💡 Sugerencia: Mueve de ${fromSquare} a ${toSquare}`, 'info', 5000);
             
             // Convertir notación UCI a coordenadas internas
             const move = parseUCIMove(bestMove);
@@ -721,7 +841,7 @@ async function getHint() {
             }
         }
     } catch (error) {
-        alert('Error al obtener sugerencia: ' + error.message);
+        showMessage('Error al obtener sugerencia: ' + error.message, 'error', 3000);
     } finally {
         showThinkingIndicator(false);
     }
@@ -780,7 +900,7 @@ function saveGame() {
         gameState.name = gameName;
         savedGames.push(gameState);
         localStorage.setItem('saved_games', JSON.stringify(savedGames));
-        alert('Partida guardada correctamente');
+        showMessage('Partida guardada correctamente', 'success', 2000);
     }
 }
 
@@ -788,7 +908,7 @@ function loadGame() {
     const savedGames = JSON.parse(localStorage.getItem('saved_games') || '[]');
     
     if (savedGames.length === 0) {
-        alert('No hay partidas guardadas');
+        showMessage('No hay partidas guardadas', 'warning', 2000);
         return;
     }
 
@@ -804,25 +924,24 @@ function loadGame() {
     if (index >= 0 && index < savedGames.length) {
         const savedGame = savedGames[index];
         
-        // Restaurar el estado del juego
-    game = new ChessGame();
+        game = new ChessGame();
         game.board = savedGame.board;
         game.currentTurn = savedGame.currentTurn;
         game.moveHistory = savedGame.moveHistory;
         game.capturedPieces = savedGame.capturedPieces;
         playerColor = savedGame.playerColor;
     
-    renderBoard();
-    updateCapturedPieces();
-    updateMoveHistory();
+        renderBoard();
+        updateCapturedPieces();
+        updateMoveHistory();
     
-        alert('Partida cargada correctamente');
+        showMessage('Partida cargada correctamente', 'success', 2000);
     }
 }
 
 function exportPGN() {
     if (game.moveHistory.length === 0) {
-        alert('No hay movimientos para exportar');
+        showMessage('No hay movimientos para exportar', 'warning', 2000);
         return;
     }
 
@@ -853,7 +972,7 @@ function exportPGN() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    alert('Archivo PGN exportado correctamente');
+    showMessage('Archivo PGN exportado correctamente', 'success', 2000);
 }
 
 // Funciones para reanudar partida
@@ -873,7 +992,7 @@ function resumeGame() {
     const autoSavedGame = localStorage.getItem('auto_saved_game');
     
     if (!autoSavedGame) {
-        alert('No hay partida en curso para reanudar');
+        showMessage('No hay partida en curso para reanudar', 'warning', 2000);
         return;
     }
     
@@ -885,6 +1004,7 @@ function resumeGame() {
         gameMode = savedState.gameMode;
         aiDifficulty = savedState.aiDifficulty;
         boardTheme = savedState.boardTheme;
+        pieceStyle = savedState.pieceStyle || 'classic';
         timePerPlayer = savedState.timePerPlayer;
         incrementPerMove = savedState.incrementPerMove;
         whiteTime = savedState.whiteTime;
@@ -897,6 +1017,7 @@ function resumeGame() {
         document.getElementById('game-mode').value = gameMode;
         document.getElementById('ai-difficulty').value = aiDifficulty;
         document.getElementById('board-theme').value = boardTheme;
+        document.getElementById('piece-style').value = pieceStyle;
         
         const timeControl = `${timePerPlayer}+${incrementPerMove}`;
         const timeControlSelect = document.getElementById('time-control');
@@ -932,10 +1053,10 @@ function resumeGame() {
             startClock();
         }
         
-        alert('Partida reanudada correctamente');
+        showMessage('Partida reanudada correctamente', 'success', 2000);
     } catch (error) {
         console.error('Error al reanudar partida:', error);
-        alert('Error al reanudar la partida');
+        showMessage('Error al reanudar la partida', 'error', 3000);
         localStorage.removeItem('auto_saved_game');
         checkForGameInProgress();
     }
@@ -943,7 +1064,6 @@ function resumeGame() {
 
 function autoSaveGame() {
     if (!game || game.gameOver) {
-        // Si el juego terminó, limpiar el guardado automático
         clearAutoSavedGame();
         return;
     }
@@ -961,6 +1081,7 @@ function autoSaveGame() {
         gameMode: gameMode,
         aiDifficulty: aiDifficulty,
         boardTheme: boardTheme,
+        pieceStyle: pieceStyle,
         timePerPlayer: timePerPlayer,
         incrementPerMove: incrementPerMove,
         whiteTime: whiteTime,
@@ -993,7 +1114,15 @@ function startClock() {
                 stopClock();
                 game.gameOver = true;
                 clearAutoSavedGame();
-                alert('¡Se acabó el tiempo de las blancas! Las negras ganan.');
+                
+                // Registrar estadística (negras ganan)
+                if (playerColor === 'black') {
+                    recordGameResult('win');
+                } else {
+                    recordGameResult('loss');
+                }
+                
+                showMessage('¡Se acabó el tiempo de las blancas! Las negras ganan.', 'error', 0);
                 return;
             }
         } else {
@@ -1002,7 +1131,15 @@ function startClock() {
                 stopClock();
                 game.gameOver = true;
                 clearAutoSavedGame();
-                alert('¡Se acabó el tiempo de las negras! Las blancas ganan.');
+                
+                // Registrar estadística (blancas ganan)
+                if (playerColor === 'white') {
+                    recordGameResult('win');
+                } else {
+                    recordGameResult('loss');
+                }
+                
+                showMessage('¡Se acabó el tiempo de las negras! Las blancas ganan.', 'error', 0);
                 return;
             }
         }
@@ -1048,6 +1185,9 @@ function renderBoard() {
     const boardElement = document.getElementById('chess-board');
     boardElement.innerHTML = '';
     
+    // Aplicar clase de estilo de piezas al tablero
+    boardElement.className = 'chess-board board-theme-' + boardTheme + ' piece-style-' + pieceStyle;
+    
     const isFlipped = playerColor === 'black';
     const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
     
@@ -1086,10 +1226,40 @@ function renderBoard() {
             // Agregar pieza si existe
             const piece = game.getPiece(displayRow, displayCol);
             if (piece) {
-                const pieceElement = document.createElement('span');
-                pieceElement.className = 'piece';
-                pieceElement.textContent = piece.piece;
-                square.appendChild(pieceElement);
+                // Verificar si se debe usar SVG o emoji
+                if (SVG_PIECE_SETS.includes(pieceStyle)) {
+                    // Usar imagen SVG
+                    const pieceImg = document.createElement('img');
+                    pieceImg.className = 'piece piece-svg';
+                    pieceImg.dataset.color = piece.color;
+                    pieceImg.dataset.type = piece.type;
+                    
+                    // Mapeo correcto de tipos a caracteres de notación de ajedrez
+                    const typeMap = {
+                        'king': 'K',
+                        'queen': 'Q',
+                        'rook': 'R',
+                        'bishop': 'B',
+                        'knight': 'N',  // ¡Importante! N para kNight
+                        'pawn': 'P'
+                    };
+                    
+                    const colorChar = piece.color === 'white' ? 'w' : 'b';
+                    const typeChar = typeMap[piece.type];
+                    const fileName = `${colorChar}${typeChar}.svg`;
+                    
+                    pieceImg.src = `pieces/${pieceStyle}/${fileName}`;
+                    pieceImg.alt = piece.piece;
+                    square.appendChild(pieceImg);
+                } else {
+                    // Usar emoji/texto
+                    const pieceElement = document.createElement('span');
+                    pieceElement.className = 'piece';
+                    pieceElement.dataset.color = piece.color;
+                    pieceElement.dataset.type = piece.type;
+                    pieceElement.textContent = piece.piece;
+                    square.appendChild(pieceElement);
+                }
             }
             
             // Event listener para clics
@@ -1134,12 +1304,8 @@ function renderCoordinateLabels() {
 function handleSquareClick(row, col) {
     if (game.gameOver) return;
     
-    // En modo humano vs humano, permitir mover ambos colores
-    const allowedColor = (gameMode === 'vs-human' || gameMode === 'puzzle') 
-        ? game.currentTurn 
-        : playerColor;
-    
-    if (gameMode === 'vs-ai' && game.currentTurn !== playerColor) return;
+    // Solo permitir mover las piezas del jugador (siempre vs IA)
+    if (game.currentTurn !== playerColor) return;
     
     const clickedPiece = game.getPiece(row, col);
     
@@ -1173,16 +1339,11 @@ function handleSquareClick(row, col) {
             
             handleGameResult(result);
             
-            // Turno de la IA solo en modo IA
-            if (gameMode === 'vs-ai' && !game.gameOver && game.currentTurn !== playerColor) {
+            // Turno de la IA (siempre activo)
+            if (!game.gameOver && game.currentTurn !== playerColor) {
                 setTimeout(() => makeAIMove(), 800);
             }
-
-            // Verificar puzzle
-            if (gameMode === 'puzzle') {
-                checkPuzzleSolution();
-            }
-        } else if (clickedPiece && clickedPiece.color === allowedColor) {
+        } else if (clickedPiece && clickedPiece.color === playerColor) {
             // Seleccionar otra pieza propia
             selectedSquare = { row, col };
             highlightValidMoves(row, col);
@@ -1191,23 +1352,10 @@ function handleSquareClick(row, col) {
             selectedSquare = null;
             renderBoard();
         }
-    } else if (clickedPiece && clickedPiece.color === allowedColor) {
+    } else if (clickedPiece && clickedPiece.color === playerColor) {
         // Seleccionar una pieza
         selectedSquare = { row, col };
         highlightValidMoves(row, col);
-    }
-}
-
-function checkPuzzleSolution() {
-    // Aquí se implementaría la verificación de la solución del puzzle
-    const puzzle = chessPuzzles[currentPuzzleIndex];
-    // Por ahora, simplemente avanzar al siguiente puzzle después de unos movimientos
-    if (game.moveHistory.length >= 2) {
-        setTimeout(() => {
-            alert('¡Correcto! Siguiente puzzle...');
-            currentPuzzleIndex++;
-            startNewGame();
-        }, 1000);
     }
 }
 
@@ -1428,14 +1576,26 @@ function handleGameResult(result) {
         const winner = result.winner === 'white' ? 'Blancas' : 'Negras';
         stopClock();
         clearAutoSavedGame();
+        
+        // Registrar estadística
+        if (result.winner === playerColor) {
+            recordGameResult('win');
+        } else {
+            recordGameResult('loss');
+        }
+        
         setTimeout(() => {
-            alert(`¡Jaque mate! ${winner} ganan.`);
+            showMessage(`¡Jaque mate! ${winner} ganan.`, 'success', 0);
         }, 300);
     } else if (result.status === 'stalemate') {
         stopClock();
         clearAutoSavedGame();
+        
+        // Registrar tablas
+        recordGameResult('draw');
+        
         setTimeout(() => {
-            alert('¡Tablas por ahogado!');
+            showMessage('¡Tablas por ahogado!', 'info', 0);
         }, 300);
     } else if (result.status === 'check') {
         console.log('¡Jaque!');
@@ -1476,14 +1636,14 @@ async function makeAIMove() {
             
                 handleGameResult(result);
             } else {
-                alert('Error al parsear el movimiento de la IA');
+                showMessage('Error al parsear el movimiento de la IA', 'error', 3000);
             }
         } else {
-            alert('La IA no pudo generar un movimiento válido');
+            showMessage('La IA no pudo generar un movimiento válido', 'error', 3000);
         }
     } catch (error) {
         console.error('Error en movimiento de IA:', error);
-        alert('Error al obtener movimiento de la IA: ' + error.message);
+        showMessage('Error al obtener movimiento de la IA: ' + error.message, 'error', 3000);
     } finally {
         showThinkingIndicator(false);
     }
