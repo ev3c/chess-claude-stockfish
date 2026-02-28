@@ -26,6 +26,16 @@ header h1 {
     font-size: 3rem;
     margin-bottom: 10px;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    position: relative;
+}
+
+.version-tag {
+    font-size: 0.75rem;
+    color: #000;
+    font-weight: 400;
+    vertical-align: baseline;
+    text-shadow: none;
+    letter-spacing: 0.5px;
 }
 
 .subtitle {

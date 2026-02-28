@@ -558,13 +558,12 @@ function loadSavedSettings() {
         try {
             const settings = JSON.parse(savedSettings);
             
-            // Aplicar configuraciones (siempre vs-ai)
-            playerColor = settings.playerColor || 'white';
-            aiDifficulty = settings.aiDifficulty || 20;
-            boardTheme = settings.boardTheme || 'classic';
-            pieceStyle = settings.pieceStyle || 'classic';
-            timePerPlayer = settings.timePerPlayer || 3;
-            incrementPerMove = settings.incrementPerMove || 2;
+            playerColor = settings.playerColor ?? 'white';
+            aiDifficulty = settings.aiDifficulty ?? 20;
+            boardTheme = settings.boardTheme ?? 'classic';
+            pieceStyle = settings.pieceStyle ?? 'classic';
+            timePerPlayer = settings.timePerPlayer ?? 3;
+            incrementPerMove = settings.incrementPerMove ?? 2;
             
             // Actualizar UI
             document.getElementById('player-color').value = playerColor;
@@ -574,8 +573,7 @@ function loadSavedSettings() {
             
             const timeControl = `${timePerPlayer}+${incrementPerMove}`;
             const timeControlSelect = document.getElementById('time-control');
-            const options = Array.from(timeControlSelect.options);
-            const matchingOption = options.find(opt => opt.value === timeControl);
+            const matchingOption = Array.from(timeControlSelect.options).find(opt => opt.value === timeControl);
             if (matchingOption) {
                 timeControlSelect.value = timeControl;
             }
@@ -1000,34 +998,30 @@ function resumeGame() {
         const savedState = JSON.parse(autoSavedGame);
         
         // Restaurar todas las configuraciones
-        playerColor = savedState.playerColor;
-        gameMode = savedState.gameMode;
-        aiDifficulty = savedState.aiDifficulty;
-        boardTheme = savedState.boardTheme;
-        pieceStyle = savedState.pieceStyle || 'classic';
-        timePerPlayer = savedState.timePerPlayer;
-        incrementPerMove = savedState.incrementPerMove;
-        whiteTime = savedState.whiteTime;
-        blackTime = savedState.blackTime;
-        lastMoveSquares = savedState.lastMoveSquares || { from: null, to: null };
-        currentMoveIndex = savedState.currentMoveIndex || -1;
+        playerColor = savedState.playerColor ?? 'white';
+        aiDifficulty = savedState.aiDifficulty ?? 20;
+        boardTheme = savedState.boardTheme ?? 'classic';
+        pieceStyle = savedState.pieceStyle ?? 'classic';
+        timePerPlayer = savedState.timePerPlayer ?? 3;
+        incrementPerMove = savedState.incrementPerMove ?? 2;
+        whiteTime = savedState.whiteTime ?? timePerPlayer * 60;
+        blackTime = savedState.blackTime ?? timePerPlayer * 60;
+        lastMoveSquares = savedState.lastMoveSquares ?? { from: null, to: null };
+        currentMoveIndex = savedState.currentMoveIndex ?? -1;
         
         // Actualizar UI con las configuraciones
         document.getElementById('player-color').value = playerColor;
-        document.getElementById('game-mode').value = gameMode;
         document.getElementById('ai-difficulty').value = aiDifficulty;
         document.getElementById('board-theme').value = boardTheme;
         document.getElementById('piece-style').value = pieceStyle;
         
         const timeControl = `${timePerPlayer}+${incrementPerMove}`;
         const timeControlSelect = document.getElementById('time-control');
-        const options = Array.from(timeControlSelect.options);
-        const matchingOption = options.find(opt => opt.value === timeControl);
+        const matchingOption = Array.from(timeControlSelect.options).find(opt => opt.value === timeControl);
         if (matchingOption) {
             timeControlSelect.value = timeControl;
         }
         
-        updateUIForGameMode();
         applyBoardTheme();
         
         // Restaurar el estado del juego
@@ -1078,7 +1072,6 @@ function autoSaveGame() {
         gameOver: game.gameOver,
         gameStateHistory: game.gameStateHistory || [],
         playerColor: playerColor,
-        gameMode: gameMode,
         aiDifficulty: aiDifficulty,
         boardTheme: boardTheme,
         pieceStyle: pieceStyle,
