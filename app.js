@@ -782,11 +782,6 @@ function startNewGame() {
     if (playerColor === 'black') {
         setTimeout(() => makeAIMove(), 800);
     }
-
-    // Iniciar reloj
-    if (!game.gameOver) {
-        startClock();
-    }
 }
 
 function applyBoardTheme() {
@@ -1318,6 +1313,11 @@ function handleSquareClick(row, col) {
             };
             
             selectedSquare = null;
+            
+            // Iniciar reloj en el primer movimiento
+            if (!clockInterval) {
+                startClock();
+            }
             
             // Agregar incremento al jugador que acaba de mover
             addTimeIncrement();
