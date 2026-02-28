@@ -60,9 +60,456 @@ async function initStockfish() {
     }
 }
 
-// Función para obtener el mejor movimiento (Stockfish 17 API + fallback local)
+// Libro de aperturas para variedad en las partidas
+const OPENING_BOOK = {
+    // Respuestas a 1.e4
+    'e2e4': ['e7e5', 'c7c5', 'd7d5', 'e7e6', 'c7c6', 'g7g6', 'd7d6', 'b7b6'],
+    // Respuestas a 1.d4
+    'd2d4': ['d7d5', 'g8f6', 'e7e6', 'f7f5', 'c7c5', 'g7g6', 'd7d6'],
+    // Respuestas a 1.c4 (Inglesa)
+    'c2c4': ['e7e5', 'c7c5', 'g8f6', 'e7e6', 'g7g6'],
+    // Respuestas a 1.Nf3 (Reti)
+    'g1f3': ['d7d5', 'g8f6', 'c7c5', 'f7f5', 'g7g6'],
+
+    // Aperturas como blancas (primer movimiento)
+    'start_white': ['e2e4', 'd2d4', 'c2c4', 'g1f3', 'b2b3', 'g2g3'],
+
+    // Siciliana: 1.e4 c5
+    'e2e4 c7c5': ['g1f3', 'b1c3', 'c2c3', 'd2d4', 'f2f4'],
+    // Española: 1.e4 e5 2.Nf3
+    'e2e4 e7e5': ['g1f3', 'f1c4', 'b1c3', 'f2f4', 'd2d4'],
+    // Francesa: 1.e4 e6
+    'e2e4 e7e6': ['d2d4', 'd2d3', 'g1f3', 'b1c3'],
+    // Caro-Kann: 1.e4 c6
+    'e2e4 c7c6': ['d2d4', 'b1c3', 'g1f3', 'd2d3'],
+    // Escandinava: 1.e4 d5
+    'e2e4 d7d5': ['e4d5', 'b1c3', 'e4e5'],
+    // Pirc: 1.e4 d6
+    'e2e4 d7d6': ['d2d4', 'g1f3', 'b1c3', 'f2f4'],
+
+    // 1.e4 e5 2.Nf3 Nc6
+    'e2e4 e7e5 g1f3': ['b8c6', 'g8f6', 'd7d6'],
+    'e2e4 e7e5 g1f3 b8c6': ['f1b5', 'f1c4', 'd2d4', 'b1c3'],
+    'e2e4 e7e5 g1f3 g8f6': ['g1e5', 'd2d4', 'b1c3', 'f1c4'],
+
+    // Gambito de Dama: 1.d4 d5
+    'd2d4 d7d5': ['c2c4', 'g1f3', 'c1f4', 'e2e3', 'b1c3'],
+    // India de Rey: 1.d4 Nf6
+    'd2d4 g8f6': ['c2c4', 'g1f3', 'c1f4', 'e2e3', 'b1c3'],
+    // Holandesa: 1.d4 f5
+    'd2d4 f7f5': ['c2c4', 'g1f3', 'g2g3', 'e2e3'],
+    // Benoni: 1.d4 c5
+    'd2d4 c7c5': ['d4d5', 'e2e3', 'g1f3'],
+
+    // Gambito de Dama aceptado/rehusado
+    'd2d4 d7d5 c2c4': ['d5c4', 'e7e6', 'c7c6', 'g8f6'],
+    'd2d4 d7d5 c2c4 e7e6': ['b1c3', 'g1f3', 'c1g5'],
+    'd2d4 d7d5 c2c4 c7c6': ['g1f3', 'b1c3', 'e2e3'],
+
+    // India de Rey continuaciones
+    'd2d4 g8f6 c2c4': ['g7g6', 'e7e6', 'c7c5', 'e7e5', 'b7b6'],
+    'd2d4 g8f6 c2c4 g7g6': ['b1c3', 'g1f3', 'g2g3'],
+    'd2d4 g8f6 c2c4 e7e6': ['b1c3', 'g1f3', 'g2g3'],
+
+    // Siciliana continuaciones
+    'e2e4 c7c5 g1f3': ['d7d6', 'b8c6', 'e7e6', 'g7g6'],
+    'e2e4 c7c5 g1f3 d7d6': ['d2d4', 'f1b5', 'b1c3'],
+    'e2e4 c7c5 g1f3 b8c6': ['d2d4', 'f1b5', 'b1c3'],
+};
+
+// Nombres de aperturas por secuencia de movimientos UCI
+const OPENING_NAMES = {
+    // Primer movimiento blancas
+    'e2e4': '1.e4 — Apertura de Peón de Rey',
+    'd2d4': '1.d4 — Apertura de Peón de Dama',
+    'c2c4': '1.c4 — Apertura Inglesa',
+    'g1f3': '1.Cf3 — Apertura Réti',
+    'b2b3': '1.b3 — Apertura Larsen',
+    'g2g3': '1.g3 — Apertura Húngara',
+
+    // 1.e4 respuestas
+    'e2e4 e7e5': '1...e5 — Juego Abierto',
+    'e2e4 c7c5': '1...c5 — Defensa Siciliana',
+    'e2e4 e7e6': '1...e6 — Defensa Francesa',
+    'e2e4 c7c6': '1...c6 — Defensa Caro-Kann',
+    'e2e4 d7d5': '1...d5 — Defensa Escandinava',
+    'e2e4 d7d6': '1...d6 — Defensa Pirc',
+    'e2e4 g7g6': '1...g6 — Defensa Moderna',
+    'e2e4 b7b6': '1...b6 — Defensa Owen',
+
+    // Italiana / Española / Escocesa
+    'e2e4 e7e5 g1f3': '2.Cf3 — Apertura del Caballo de Rey',
+    'e2e4 e7e5 g1f3 b8c6': '2...Cc6 — Defensa de los Dos Caballos',
+    'e2e4 e7e5 g1f3 b8c6 f1b5': '3.Ab5 — Apertura Española (Ruy López)',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6': '3...a6 — Española: Variante Morphy',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4': '4.Aa4 — Española: Morphy Clásica',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6': '4...Cf6 — Española: Abierta',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1': '5.O-O — Española: Línea Principal',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7': '5...Ae7 — Española: Cerrada',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 b7b5': '5...b5 — Española: Arcángel',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 g8f6': '3...Cf6 — Española: Defensa Berlinesa',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 f8c5': '3...Ac5 — Española: Defensa Clásica',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 d7d6': '3...d6 — Española: Defensa Steinitz',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 f7f5': '3...f5 — Española: Gambito Schliemann',
+    'e2e4 e7e5 g1f3 b8c6 f1c4': '3.Ac4 — Apertura Italiana (Giuoco Piano)',
+    'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5': '3...Ac5 — Italiana: Giuoco Piano',
+    'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 c2c3': '4.c3 — Italiana: Giuoco Piano Lento',
+    'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 b2b4': '4.b4 — Gambito Evans',
+    'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 d2d3': '4.d3 — Italiana: Giuoco Pianissimo',
+    'e2e4 e7e5 g1f3 b8c6 f1c4 g8f6': '3...Cf6 — Italiana: Dos Caballos',
+    'e2e4 e7e5 g1f3 b8c6 f1c4 g8f6 d2d4': '4.d4 — Dos Caballos: Ataque Moderno',
+    'e2e4 e7e5 g1f3 b8c6 f1c4 g8f6 g1g5': '4.Cg5 — Dos Caballos: Ataque Fried Liver',
+    'e2e4 e7e5 g1f3 b8c6 d2d4': '3.d4 — Apertura Escocesa',
+    'e2e4 e7e5 g1f3 b8c6 d2d4 e5d4': '3...exd4 — Escocesa: Línea Principal',
+    'e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4': '4.Cxd4 — Escocesa Clásica',
+    'e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f1c4': '4.Ac4 — Gambito Escocés',
+    'e2e4 e7e5 g1f3 b8c6 b1c3': '3.Cc3 — Apertura de los Cuatro Caballos',
+    'e2e4 e7e5 g1f3 g8f6': '2...Cf6 — Defensa Petrov',
+    'e2e4 e7e5 g1f3 g8f6 f3e5': '3.Cxe5 — Petrov: Línea Principal',
+    'e2e4 e7e5 g1f3 g8f6 f3e5 d7d6': '3...d6 — Petrov: Variante Clásica',
+    'e2e4 e7e5 g1f3 g8f6 d2d4': '3.d4 — Petrov: Ataque Steinitz',
+    'e2e4 e7e5 g1f3 g8f6 b1c3': '3.Cc3 — Petrov: Tres Caballos',
+    'e2e4 e7e5 f1c4': '2.Ac4 — Apertura del Alfil',
+    'e2e4 e7e5 f2f4': '2.f4 — Gambito de Rey',
+    'e2e4 e7e5 f2f4 e5f4': '2...exf4 — Gambito de Rey Aceptado',
+    'e2e4 e7e5 f2f4 f8c5': '2...Ac5 — Gambito de Rey Rehusado',
+    'e2e4 e7e5 d2d4': '2.d4 — Gambito del Centro',
+    'e2e4 e7e5 b1c3': '2.Cc3 — Apertura Vienesa',
+    'e2e4 e7e5 b1c3 g8f6': '2...Cf6 — Vienesa: Variante Falkbeer',
+    'e2e4 e7e5 b1c3 b8c6': '2...Cc6 — Vienesa: Línea Principal',
+
+    // Siciliana variantes
+    'e2e4 c7c5 g1f3': '2.Cf3 — Siciliana Abierta',
+    'e2e4 c7c5 g1f3 d7d6': '2...d6 — Siciliana Najdorf / Dragón',
+    'e2e4 c7c5 g1f3 d7d6 d2d4': '3.d4 — Siciliana Abierta: Variante Principal',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4': '3...cxd4 — Siciliana Abierta',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4': '4.Cxd4 — Siciliana: Línea Principal',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6': '4...Cf6 — Siciliana: Preparando Najdorf/Dragón',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3': '5.Cc3 — Siciliana: Línea Clásica',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 a7a6': '5...a6 — Siciliana Najdorf',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 g7g6': '5...g6 — Siciliana Dragón',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 e7e5': '5...e5 — Siciliana Sveshnikov',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 b8c6': '5...Cc6 — Siciliana Clásica',
+    'e2e4 c7c5 g1f3 b8c6': '2...Cc6 — Siciliana Clásica',
+    'e2e4 c7c5 g1f3 b8c6 d2d4': '3.d4 — Siciliana Clásica Abierta',
+    'e2e4 c7c5 g1f3 e7e6': '2...e6 — Siciliana Paulsen / Taimanov',
+    'e2e4 c7c5 g1f3 e7e6 d2d4': '3.d4 — Siciliana Paulsen: Línea Principal',
+    'e2e4 c7c5 g1f3 e7e6 d2d4 c5d4 f3d4 a7a6': '4...a6 — Siciliana Kan',
+    'e2e4 c7c5 g1f3 e7e6 d2d4 c5d4 f3d4 b8c6': '4...Cc6 — Siciliana Taimanov',
+    'e2e4 c7c5 g1f3 g7g6': '2...g6 — Siciliana Acelerada del Dragón',
+    'e2e4 c7c5 b1c3': '2.Cc3 — Siciliana Cerrada',
+    'e2e4 c7c5 c2c3': '2.c3 — Siciliana Alapin',
+    'e2e4 c7c5 c2c3 d7d5': '2...d5 — Alapin: Línea Principal',
+    'e2e4 c7c5 c2c3 g8f6': '2...Cf6 — Alapin: Variante Moderna',
+    'e2e4 c7c5 d2d4': '2.d4 — Gambito Smith-Morra',
+    'e2e4 c7c5 d2d4 c5d4': '2...cxd4 — Smith-Morra Aceptado',
+    'e2e4 c7c5 f2f4': '2.f4 — Gambito Grand Prix',
+
+    // Francesa variantes
+    'e2e4 e7e6 d2d4': '2.d4 — Francesa: Variante Principal',
+    'e2e4 e7e6 d2d4 d7d5': '2...d5 — Francesa Clásica',
+    'e2e4 e7e6 d2d4 d7d5 b1c3': '3.Cc3 — Francesa: Winawer / Clásica',
+    'e2e4 e7e6 d2d4 d7d5 b1c3 f8b4': '3...Ab4 — Francesa: Variante Winawer',
+    'e2e4 e7e6 d2d4 d7d5 b1c3 f8b4 e4e5': '4.e5 — Winawer: Línea Principal',
+    'e2e4 e7e6 d2d4 d7d5 b1c3 f8b4 e4e5 c7c5': '4...c5 — Winawer: Variante Clásica',
+    'e2e4 e7e6 d2d4 d7d5 b1c3 g8f6': '3...Cf6 — Francesa: Variante Clásica',
+    'e2e4 e7e6 d2d4 d7d5 b1c3 g8f6 c1g5': '4.Ag5 — Francesa Clásica: Línea McCutcheon',
+    'e2e4 e7e6 d2d4 d7d5 b1c3 d5e4': '3...dxe4 — Francesa: Variante Rubinstein',
+    'e2e4 e7e6 d2d4 d7d5 e4e5': '3.e5 — Francesa: Variante del Avance',
+    'e2e4 e7e6 d2d4 d7d5 e4e5 c7c5': '3...c5 — Francesa Avance: Línea Principal',
+    'e2e4 e7e6 d2d4 d7d5 e4e5 c7c5 c2c3': '4.c3 — Francesa Avance: Variante Nimzowitsch',
+    'e2e4 e7e6 d2d4 d7d5 b1d2': '3.Cd2 — Francesa: Variante Tarrasch',
+    'e2e4 e7e6 d2d4 d7d5 b1d2 g8f6': '3...Cf6 — Tarrasch: Línea Principal',
+    'e2e4 e7e6 d2d4 d7d5 b1d2 c7c5': '3...c5 — Tarrasch: Variante Abierta',
+
+    // Caro-Kann variantes
+    'e2e4 c7c6 d2d4': '2.d4 — Caro-Kann: Variante Principal',
+    'e2e4 c7c6 d2d4 d7d5': '2...d5 — Caro-Kann Clásica',
+    'e2e4 c7c6 d2d4 d7d5 b1c3': '3.Cc3 — Caro-Kann: Variante Clásica',
+    'e2e4 c7c6 d2d4 d7d5 b1c3 d5e4': '3...dxe4 — Caro-Kann Clásica: Línea Principal',
+    'e2e4 c7c6 d2d4 d7d5 b1c3 d5e4 c3e4': '4.Cxe4 — Caro-Kann: Variante Principal',
+    'e2e4 c7c6 d2d4 d7d5 b1c3 d5e4 c3e4 c8f5': '4...Af5 — Caro-Kann: Clásica con Af5',
+    'e2e4 c7c6 d2d4 d7d5 b1c3 d5e4 c3e4 b8d7': '4...Cd7 — Caro-Kann: Variante Smyslov',
+    'e2e4 c7c6 d2d4 d7d5 b1c3 d5e4 c3e4 g8f6': '4...Cf6 — Caro-Kann: Bronstein-Larsen',
+    'e2e4 c7c6 d2d4 d7d5 e4e5': '3.e5 — Caro-Kann: Variante del Avance',
+    'e2e4 c7c6 d2d4 d7d5 e4e5 c8f5': '3...Af5 — Caro-Kann Avance: Línea Principal',
+    'e2e4 c7c6 d2d4 d7d5 e4d5': '3.exd5 — Caro-Kann: Variante del Cambio',
+    'e2e4 c7c6 d2d4 d7d5 e4d5 c6d5': '3...cxd5 — Caro-Kann: Cambio Simétrico',
+
+    // Escandinava
+    'e2e4 d7d5 e4d5': '2.exd5 — Escandinava: Línea Principal',
+    'e2e4 d7d5 e4d5 d8d5': '2...Dxd5 — Escandinava: Recuperación Inmediata',
+    'e2e4 d7d5 e4d5 d8d5 b1c3': '3.Cc3 — Escandinava: Línea Principal',
+    'e2e4 d7d5 e4d5 d8d5 b1c3 d5a5': '3...Da5 — Escandinava: Variante Clásica',
+    'e2e4 d7d5 e4d5 d8d5 b1c3 d5d6': '3...Dd6 — Escandinava: Variante Moderna',
+    'e2e4 d7d5 e4d5 g8f6': '2...Cf6 — Escandinava: Variante Moderna (Marshall)',
+
+    // Pirc / Moderna
+    'e2e4 d7d6 d2d4': '2.d4 — Pirc: Variante Principal',
+    'e2e4 d7d6 d2d4 g8f6': '2...Cf6 — Pirc Clásica',
+    'e2e4 d7d6 d2d4 g8f6 b1c3': '3.Cc3 — Pirc: Línea Principal',
+    'e2e4 d7d6 d2d4 g8f6 b1c3 g7g6': '3...g6 — Pirc: Sistema Clásico',
+    'e2e4 d7d6 d2d4 g8f6 b1c3 g7g6 f2f4': '4.f4 — Pirc: Ataque Austriaco',
+    'e2e4 d7d6 d2d4 g8f6 b1c3 g7g6 g1f3': '4.Cf3 — Pirc: Línea Clásica',
+    'e2e4 d7d6 d2d4 g8f6 b1c3 g7g6 c1e3': '4.Ae3 — Pirc: Sistema 150 Ataque',
+
+    // 1.d4 respuestas
+    'd2d4 d7d5': '1...d5 — Juego Cerrado',
+    'd2d4 g8f6': '1...Cf6 — Defensa India',
+    'd2d4 e7e6': '1...e6 — Defensa Francesa Invertida',
+    'd2d4 f7f5': '1...f5 — Defensa Holandesa',
+    'd2d4 c7c5': '1...c5 — Defensa Benoni',
+    'd2d4 g7g6': '1...g6 — Defensa India de Rey Moderna',
+    'd2d4 d7d6': '1...d6 — Defensa India Antigua',
+
+    // Gambito de Dama
+    'd2d4 d7d5 c2c4': '2.c4 — Gambito de Dama',
+    'd2d4 d7d5 c2c4 d5c4': '2...dxc4 — Gambito de Dama Aceptado',
+    'd2d4 d7d5 c2c4 d5c4 g1f3': '3.Cf3 — GDA: Línea Principal',
+    'd2d4 d7d5 c2c4 d5c4 e2e3': '3.e3 — GDA: Variante Clásica',
+    'd2d4 d7d5 c2c4 e7e6': '2...e6 — Gambito de Dama Rehusado',
+    'd2d4 d7d5 c2c4 e7e6 b1c3': '3.Cc3 — GDR: Línea Principal',
+    'd2d4 d7d5 c2c4 e7e6 b1c3 g8f6': '3...Cf6 — GDR Clásico',
+    'd2d4 d7d5 c2c4 e7e6 b1c3 g8f6 c1g5': '4.Ag5 — GDR: Variante Ortodoxa',
+    'd2d4 d7d5 c2c4 e7e6 b1c3 g8f6 c1g5 f8e7': '4...Ae7 — GDR Ortodoxa: Línea Principal',
+    'd2d4 d7d5 c2c4 e7e6 b1c3 g8f6 g1f3': '4.Cf3 — GDR: Variante del Cambio',
+    'd2d4 d7d5 c2c4 e7e6 g1f3': '3.Cf3 — GDR: Sistema Cf3',
+    'd2d4 d7d5 c2c4 e7e6 g1f3 g8f6': '3...Cf6 — GDR: Línea Clásica',
+    'd2d4 d7d5 c2c4 c7c6': '2...c6 — Defensa Eslava',
+    'd2d4 d7d5 c2c4 c7c6 g1f3': '3.Cf3 — Eslava: Línea Principal',
+    'd2d4 d7d5 c2c4 c7c6 g1f3 g8f6': '3...Cf6 — Eslava Clásica',
+    'd2d4 d7d5 c2c4 c7c6 g1f3 g8f6 b1c3': '4.Cc3 — Eslava: Variante Principal',
+    'd2d4 d7d5 c2c4 c7c6 g1f3 g8f6 b1c3 d5c4': '4...dxc4 — Eslava: Variante Checa',
+    'd2d4 d7d5 c2c4 c7c6 g1f3 g8f6 b1c3 e7e6': '4...e6 — Semi-Eslava',
+    'd2d4 d7d5 c2c4 c7c6 g1f3 g8f6 b1c3 e7e6 e2e3': '5.e3 — Semi-Eslava: Meran',
+    'd2d4 d7d5 c2c4 c7c6 g1f3 g8f6 b1c3 e7e6 c1g5': '5.Ag5 — Semi-Eslava: Anti-Meran',
+    'd2d4 d7d5 c2c4 g8f6': '2...Cf6 — Defensa Marshall',
+    'd2d4 d7d5 g1f3': '2.Cf3 — Sistema Londres / Colle',
+    'd2d4 d7d5 g1f3 g8f6': '2...Cf6 — Sistema Colle',
+    'd2d4 d7d5 g1f3 g8f6 c1f4': '3.Af4 — Sistema Londres',
+    'd2d4 d7d5 g1f3 g8f6 e2e3': '3.e3 — Sistema Colle: Línea Principal',
+    'd2d4 d7d5 c1f4': '2.Af4 — Sistema Londres',
+    'd2d4 d7d5 c1f4 g8f6': '2...Cf6 — Londres: Línea Principal',
+    'd2d4 d7d5 c1f4 g8f6 e2e3': '3.e3 — Londres: Variante Clásica',
+    'd2d4 d7d5 c1f4 g8f6 g1f3': '3.Cf3 — Londres: Línea Moderna',
+
+    // India de Rey
+    'd2d4 g8f6 c2c4': '2.c4 — Sistema Indio',
+    'd2d4 g8f6 c2c4 g7g6': '2...g6 — India de Rey',
+    'd2d4 g8f6 c2c4 g7g6 b1c3': '3.Cc3 — India de Rey: Línea Principal',
+    'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7': '3...Ag7 — India de Rey: Fianchetto',
+    'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4': '4.e4 — India de Rey: Línea Clásica',
+    'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6': '4...d6 — India de Rey: Variante Principal',
+    'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6 g1f3': '5.Cf3 — India de Rey: Clásica',
+    'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6 f2f3': '5.f3 — India de Rey: Sämisch',
+    'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6 g1e2': '5.Ce2 — India de Rey: Averbakh',
+    'd2d4 g8f6 c2c4 g7g6 g1f3': '3.Cf3 — India de Rey: Fianchetto',
+    'd2d4 g8f6 c2c4 g7g6 g2g3': '3.g3 — India de Rey: Sistema Fianchetto',
+    'd2d4 g8f6 c2c4 e7e6': '2...e6 — India de Dama / Nimzo-India',
+    'd2d4 g8f6 c2c4 e7e6 b1c3': '3.Cc3 — Nimzo-India',
+    'd2d4 g8f6 c2c4 e7e6 b1c3 f8b4': '3...Ab4 — Nimzo-India: Línea Principal',
+    'd2d4 g8f6 c2c4 e7e6 b1c3 f8b4 d1c2': '4.Dc2 — Nimzo-India: Variante Clásica',
+    'd2d4 g8f6 c2c4 e7e6 b1c3 f8b4 e2e3': '4.e3 — Nimzo-India: Variante Rubinstein',
+    'd2d4 g8f6 c2c4 e7e6 b1c3 f8b4 a2a3': '4.a3 — Nimzo-India: Variante Sämisch',
+    'd2d4 g8f6 c2c4 e7e6 g1f3': '3.Cf3 — India de Dama',
+    'd2d4 g8f6 c2c4 e7e6 g1f3 b7b6': '3...b6 — India de Dama: Línea Principal',
+    'd2d4 g8f6 c2c4 e7e6 g1f3 f8b4': '3...Ab4+ — Bogo-India',
+    'd2d4 g8f6 c2c4 e7e6 g1f3 d7d5': '3...d5 — GDR: Transposición',
+    'd2d4 g8f6 c2c4 e7e6 g2g3': '3.g3 — Catalana',
+    'd2d4 g8f6 c2c4 e7e6 g2g3 d7d5': '3...d5 — Catalana: Línea Principal',
+    'd2d4 g8f6 c2c4 c7c5': '2...c5 — Benoni Moderna',
+    'd2d4 g8f6 c2c4 c7c5 d4d5': '3.d5 — Benoni: Línea Principal',
+    'd2d4 g8f6 c2c4 c7c5 d4d5 e7e6': '3...e6 — Benoni Moderna: Clásica',
+    'd2d4 g8f6 c2c4 e7e5': '2...e5 — Gambito Budapest',
+    'd2d4 g8f6 c2c4 b7b6': '2...b6 — Defensa India de Dama',
+    'd2d4 g8f6 g1f3': '2.Cf3 — Sistema Indio de Dama',
+    'd2d4 g8f6 c1f4': '2.Af4 — Sistema Londres vs India',
+    'd2d4 g8f6 c1f4 d7d5': '2...d5 — Londres vs India: Línea Principal',
+    'd2d4 g8f6 c1f4 g7g6': '2...g6 — Londres vs India de Rey',
+
+    // Holandesa
+    'd2d4 f7f5 c2c4': '2.c4 — Holandesa: Variante Principal',
+    'd2d4 f7f5 g1f3': '2.Cf3 — Holandesa: Clásica',
+    'd2d4 f7f5 g2g3': '2.g3 — Holandesa: Leningrado',
+    'd2d4 f7f5 c2c4 g8f6': '2...Cf6 — Holandesa: Línea Principal',
+    'd2d4 f7f5 c2c4 g8f6 g2g3': '3.g3 — Holandesa: Leningrado Moderna',
+    'd2d4 f7f5 c2c4 e7e6': '2...e6 — Holandesa: Muro de Piedra',
+
+    // Inglesa continuaciones
+    'c2c4 e7e5': '1...e5 — Inglesa: Siciliana Invertida',
+    'c2c4 e7e5 b1c3': '2.Cc3 — Inglesa: Línea Principal',
+    'c2c4 e7e5 b1c3 g8f6': '2...Cf6 — Inglesa: Variante Principal',
+    'c2c4 e7e5 b1c3 g8f6 g1f3': '3.Cf3 — Inglesa: Cuatro Caballos',
+    'c2c4 e7e5 g2g3': '2.g3 — Inglesa: Fianchetto',
+    'c2c4 c7c5': '1...c5 — Inglesa Simétrica',
+    'c2c4 c7c5 g1f3': '2.Cf3 — Inglesa Simétrica: Línea Principal',
+    'c2c4 c7c5 b1c3': '2.Cc3 — Inglesa Simétrica: Cc3',
+    'c2c4 g8f6': '1...Cf6 — Inglesa: India',
+    'c2c4 g8f6 b1c3': '2.Cc3 — Inglesa India: Línea Principal',
+    'c2c4 g8f6 g1f3': '2.Cf3 — Inglesa India: Sistema Réti',
+    'c2c4 e7e6': '1...e6 — Inglesa: Agincourt',
+    'c2c4 g7g6': '1...g6 — Inglesa: Moderna',
+
+    // Réti
+    'g1f3 d7d5': '1...d5 — Réti: Clásica',
+    'g1f3 d7d5 c2c4': '2.c4 — Réti: Gambito',
+    'g1f3 d7d5 c2c4 d5c4': '2...dxc4 — Réti: Gambito Aceptado',
+    'g1f3 d7d5 c2c4 e7e6': '2...e6 — Réti: Línea Principal',
+    'g1f3 d7d5 c2c4 c7c6': '2...c6 — Réti: Eslava',
+    'g1f3 d7d5 g2g3': '2.g3 — Réti: Sistema Catalán',
+    'g1f3 d7d5 g2g3 g8f6': '2...Cf6 — Réti Catalán: Línea Principal',
+    'g1f3 g8f6': '1...Cf6 — Réti: Simétrica',
+    'g1f3 g8f6 c2c4': '2.c4 — Réti: Transposición India',
+    'g1f3 g8f6 g2g3': '2.g3 — Réti: Doble Fianchetto',
+    'g1f3 c7c5': '1...c5 — Réti: Siciliana Invertida',
+    'g1f3 f7f5': '1...f5 — Réti: Holandesa',
+
+    // Larsen
+    'b2b3 e7e5': '1...e5 — Larsen: Línea Principal',
+    'b2b3 d7d5': '1...d5 — Larsen: Clásica',
+    'b2b3 g8f6': '1...Cf6 — Larsen: India',
+
+    // Húngara
+    'g2g3 d7d5': '1...d5 — Húngara: Clásica',
+    'g2g3 e7e5': '1...e5 — Húngara: Línea Principal',
+    'g2g3 g8f6': '1...Cf6 — Húngara: India',
+};
+
+let currentOpeningName = '';
+let lastOpeningMoveCount = 0;
+
+function detectOpening() {
+    const history = game.moveHistoryUCI || [];
+    if (history.length === 0) return;
+
+    if (history.length <= lastOpeningMoveCount) return;
+    lastOpeningMoveCount = history.length;
+
+    // A partir del movimiento 9 (18 half-moves), ocultar el banner
+    if (history.length > 16) {
+        hideOpeningBanner();
+        return;
+    }
+
+    // Buscar coincidencia más larga primero
+    let bestMatch = '';
+    for (let len = history.length; len >= 1; len--) {
+        const key = history.slice(0, len).join(' ');
+        if (OPENING_NAMES[key]) {
+            bestMatch = OPENING_NAMES[key];
+            break;
+        }
+    }
+
+    if (bestMatch && bestMatch !== currentOpeningName) {
+        currentOpeningName = bestMatch;
+        showOpeningName(bestMatch);
+    } else if (!bestMatch && !currentOpeningName) {
+        currentOpeningName = 'Variante desconocida';
+        showOpeningName('Variante desconocida');
+    }
+}
+
+function showOpeningName(name) {
+    let banner = document.getElementById('opening-banner');
+    if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'opening-banner';
+        banner.className = 'opening-banner';
+        const boardContainer = document.querySelector('.board-container');
+        boardContainer.insertBefore(banner, boardContainer.firstChild);
+    }
+
+    banner.textContent = name;
+    banner.classList.remove('opening-fade-out');
+    banner.classList.add('opening-fade-in');
+    banner.style.display = 'block';
+}
+
+function recalcOpening() {
+    const history = game.moveHistoryUCI || [];
+    lastOpeningMoveCount = history.length;
+
+    if (history.length === 0) {
+        currentOpeningName = '';
+        const banner = document.getElementById('opening-banner');
+        if (banner) banner.style.display = 'none';
+        return;
+    }
+
+    if (history.length > 16) {
+        hideOpeningBanner();
+        return;
+    }
+
+    let bestMatch = '';
+    for (let len = history.length; len >= 1; len--) {
+        const key = history.slice(0, len).join(' ');
+        if (OPENING_NAMES[key]) {
+            bestMatch = OPENING_NAMES[key];
+            break;
+        }
+    }
+
+    currentOpeningName = bestMatch || 'Variante desconocida';
+    showOpeningName(currentOpeningName);
+}
+
+function hideOpeningBanner() {
+    const banner = document.getElementById('opening-banner');
+    if (banner && banner.style.display !== 'none') {
+        banner.classList.remove('opening-fade-in');
+        banner.classList.add('opening-fade-out');
+        setTimeout(() => { banner.style.display = 'none'; }, 600);
+    }
+}
+
+function getOpeningBookMove() {
+    const moveCount = (game.moveHistoryUCI || []).length;
+    if (moveCount > 10) return null;
+
+    const history = game.moveHistoryUCI || [];
+
+    // Primer movimiento como blancas
+    if (moveCount === 0 && game.currentTurn === 'white') {
+        const moves = OPENING_BOOK['start_white'];
+        return moves[Math.floor(Math.random() * moves.length)];
+    }
+
+    // Buscar la posición actual en el libro (de más específica a menos)
+    const keys = [];
+    if (moveCount >= 3) keys.push(history.slice(0, 3).join(' '));
+    if (moveCount >= 2) keys.push(history.slice(0, 2).join(' '));
+    if (moveCount >= 1) keys.push(history[history.length - 1]);
+
+    for (const key of keys) {
+        if (OPENING_BOOK[key]) {
+            const candidates = OPENING_BOOK[key];
+            // Mezclar candidatos para elegir aleatoriamente
+            const shuffled = [...candidates].sort(() => Math.random() - 0.5);
+
+            for (const move of shuffled) {
+                const allMoves = getAllPossibleMoves(game.currentTurn);
+                if (allMoves.some(m => m.uci === move)) {
+                    console.log(`Libro de aperturas: ${move} (de ${candidates.length} opciones)`);
+                    return move;
+                }
+            }
+        }
+    }
+
+    return null;
+}
+
+// Función para obtener el mejor movimiento (libro + Stockfish API + fallback local)
 async function getStockfishBestMove() {
     console.log('Motor de ajedrez - Nivel:', aiDifficulty);
+
+    // Intentar libro de aperturas primero (variedad)
+    const bookMove = getOpeningBookMove();
+    if (bookMove) {
+        return bookMove;
+    }
     
     // Intentar usar Stockfish API (niveles 15-20)
     if (aiDifficulty >= 15) {
@@ -766,6 +1213,10 @@ function startNewGame() {
     selectedSquare = null;
     lastMoveSquares = { from: null, to: null };
     currentMoveIndex = -1;
+    currentOpeningName = '';
+    lastOpeningMoveCount = 0;
+    const banner = document.getElementById('opening-banner');
+    if (banner) banner.style.display = 'none';
     
     // Resetear reloj
     stopClock();
@@ -805,6 +1256,7 @@ function undoMove() {
     updateCapturedPieces();
     updateMoveHistory();
     updateUndoButton();
+    recalcOpening();
 }
 
 function updateUndoButton() {
@@ -1329,6 +1781,7 @@ function handleSquareClick(row, col) {
             
             // Guardar automáticamente el estado
             autoSaveGame();
+            detectOpening();
             
             handleGameResult(result);
             
@@ -1626,6 +2079,7 @@ async function makeAIMove() {
                 
                 // Guardar automáticamente el estado
                 autoSaveGame();
+                detectOpening();
             
                 handleGameResult(result);
             } else {
