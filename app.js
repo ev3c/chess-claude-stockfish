@@ -1129,11 +1129,55 @@ function recordGameResult(result) {
 
 // Reiniciar estadísticas
 function resetStats() {
-    if (confirm('¿Estás seguro de que quieres reiniciar las estadísticas?')) {
+    showConfirmDialog('¿Reiniciar las estadísticas a cero?', () => {
         stats = { wins: 0, draws: 0, losses: 0 };
         saveStats();
         showMessage('Estadísticas reiniciadas', 'success', 2000);
-    }
+    });
+}
+
+function showConfirmDialog(message, onConfirm) {
+    let overlay = document.getElementById('game-list-overlay');
+    if (overlay) overlay.remove();
+
+    overlay = document.createElement('div');
+    overlay.id = 'game-list-overlay';
+    overlay.className = 'message-overlay';
+    overlay.style.display = 'flex';
+    document.body.appendChild(overlay);
+
+    const modal = document.createElement('div');
+    modal.className = 'game-list-modal';
+    modal.style.textAlign = 'center';
+
+    const text = document.createElement('p');
+    text.textContent = message;
+    text.style.cssText = 'font-size:1rem;color:#333;margin-bottom:20px;font-weight:500;';
+    modal.appendChild(text);
+
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:8px;';
+
+    const confirmBtn = document.createElement('button');
+    confirmBtn.className = 'btn btn-success';
+    confirmBtn.textContent = 'Confirmar';
+    confirmBtn.style.marginTop = '0';
+    confirmBtn.addEventListener('click', () => { overlay.remove(); onConfirm(); });
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'btn btn-secondary';
+    cancelBtn.textContent = 'Cancelar';
+    cancelBtn.style.marginTop = '0';
+    cancelBtn.addEventListener('click', () => overlay.remove());
+
+    btnRow.appendChild(confirmBtn);
+    btnRow.appendChild(cancelBtn);
+    modal.appendChild(btnRow);
+
+    overlay.appendChild(modal);
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.remove();
+    });
 }
 
 // Inicializar la aplicación
@@ -1182,7 +1226,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('save-game').addEventListener('click', saveGame);
     document.getElementById('load-game').addEventListener('click', loadGame);
     document.getElementById('export-pgn').addEventListener('click', exportPGN);
-    
+    document.getElementById('import-pgn').addEventListener('click', importPGN);
+
     // Estadísticas
     document.getElementById('reset-stats').addEventListener('click', resetStats);
 
@@ -1333,20 +1378,92 @@ function saveGame() {
         board: game.getBoardState(),
         currentTurn: game.currentTurn,
         moveHistory: game.moveHistory,
+        moveHistoryUCI: game.moveHistoryUCI || [],
         capturedPieces: game.capturedPieces,
+        gameStateHistory: game.gameStateHistory || [],
+        enPassantTarget: game.enPassantTarget,
+        castlingRights: game.castlingRights,
+        gameOver: game.gameOver,
         playerColor: playerColor,
         timestamp: new Date().toISOString()
     };
 
     const savedGames = JSON.parse(localStorage.getItem('saved_games') || '[]');
-    const gameName = prompt('Nombre para esta partida:', `Partida ${savedGames.length + 1}`);
-    
-    if (gameName) {
+    const defaultName = `Partida ${savedGames.length + 1}`;
+
+    showSaveDialog(defaultName, (gameName) => {
         gameState.name = gameName;
         savedGames.push(gameState);
         localStorage.setItem('saved_games', JSON.stringify(savedGames));
         showMessage('Partida guardada correctamente', 'success', 2000);
-    }
+    });
+}
+
+function showSaveDialog(defaultName, onSave) {
+    let overlay = document.getElementById('game-list-overlay');
+    if (overlay) overlay.remove();
+
+    overlay = document.createElement('div');
+    overlay.id = 'game-list-overlay';
+    overlay.className = 'message-overlay';
+    overlay.style.display = 'flex';
+    document.body.appendChild(overlay);
+
+    const modal = document.createElement('div');
+    modal.className = 'game-list-modal';
+
+    const title = document.createElement('h3');
+    title.textContent = 'Guardar Partida';
+    title.className = 'game-list-title';
+    modal.appendChild(title);
+
+    const label = document.createElement('label');
+    label.textContent = 'Nombre:';
+    label.style.cssText = 'display:block;margin-bottom:8px;color:#555;font-weight:600;font-size:0.9rem;';
+    modal.appendChild(label);
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = defaultName;
+    input.className = 'select';
+    input.style.marginBottom = '16px';
+    modal.appendChild(input);
+
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:8px;';
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'btn btn-success';
+    saveBtn.textContent = '💾 Guardar';
+    saveBtn.style.marginTop = '0';
+    saveBtn.addEventListener('click', () => {
+        const name = input.value.trim() || defaultName;
+        overlay.remove();
+        onSave(name);
+    });
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'btn btn-secondary';
+    cancelBtn.textContent = 'Cancelar';
+    cancelBtn.style.marginTop = '0';
+    cancelBtn.addEventListener('click', () => overlay.remove());
+
+    btnRow.appendChild(saveBtn);
+    btnRow.appendChild(cancelBtn);
+    modal.appendChild(btnRow);
+
+    overlay.appendChild(modal);
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.remove();
+    });
+
+    input.focus();
+    input.select();
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') saveBtn.click();
+        if (e.key === 'Escape') overlay.remove();
+    });
 }
 
 function loadGame() {
@@ -1357,30 +1474,130 @@ function loadGame() {
         return;
     }
 
-    let message = 'Selecciona una partida para cargar:\n\n';
-    savedGames.forEach((game, index) => {
-        const date = new Date(game.timestamp).toLocaleString();
-        message += `${index + 1}. ${game.name} (${date})\n`;
+    showGameList(savedGames);
+}
+
+function showGameList(savedGames) {
+    let overlay = document.getElementById('game-list-overlay');
+    if (overlay) overlay.remove();
+
+    overlay = document.createElement('div');
+    overlay.id = 'game-list-overlay';
+    overlay.className = 'message-overlay';
+    overlay.style.display = 'flex';
+    document.body.appendChild(overlay);
+
+    const modal = document.createElement('div');
+    modal.className = 'game-list-modal';
+
+    const title = document.createElement('h3');
+    title.textContent = 'Partidas Guardadas';
+    title.className = 'game-list-title';
+    modal.appendChild(title);
+
+    const list = document.createElement('div');
+    list.className = 'game-list';
+
+    savedGames.forEach((g, idx) => {
+        const item = document.createElement('div');
+        item.className = 'game-list-item';
+
+        const name = document.createElement('span');
+        name.className = 'game-list-name';
+        name.textContent = g.name || `Partida ${idx + 1}`;
+
+        const info = document.createElement('span');
+        info.className = 'game-list-info';
+        const date = new Date(g.timestamp).toLocaleDateString();
+        const moves = (g.moveHistory || []).length;
+        info.textContent = `${date} · ${moves} mov.`;
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'game-list-delete';
+        deleteBtn.textContent = '✕';
+        deleteBtn.title = 'Eliminar partida';
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            savedGames.splice(idx, 1);
+            localStorage.setItem('saved_games', JSON.stringify(savedGames));
+            overlay.remove();
+            if (savedGames.length > 0) {
+                showGameList(savedGames);
+            } else {
+                showMessage('No quedan partidas guardadas', 'info', 2000);
+            }
+        });
+
+        item.appendChild(name);
+        item.appendChild(info);
+        item.appendChild(deleteBtn);
+
+        item.addEventListener('click', () => {
+            overlay.remove();
+            loadGameByIndex(savedGames, idx);
+        });
+
+        list.appendChild(item);
     });
 
-    const selection = prompt(message + '\nIngresa el número:');
-    const index = parseInt(selection) - 1;
+    modal.appendChild(list);
 
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'btn btn-secondary';
+    closeBtn.textContent = 'Cancelar';
+    closeBtn.style.marginTop = '12px';
+    closeBtn.style.width = '100%';
+    closeBtn.addEventListener('click', () => overlay.remove());
+    modal.appendChild(closeBtn);
+
+    overlay.appendChild(modal);
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.remove();
+    });
+}
+
+function loadGameByIndex(savedGames, index) {
     if (index >= 0 && index < savedGames.length) {
         const savedGame = savedGames[index];
         
+        stopClock();
         game = new ChessGame();
         game.board = savedGame.board;
         game.currentTurn = savedGame.currentTurn;
-        game.moveHistory = savedGame.moveHistory;
+        game.moveHistory = savedGame.moveHistory || [];
+        game.moveHistoryUCI = savedGame.moveHistoryUCI || [];
         game.capturedPieces = savedGame.capturedPieces;
+        game.enPassantTarget = savedGame.enPassantTarget || null;
+        game.castlingRights = savedGame.castlingRights || game.castlingRights;
+        game.gameOver = true;
         playerColor = savedGame.playerColor;
+        currentMoveIndex = -1;
+
+        // Reconstruir gameStateHistory si no existe (partidas antiguas)
+        // Usamos los snapshots guardados o creamos uno solo con la posición final
+        if (savedGame.gameStateHistory && savedGame.gameStateHistory.length > 0) {
+            game.gameStateHistory = savedGame.gameStateHistory;
+        } else {
+            game.gameStateHistory = [];
+        }
+
+        // Siempre añadir la posición final como último estado
+        game.gameStateHistory.push({
+            board: JSON.parse(JSON.stringify(game.board)),
+            currentTurn: game.currentTurn,
+            capturedPieces: JSON.parse(JSON.stringify(game.capturedPieces)),
+            enPassantTarget: game.enPassantTarget ? { ...game.enPassantTarget } : null,
+            castlingRights: JSON.parse(JSON.stringify(game.castlingRights)),
+            gameOver: true
+        });
     
         renderBoard();
         updateCapturedPieces();
         updateMoveHistory();
+        updateUndoButton();
+        recalcOpening();
     
-        showMessage('Partida cargada correctamente', 'success', 2000);
+        showMessage('Partida cargada — usa ◀ ▶ para navegar', 'success', 3000);
     }
 }
 
@@ -1418,6 +1635,173 @@ function exportPGN() {
     URL.revokeObjectURL(url);
 
     showMessage('Archivo PGN exportado correctamente', 'success', 2000);
+}
+
+function importPGN() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pgn,.txt';
+    
+    input.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const pgnText = event.target.result;
+            parsePGNAndLoad(pgnText);
+        };
+        reader.readAsText(file);
+    });
+    
+    input.click();
+}
+
+function parsePGNAndLoad(pgnText) {
+    try {
+        // Extraer movimientos: quitar headers [...]  y comentarios {...}
+        let movesText = pgnText
+            .replace(/\[.*?\]\s*/g, '')
+            .replace(/\{.*?\}/g, '')
+            .replace(/\(.*?\)/g, '')
+            .replace(/\d+\.\.\./g, '')
+            .replace(/;.*$/gm, '')
+            .trim();
+
+        // Quitar resultado final
+        movesText = movesText.replace(/\s*(1-0|0-1|1\/2-1\/2|\*)\s*$/, '').trim();
+
+        // Separar movimientos individuales: "1. e4 e5 2. Nf3 Nc6" → ["e4", "e5", "Nf3", "Nc6"]
+        const moves = movesText
+            .split(/\s+/)
+            .filter(token => token && !token.match(/^\d+\.?$/))
+            .map(m => m.replace(/^\d+\./, ''));
+
+        if (moves.length === 0) {
+            showMessage('No se encontraron movimientos en el PGN', 'error', 3000);
+            return;
+        }
+
+        // Crear nueva partida y reproducir movimientos
+        stopClock();
+        game = new ChessGame();
+        currentMoveIndex = -1;
+        currentOpeningName = '';
+        lastOpeningMoveCount = 0;
+
+        let movesPlayed = 0;
+
+        for (const sanMove of moves) {
+            const parsed = parseSANMove(sanMove, game);
+            if (!parsed) {
+                console.warn('No se pudo parsear movimiento:', sanMove, 'después de', movesPlayed, 'movimientos');
+                break;
+            }
+
+            const result = game.makeMove(parsed.fromRow, parsed.fromCol, parsed.toRow, parsed.toCol);
+            if (!result) {
+                console.warn('Movimiento inválido:', sanMove);
+                break;
+            }
+            movesPlayed++;
+        }
+
+        // Añadir estado final para navegación
+        game.gameStateHistory.push({
+            board: JSON.parse(JSON.stringify(game.board)),
+            currentTurn: game.currentTurn,
+            capturedPieces: JSON.parse(JSON.stringify(game.capturedPieces)),
+            enPassantTarget: game.enPassantTarget ? { ...game.enPassantTarget } : null,
+            castlingRights: JSON.parse(JSON.stringify(game.castlingRights)),
+            gameOver: game.gameOver
+        });
+
+        game.gameOver = true;
+        renderBoard();
+        updateCapturedPieces();
+        updateMoveHistory();
+        updateUndoButton();
+        recalcOpening();
+
+        showMessage(`PGN importado: ${movesPlayed} movimientos — usa ◀ ▶ para navegar`, 'success', 3000);
+
+    } catch (error) {
+        console.error('Error al importar PGN:', error);
+        showMessage('Error al importar el archivo PGN', 'error', 3000);
+    }
+}
+
+function parseSANMove(san, gameState) {
+    const color = gameState.currentTurn;
+    san = san.replace(/[+#!?]/g, '');
+
+    // Enroque
+    if (san === 'O-O' || san === '0-0') {
+        const row = color === 'white' ? 7 : 0;
+        return { fromRow: row, fromCol: 4, toRow: row, toCol: 6 };
+    }
+    if (san === 'O-O-O' || san === '0-0-0') {
+        const row = color === 'white' ? 7 : 0;
+        return { fromRow: row, fromCol: 4, toRow: row, toCol: 2 };
+    }
+
+    const files = 'abcdefgh';
+    const pieceMap = { 'K': 'king', 'Q': 'queen', 'R': 'rook', 'B': 'bishop', 'N': 'knight' };
+
+    let pieceType = 'pawn';
+    let disambigFile = -1;
+    let disambigRank = -1;
+    let toFile, toRank;
+    let promotion = null;
+
+    let s = san;
+
+    // Detectar promoción: e8=Q o e8Q
+    const promoMatch = s.match(/=?([QRBN])$/);
+    if (promoMatch) {
+        promotion = promoMatch[1];
+        s = s.replace(/=?[QRBN]$/, '');
+    }
+
+    // Detectar tipo de pieza
+    if (s[0] && pieceMap[s[0]]) {
+        pieceType = pieceMap[s[0]];
+        s = s.substring(1);
+    }
+
+    // Quitar 'x' (captura)
+    s = s.replace('x', '');
+
+    // Las últimas 2 letras son la casilla destino
+    if (s.length < 2) return null;
+    toFile = files.indexOf(s[s.length - 2]);
+    toRank = 8 - parseInt(s[s.length - 1]);
+    if (toFile < 0 || toRank < 0 || toRank > 7) return null;
+
+    // Desambiguación (lo que queda antes del destino)
+    const disambig = s.substring(0, s.length - 2);
+    for (const ch of disambig) {
+        if (files.includes(ch)) disambigFile = files.indexOf(ch);
+        else if (ch >= '1' && ch <= '8') disambigRank = 8 - parseInt(ch);
+    }
+
+    // Buscar la pieza que puede hacer este movimiento
+    for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+            const piece = gameState.getPiece(row, col);
+            if (!piece || piece.color !== color || piece.type !== pieceType) continue;
+
+            if (disambigFile >= 0 && col !== disambigFile) continue;
+            if (disambigRank >= 0 && row !== disambigRank) continue;
+
+            const validMoves = gameState.getValidMoves(row, col);
+            if (validMoves.some(m => m.row === toRank && m.col === toFile)) {
+                return { fromRow: row, fromCol: col, toRow: toRank, toCol: toFile };
+            }
+        }
+    }
+
+    return null;
 }
 
 // Funciones para reanudar partida
@@ -1882,7 +2266,9 @@ function updateMoveHistory() {
         whiteMoveItem.className = 'move-item';
         whiteMoveItem.textContent = `${moveNumber}. ${whiteMove}`;
         whiteMoveItem.dataset.index = i;
-        if (currentMoveIndex === i) {
+        // currentMoveIndex apunta al índice en gameStateHistory;
+        // movimiento i corresponde a gameStateHistory[i+1]
+        if (currentMoveIndex === i + 1) {
             whiteMoveItem.classList.add('active');
         }
         whiteMoveItem.addEventListener('click', () => goToMove(i));
@@ -1894,7 +2280,7 @@ function updateMoveHistory() {
             blackMoveItem.className = 'move-item';
             blackMoveItem.textContent = blackMove;
             blackMoveItem.dataset.index = i + 1;
-            if (currentMoveIndex === i + 1) {
+            if (currentMoveIndex === i + 2) {
                 blackMoveItem.classList.add('active');
             }
             blackMoveItem.addEventListener('click', () => goToMove(i + 1));
@@ -1902,8 +2288,8 @@ function updateMoveHistory() {
         }
     }
     
-    // Si estamos en la posición actual (última)
-    if (currentMoveIndex === -1 || currentMoveIndex === game.moveHistory.length - 1) {
+    // Si estamos en la posición final
+    if (currentMoveIndex === -1) {
         const items = historyDisplay.querySelectorAll('.move-item');
         if (items.length > 0) {
             items[items.length - 1].classList.add('active');
@@ -1925,18 +2311,32 @@ function updateNavigationButtons() {
     const navNext = document.getElementById('nav-next');
     const navLast = document.getElementById('nav-last');
     
-    const hasHistory = game && game.moveHistory && game.moveHistory.length > 0;
-    const atStart = currentMoveIndex === -1 || currentMoveIndex === 0;
-    const atEnd = currentMoveIndex === -1 || currentMoveIndex >= game.moveHistory.length - 1;
+    const totalStates = game ? (game.gameStateHistory || []).length : 0;
+    const canNavigate = totalStates > 1;
+    const atEnd = currentMoveIndex === -1;
+    const atStart = currentMoveIndex === 0;
     
-    navFirst.disabled = !hasHistory || atStart;
-    navPrev.disabled = !hasHistory || atStart;
-    navNext.disabled = !hasHistory || atEnd;
-    navLast.disabled = !hasHistory || atEnd;
+    navFirst.disabled = !canNavigate || atStart;
+    navPrev.disabled = !canNavigate || atStart;
+    navNext.disabled = !canNavigate || atEnd;
+    navLast.disabled = !canNavigate || atEnd;
 }
 
+// gameStateHistory layout:
+//   [0] = estado ANTES del movimiento 0 (posición inicial)
+//   [1] = estado ANTES del movimiento 1 (= después del movimiento 0)
+//   ...
+//   [N] = estado final (después del último movimiento) — añadido al cargar
+//
+// currentMoveIndex:
+//   -1 = posición final (último estado)
+//    0 = después del movimiento 0 → mostrar gameStateHistory[1]
+//    i = después del movimiento i → mostrar gameStateHistory[i+1]
+//   "inicio" = posición inicial → mostrar gameStateHistory[0], currentMoveIndex = 0 especial
+
 function goToFirstMove() {
-    if (!game || !game.gameStateHistory || game.gameStateHistory.length === 0) return;
+    const states = game ? (game.gameStateHistory || []) : [];
+    if (states.length < 2) return;
     
     currentMoveIndex = 0;
     restoreGameState(0);
@@ -1944,75 +2344,78 @@ function goToFirstMove() {
 }
 
 function goToPreviousMove() {
-    if (!game || !game.gameStateHistory) return;
+    const states = game ? (game.gameStateHistory || []) : [];
+    if (states.length < 2) return;
     
     if (currentMoveIndex === -1) {
-        currentMoveIndex = game.moveHistory.length - 1;
+        // Desde el final, ir al penúltimo estado (después del penúltimo movimiento)
+        currentMoveIndex = states.length - 2;
+    } else if (currentMoveIndex > 0) {
+        currentMoveIndex--;
+    } else {
+        return;
     }
     
-    if (currentMoveIndex > 0) {
-        currentMoveIndex--;
-        restoreGameState(currentMoveIndex);
-        updateMoveHistory();
-    }
+    restoreGameState(currentMoveIndex);
+    updateMoveHistory();
 }
 
 function goToNextMove() {
-    if (!game || !game.gameStateHistory) return;
+    const states = game ? (game.gameStateHistory || []) : [];
+    if (states.length < 2 || currentMoveIndex === -1) return;
     
-    if (currentMoveIndex === -1) return;
-    
-    if (currentMoveIndex < game.moveHistory.length - 1) {
+    if (currentMoveIndex < states.length - 2) {
         currentMoveIndex++;
         restoreGameState(currentMoveIndex);
-        updateMoveHistory();
     } else {
-        // Volver a la posición actual
         currentMoveIndex = -1;
-        restoreGameState(game.gameStateHistory.length - 1);
-        updateMoveHistory();
+        restoreGameState(states.length - 1);
     }
+    updateMoveHistory();
 }
 
 function goToLastMove() {
-    if (!game || !game.gameStateHistory) return;
+    const states = game ? (game.gameStateHistory || []) : [];
+    if (states.length < 2) return;
     
     currentMoveIndex = -1;
-    restoreGameState(game.gameStateHistory.length - 1);
+    restoreGameState(states.length - 1);
     updateMoveHistory();
 }
 
 function goToMove(moveIndex) {
-    if (!game || !game.gameStateHistory) return;
+    const states = game ? (game.gameStateHistory || []) : [];
+    if (states.length < 2) return;
     
-    currentMoveIndex = moveIndex;
-    restoreGameState(moveIndex);
+    // Click en movimiento i → mostrar posición después de ese movimiento = states[i+1]
+    const stateIdx = moveIndex + 1;
+    if (stateIdx >= states.length) {
+        currentMoveIndex = -1;
+        restoreGameState(states.length - 1);
+    } else {
+        currentMoveIndex = moveIndex + 1;
+        restoreGameState(stateIdx);
+    }
     updateMoveHistory();
 }
 
 function restoreGameState(stateIndex) {
-    if (!game || !game.gameStateHistory || stateIndex < 0) return;
+    if (!game || !game.gameStateHistory) return;
     
-    // Obtener el estado guardado ANTES del movimiento (stateIndex + 1 porque guardamos antes de mover)
-    const targetStateIndex = stateIndex;
-    
-    if (targetStateIndex >= game.gameStateHistory.length) {
-        // Restaurar posición actual (última)
-        targetStateIndex = game.gameStateHistory.length - 1;
+    if (stateIndex < 0) stateIndex = 0;
+    if (stateIndex >= game.gameStateHistory.length) {
+        stateIndex = game.gameStateHistory.length - 1;
     }
     
-    const state = game.gameStateHistory[targetStateIndex];
+    const state = game.gameStateHistory[stateIndex];
     if (!state) return;
     
-    // Restaurar el estado del juego
     game.board = JSON.parse(JSON.stringify(state.board));
     game.currentTurn = state.currentTurn;
     game.capturedPieces = JSON.parse(JSON.stringify(state.capturedPieces));
     game.enPassantTarget = state.enPassantTarget ? { ...state.enPassantTarget } : null;
     game.castlingRights = JSON.parse(JSON.stringify(state.castlingRights));
-    game.gameOver = state.gameOver;
     
-    // Actualizar la visualización
     renderBoard();
     updateCapturedPieces();
 }

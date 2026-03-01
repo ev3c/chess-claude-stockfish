@@ -724,6 +724,85 @@ header h1 {
     border-left: 6px solid #3b82f6;
 }
 
+/* Modal de lista de partidas */
+.game-list-modal {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 420px;
+    width: 90%;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    animation: scaleIn 0.3s ease;
+}
+
+.game-list-title {
+    font-size: 1.2rem;
+    color: #333;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #667eea;
+    text-align: center;
+}
+
+.game-list {
+    overflow-y: auto;
+    max-height: 50vh;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.game-list-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.game-list-item:hover {
+    background: #eef2ff;
+    border-color: #667eea;
+    transform: translateX(4px);
+}
+
+.game-list-name {
+    flex: 1;
+    font-weight: 600;
+    color: #333;
+    font-size: 0.95rem;
+}
+
+.game-list-info {
+    font-size: 0.8rem;
+    color: #888;
+    white-space: nowrap;
+}
+
+.game-list-delete {
+    background: none;
+    border: none;
+    color: #ccc;
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    line-height: 1;
+}
+
+.game-list-delete:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
 .spinner {
     width: 30px;
     height: 30px;
