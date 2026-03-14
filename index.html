@@ -70,6 +70,71 @@
                 </div>
 
                 <div class="panel">
+                    <h2>📖 Entrenar Aperturas</h2>
+                    <div class="config-section">
+                        <label>Selecciona una apertura:</label>
+                        <select id="opening-select" class="select">
+                            <option value="">— Modo libre —</option>
+                            <optgroup label="1.e4 — Juego Abierto">
+                                <option value="italiana">Apertura Italiana (Giuoco Piano)</option>
+                                <option value="española">Apertura Española (Ruy López)</option>
+                                <option value="escocesa">Apertura Escocesa</option>
+                                <option value="petrov">Defensa Petrov</option>
+                                <option value="vienesa">Apertura Vienesa</option>
+                                <option value="gambito-rey">Gambito de Rey</option>
+                                <option value="gambito-evans">Gambito Evans</option>
+                                <option value="dos-caballos">Dos Caballos</option>
+                            </optgroup>
+                            <optgroup label="1.e4 — Semiabiertas">
+                                <option value="siciliana-najdorf">Siciliana Najdorf</option>
+                                <option value="siciliana-dragon">Siciliana Dragón</option>
+                                <option value="siciliana-sveshnikov">Siciliana Sveshnikov</option>
+                                <option value="siciliana-clasica">Siciliana Clásica</option>
+                                <option value="siciliana-alapin">Siciliana Alapin</option>
+                                <option value="siciliana-smith-morra">Gambito Smith-Morra</option>
+                                <option value="francesa-winawer">Francesa Winawer</option>
+                                <option value="francesa-clasica">Francesa Clásica</option>
+                                <option value="francesa-avance">Francesa Avance</option>
+                                <option value="francesa-tarrasch">Francesa Tarrasch</option>
+                                <option value="caro-kann-clasica">Caro-Kann Clásica</option>
+                                <option value="caro-kann-avance">Caro-Kann Avance</option>
+                                <option value="escandinava">Defensa Escandinava</option>
+                                <option value="pirc">Defensa Pirc</option>
+                            </optgroup>
+                            <optgroup label="1.d4 — Gambito de Dama">
+                                <option value="gda">Gambito de Dama Aceptado</option>
+                                <option value="gdr-ortodoxa">GDR Ortodoxa</option>
+                                <option value="eslava">Defensa Eslava</option>
+                                <option value="semi-eslava">Semi-Eslava</option>
+                            </optgroup>
+                            <optgroup label="1.d4 — Defensas Indias">
+                                <option value="india-rey">India de Rey</option>
+                                <option value="nimzo-india">Nimzo-India</option>
+                                <option value="india-dama">India de Dama</option>
+                                <option value="benoni">Benoni Moderna</option>
+                                <option value="budapest">Gambito Budapest</option>
+                                <option value="holandesa">Defensa Holandesa</option>
+                            </optgroup>
+                            <optgroup label="1.d4 — Sistemas">
+                                <option value="londres">Sistema Londres</option>
+                                <option value="colle">Sistema Colle</option>
+                            </optgroup>
+                            <optgroup label="Otras Aperturas">
+                                <option value="inglesa">Apertura Inglesa</option>
+                                <option value="reti">Apertura Réti</option>
+                                <option value="catalana">Apertura Catalana</option>
+                                <option value="larsen">Apertura Larsen</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div id="opening-training-info" class="opening-training-info" style="display:none;">
+                        <p id="opening-training-name" class="training-name"></p>
+                        <p id="opening-training-moves" class="training-moves"></p>
+                    </div>
+                    <button id="start-opening-training" class="btn btn-primary" style="display:none;">♟ Iniciar Entrenamiento</button>
+                </div>
+
+                <div class="panel">
                     <h2>Piezas Capturadas</h2>
                     <div class="captured">
                         <div class="captured-section">

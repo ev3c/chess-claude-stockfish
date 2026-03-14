@@ -377,6 +377,48 @@ const OPENING_NAMES = {
 
 let currentOpeningName = '';
 let lastOpeningMoveCount = 0;
+let trainingOpening = null; // Apertura seleccionada para entrenamiento
+
+const OPENING_TRAINING = {
+    'italiana': { name: 'Apertura Italiana (Giuoco Piano)', moves: 'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5', san: '1.e4 e5 2.Cf3 Cc6 3.Ac4 Ac5' },
+    'española': { name: 'Apertura Española (Ruy López)', moves: 'e2e4 e7e5 g1f3 b8c6 f1b5', san: '1.e4 e5 2.Cf3 Cc6 3.Ab5' },
+    'escocesa': { name: 'Apertura Escocesa', moves: 'e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4', san: '1.e4 e5 2.Cf3 Cc6 3.d4 exd4 4.Cxd4' },
+    'petrov': { name: 'Defensa Petrov', moves: 'e2e4 e7e5 g1f3 g8f6', san: '1.e4 e5 2.Cf3 Cf6' },
+    'vienesa': { name: 'Apertura Vienesa', moves: 'e2e4 e7e5 b1c3', san: '1.e4 e5 2.Cc3' },
+    'gambito-rey': { name: 'Gambito de Rey', moves: 'e2e4 e7e5 f2f4', san: '1.e4 e5 2.f4' },
+    'gambito-evans': { name: 'Gambito Evans', moves: 'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 b2b4', san: '1.e4 e5 2.Cf3 Cc6 3.Ac4 Ac5 4.b4' },
+    'dos-caballos': { name: 'Dos Caballos', moves: 'e2e4 e7e5 g1f3 b8c6 f1c4 g8f6', san: '1.e4 e5 2.Cf3 Cc6 3.Ac4 Cf6' },
+    'siciliana-najdorf': { name: 'Siciliana Najdorf', moves: 'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 a7a6', san: '1.e4 c5 2.Cf3 d6 3.d4 cxd4 4.Cxd4 Cf6 5.Cc3 a6' },
+    'siciliana-dragon': { name: 'Siciliana Dragón', moves: 'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 g7g6', san: '1.e4 c5 2.Cf3 d6 3.d4 cxd4 4.Cxd4 Cf6 5.Cc3 g6' },
+    'siciliana-sveshnikov': { name: 'Siciliana Sveshnikov', moves: 'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 e7e5', san: '1.e4 c5 2.Cf3 d6 3.d4 cxd4 4.Cxd4 Cf6 5.Cc3 e5' },
+    'siciliana-clasica': { name: 'Siciliana Clásica', moves: 'e2e4 c7c5 g1f3 b8c6', san: '1.e4 c5 2.Cf3 Cc6' },
+    'siciliana-alapin': { name: 'Siciliana Alapin', moves: 'e2e4 c7c5 c2c3', san: '1.e4 c5 2.c3' },
+    'siciliana-smith-morra': { name: 'Gambito Smith-Morra', moves: 'e2e4 c7c5 d2d4 c5d4', san: '1.e4 c5 2.d4 cxd4' },
+    'francesa-winawer': { name: 'Francesa Winawer', moves: 'e2e4 e7e6 d2d4 d7d5 b1c3 f8b4', san: '1.e4 e6 2.d4 d5 3.Cc3 Ab4' },
+    'francesa-clasica': { name: 'Francesa Clásica', moves: 'e2e4 e7e6 d2d4 d7d5 b1c3 g8f6', san: '1.e4 e6 2.d4 d5 3.Cc3 Cf6' },
+    'francesa-avance': { name: 'Francesa Avance', moves: 'e2e4 e7e6 d2d4 d7d5 e4e5', san: '1.e4 e6 2.d4 d5 3.e5' },
+    'francesa-tarrasch': { name: 'Francesa Tarrasch', moves: 'e2e4 e7e6 d2d4 d7d5 b1d2', san: '1.e4 e6 2.d4 d5 3.Cd2' },
+    'caro-kann-clasica': { name: 'Caro-Kann Clásica', moves: 'e2e4 c7c6 d2d4 d7d5 b1c3 d5e4 c3e4', san: '1.e4 c6 2.d4 d5 3.Cc3 dxe4 4.Cxe4' },
+    'caro-kann-avance': { name: 'Caro-Kann Avance', moves: 'e2e4 c7c6 d2d4 d7d5 e4e5', san: '1.e4 c6 2.d4 d5 3.e5' },
+    'escandinava': { name: 'Defensa Escandinava', moves: 'e2e4 d7d5 e4d5 d8d5 b1c3', san: '1.e4 d5 2.exd5 Dxd5 3.Cc3' },
+    'pirc': { name: 'Defensa Pirc', moves: 'e2e4 d7d6 d2d4 g8f6 b1c3 g7g6', san: '1.e4 d6 2.d4 Cf6 3.Cc3 g6' },
+    'gda': { name: 'Gambito de Dama Aceptado', moves: 'd2d4 d7d5 c2c4 d5c4', san: '1.d4 d5 2.c4 dxc4' },
+    'gdr-ortodoxa': { name: 'GDR Ortodoxa', moves: 'd2d4 d7d5 c2c4 e7e6 b1c3 g8f6 c1g5', san: '1.d4 d5 2.c4 e6 3.Cc3 Cf6 4.Ag5' },
+    'eslava': { name: 'Defensa Eslava', moves: 'd2d4 d7d5 c2c4 c7c6 g1f3 g8f6', san: '1.d4 d5 2.c4 c6 3.Cf3 Cf6' },
+    'semi-eslava': { name: 'Semi-Eslava', moves: 'd2d4 d7d5 c2c4 c7c6 g1f3 g8f6 b1c3 e7e6', san: '1.d4 d5 2.c4 c6 3.Cf3 Cf6 4.Cc3 e6' },
+    'india-rey': { name: 'India de Rey', moves: 'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6', san: '1.d4 Cf6 2.c4 g6 3.Cc3 Ag7 4.e4 d6' },
+    'nimzo-india': { name: 'Nimzo-India', moves: 'd2d4 g8f6 c2c4 e7e6 b1c3 f8b4', san: '1.d4 Cf6 2.c4 e6 3.Cc3 Ab4' },
+    'india-dama': { name: 'India de Dama', moves: 'd2d4 g8f6 c2c4 e7e6 g1f3 b7b6', san: '1.d4 Cf6 2.c4 e6 3.Cf3 b6' },
+    'benoni': { name: 'Benoni Moderna', moves: 'd2d4 g8f6 c2c4 c7c5 d4d5', san: '1.d4 Cf6 2.c4 c5 3.d5' },
+    'budapest': { name: 'Gambito Budapest', moves: 'd2d4 g8f6 c2c4 e7e5', san: '1.d4 Cf6 2.c4 e5' },
+    'holandesa': { name: 'Defensa Holandesa', moves: 'd2d4 f7f5', san: '1.d4 f5' },
+    'londres': { name: 'Sistema Londres', moves: 'd2d4 d7d5 c1f4 g8f6 e2e3', san: '1.d4 d5 2.Af4 Cf6 3.e3' },
+    'colle': { name: 'Sistema Colle', moves: 'd2d4 d7d5 g1f3 g8f6 e2e3', san: '1.d4 d5 2.Cf3 Cf6 3.e3' },
+    'inglesa': { name: 'Apertura Inglesa', moves: 'c2c4 e7e5 b1c3', san: '1.c4 e5 2.Cc3' },
+    'reti': { name: 'Apertura Réti', moves: 'g1f3 d7d5 c2c4', san: '1.Cf3 d5 2.c4' },
+    'catalana': { name: 'Apertura Catalana', moves: 'd2d4 g8f6 c2c4 e7e6 g2g3 d7d5', san: '1.d4 Cf6 2.c4 e6 3.g3 d5' },
+    'larsen': { name: 'Apertura Larsen', moves: 'b2b3', san: '1.b3' },
+};
 
 function detectOpening() {
     const history = game.moveHistoryUCI || [];
@@ -421,15 +463,30 @@ function showOpeningName(name) {
     }
 
     // Marcar todos los anteriores como "old"
-    log.querySelectorAll('.opening-banner').forEach(b => {
-        b.classList.add('old');
-        b.classList.remove('opening-fade-in');
+    log.querySelectorAll('.opening-entry').forEach(e => {
+        e.classList.add('old');
+        e.querySelector('.opening-banner').classList.remove('opening-fade-in');
     });
 
-    const entry = document.createElement('div');
-    entry.className = 'opening-banner opening-fade-in';
-    entry.textContent = name;
-    log.appendChild(entry);
+    const entryCount = log.querySelectorAll('.opening-entry').length;
+    const depth = Math.floor(entryCount / 2);
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'opening-entry opening-fade-in';
+
+    if (depth > 0) {
+        const branch = document.createElement('span');
+        branch.className = 'opening-branch';
+        branch.textContent = '  '.repeat(depth - 1) + ' └ ';
+        wrapper.appendChild(branch);
+    }
+
+    const banner = document.createElement('div');
+    banner.className = 'opening-banner';
+    banner.textContent = name;
+    wrapper.appendChild(banner);
+
+    log.appendChild(wrapper);
     log.style.display = 'flex';
 }
 
@@ -473,9 +530,9 @@ function recalcOpening() {
 function hideOpeningBanner() {
     const log = document.getElementById('opening-log');
     if (log && log.style.display !== 'none') {
-        log.querySelectorAll('.opening-banner').forEach(b => {
-            b.classList.remove('opening-fade-in');
-            b.classList.add('opening-fade-out');
+        log.querySelectorAll('.opening-entry').forEach(e => {
+            e.classList.remove('opening-fade-in');
+            e.classList.add('opening-fade-out');
         });
         setTimeout(() => { log.style.display = 'none'; }, 600);
     }
@@ -1246,7 +1303,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadStats();
 
     // Event listeners
-    document.getElementById('new-game').addEventListener('click', startNewGame);
+    document.getElementById('new-game').addEventListener('click', confirmNewGame);
     document.getElementById('player-color').addEventListener('change', (e) => {
         playerColor = e.target.value;
         saveSettings();
@@ -1287,6 +1344,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Estadísticas
     document.getElementById('reset-stats').addEventListener('click', resetStats);
 
+    // Entrenador de aperturas
+    document.getElementById('opening-select').addEventListener('change', onOpeningSelect);
+    document.getElementById('start-opening-training').addEventListener('click', startOpeningTraining);
+
     // Navegación del historial
     document.getElementById('nav-first').addEventListener('click', goToFirstMove);
     document.getElementById('nav-prev').addEventListener('click', goToPreviousMove);
@@ -1312,6 +1373,16 @@ document.addEventListener('DOMContentLoaded', () => {
 // Función para obtener movimientos de la IA
 async function getAIMove() {
     return await getStockfishBestMove();
+}
+
+function confirmNewGame() {
+    if (game && !game.gameOver && game.moveHistory && game.moveHistory.length > 0) {
+        showConfirmDialog('¿Iniciar una nueva partida? Se perderá la partida actual.', () => {
+            startNewGame();
+        });
+    } else {
+        startNewGame();
+    }
 }
 
 function startNewGame() {
@@ -1342,6 +1413,78 @@ function startNewGame() {
     if (playerColor === 'black') {
         setTimeout(() => makeAIMove(), 800);
     }
+}
+
+function onOpeningSelect() {
+    const select = document.getElementById('opening-select');
+    const info = document.getElementById('opening-training-info');
+    const btn = document.getElementById('start-opening-training');
+    const key = select.value;
+
+    if (!key) {
+        info.style.display = 'none';
+        btn.style.display = 'none';
+        trainingOpening = null;
+        return;
+    }
+
+    const opening = OPENING_TRAINING[key];
+    if (!opening) return;
+
+    trainingOpening = opening;
+    document.getElementById('opening-training-name').textContent = opening.name;
+    document.getElementById('opening-training-moves').textContent = opening.san;
+    info.style.display = 'block';
+    btn.style.display = 'block';
+}
+
+function startOpeningTraining() {
+    if (!trainingOpening) return;
+
+    // Resetear sin activar IA
+    clearAutoSavedGame();
+    game = new ChessGame();
+    selectedSquare = null;
+    lastMoveSquares = { from: null, to: null };
+    currentMoveIndex = -1;
+    currentOpeningName = '';
+    lastOpeningMoveCount = 0;
+    const openingLog = document.getElementById('opening-log');
+    if (openingLog) openingLog.remove();
+    stopClock();
+    whiteTime = timePerPlayer * 60;
+    blackTime = timePerPlayer * 60;
+    updateClockDisplay();
+    renderBoard();
+    updateCapturedPieces();
+    updateMoveHistory();
+    updateUndoButton();
+
+    const uciMoves = trainingOpening.moves.split(' ');
+
+    function playNextMove(index) {
+        if (index >= uciMoves.length || game.gameOver) return;
+
+        const uci = uciMoves[index];
+        const fromCol = uci.charCodeAt(0) - 97;
+        const fromRow = 8 - parseInt(uci[1]);
+        const toCol = uci.charCodeAt(2) - 97;
+        const toRow = 8 - parseInt(uci[3]);
+
+        const result = game.makeMove(fromRow, fromCol, toRow, toCol);
+        if (result) {
+            lastMoveSquares = { from: { row: fromRow, col: fromCol }, to: { row: toRow, col: toCol } };
+            renderBoard();
+            updateCapturedPieces();
+            updateMoveHistory();
+            updateUndoButton();
+            detectOpening();
+
+            setTimeout(() => playNextMove(index + 1), 1200);
+        }
+    }
+
+    setTimeout(() => playNextMove(0), 600);
 }
 
 function applyBoardTheme() {
