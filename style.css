@@ -7,7 +7,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #e5e7eb;
     min-height: 100vh;
     padding: 20px;
 }
@@ -19,19 +19,19 @@ body {
 
 header {
     text-align: center;
-    color: white;
+    color: #1f2937;
     margin-bottom: 30px;
 }
 
 header h1 {
-    font-size: 3rem;
+    font-size: 2.7rem;
     margin-bottom: 10px;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    text-shadow: none;
     position: relative;
 }
 
 .version-tag {
-    font-size: 0.75rem;
+    font-size: 0.675rem;
     color: #000;
     font-weight: 400;
     vertical-align: baseline;
@@ -40,7 +40,7 @@ header h1 {
 }
 
 .subtitle {
-    font-size: 1.2rem;
+    font-size: 1.08rem;
     opacity: 0.9;
 }
 
@@ -79,7 +79,7 @@ header h1 {
 
 .panel h2 {
     color: #333;
-    font-size: 1.2rem;
+    font-size: 1.08rem;
     margin-bottom: 15px;
     border-bottom: 2px solid #667eea;
     padding-bottom: 8px;
@@ -102,7 +102,7 @@ header h1 {
     padding: 10px;
     border: 2px solid #ddd;
     border-radius: 6px;
-    font-size: 0.95rem;
+    font-size: 0.855rem;
     transition: border-color 0.3s;
 }
 
@@ -113,7 +113,7 @@ header h1 {
 }
 
 .info-text {
-    font-size: 0.75rem;
+    font-size: 0.675rem;
     color: #888;
     margin-top: 5px;
 }
@@ -123,7 +123,7 @@ header h1 {
     padding: 12px;
     border: none;
     border-radius: 6px;
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s;
@@ -161,6 +161,28 @@ header h1 {
     background: #4b5563;
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(107, 114, 128, 0.3);
+}
+
+.btn-danger {
+    background: #ef4444;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+}
+
+.btn-warning {
+    background: #f59e0b;
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #d97706;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
 }
 
 .btn:disabled {
@@ -216,7 +238,7 @@ header h1 {
 }
 
 .stat-label {
-    font-size: 0.7rem;
+    font-size: 0.63rem;
     color: #666;
     font-weight: 600;
     margin-bottom: 4px;
@@ -225,7 +247,7 @@ header h1 {
 }
 
 .stat-value {
-    font-size: 1.3rem;
+    font-size: 1.17rem;
     font-weight: 700;
     font-family: 'Courier New', monospace;
 }
@@ -257,7 +279,7 @@ header h1 {
     padding: 8px;
     background: #f9fafb;
     border-radius: 6px;
-    font-size: 1.2rem;
+    font-size: 1.08rem;
 }
 
 /* Historial de movimientos eliminado */
@@ -343,7 +365,7 @@ header h1 {
     background: white;
     border: 1px solid #e0e0e0;
     border-radius: 4px;
-    font-size: 0.9rem;
+    font-size: 0.81rem;
     cursor: pointer;
     transition: all 0.2s;
     margin: 0 2px;
@@ -396,10 +418,9 @@ header h1 {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.1rem;
+    font-size: 0.99rem;
     font-weight: 700;
-    color: white;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    color: #4b5563;
     min-width: 24px;
 }
 
@@ -422,10 +443,9 @@ header h1 {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.1rem;
+    font-size: 0.99rem;
     font-weight: 700;
-    color: white;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    color: #4b5563;
 }
 
 .chess-board {
@@ -590,19 +610,32 @@ header h1 {
     opacity: 0.7;
 }
 
-/* Banner de apertura */
+/* Contenedor de aperturas */
+.opening-log {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    max-width: 640px;
+    width: 100%;
+}
+
 .opening-banner {
     background: rgba(0, 0, 0, 0.75);
     color: #fff;
     text-align: center;
-    padding: 6px 16px;
+    padding: 4px 16px;
     border-radius: 6px;
-    font-size: 0.85rem;
+    font-size: 0.765rem;
     font-weight: 500;
     letter-spacing: 0.3px;
-    max-width: 640px;
     width: 100%;
     backdrop-filter: blur(4px);
+}
+
+.opening-banner.old {
+    background: rgba(0, 0, 0, 0.35);
+    font-size: 0.7rem;
+    padding: 3px 12px;
 }
 
 .opening-fade-in {
@@ -659,7 +692,7 @@ header h1 {
     padding: 30px 50px;
     border-radius: 16px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-    font-size: 1.5rem;
+    font-size: 1.35rem;
     font-weight: 600;
     text-align: center;
     max-width: 600px;
@@ -677,7 +710,7 @@ header h1 {
     right: 10px;
     background: none;
     border: none;
-    font-size: 1.8rem;
+    font-size: 1.62rem;
     color: #999;
     cursor: pointer;
     width: 35px;
@@ -740,7 +773,7 @@ header h1 {
 }
 
 .game-list-title {
-    font-size: 1.2rem;
+    font-size: 1.08rem;
     color: #333;
     margin-bottom: 16px;
     padding-bottom: 10px;
@@ -778,11 +811,11 @@ header h1 {
     flex: 1;
     font-weight: 600;
     color: #333;
-    font-size: 0.95rem;
+    font-size: 0.855rem;
 }
 
 .game-list-info {
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     color: #888;
     white-space: nowrap;
 }
@@ -791,7 +824,7 @@ header h1 {
     background: none;
     border: none;
     color: #ccc;
-    font-size: 1.1rem;
+    font-size: 0.99rem;
     cursor: pointer;
     padding: 2px 6px;
     border-radius: 4px;
@@ -819,7 +852,7 @@ header h1 {
 }
 
 .thinking-indicator p {
-    font-size: 1.1rem;
+    font-size: 0.99rem;
     color: #555;
     font-weight: 600;
 }
@@ -840,7 +873,7 @@ header h1 {
     margin-bottom: 8px;
     color: #555;
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.81rem;
 }
 
 .clock-controls select {
@@ -876,14 +909,14 @@ header h1 {
 }
 
 .clock-label {
-    font-size: 0.85rem;
+    font-size: 0.765rem;
     font-weight: 600;
     color: #666;
     margin-bottom: 5px;
 }
 
 .clock-time {
-    font-size: 1.5rem;
+    font-size: 1.35rem;
     font-weight: 700;
     color: #333;
     font-family: monospace;
@@ -1005,7 +1038,7 @@ header h1 {
     /* Mensajes responsive */
     .message-box {
         padding: 25px 40px;
-        font-size: 1.3rem;
+        font-size: 1.17rem;
         max-width: 500px;
         margin: 0 20px;
     }
@@ -1018,12 +1051,12 @@ header h1 {
     }
 
     header h1 {
-        font-size: 1.8rem;
+        font-size: 1.62rem;
         margin-bottom: 5px;
     }
 
     .subtitle {
-        font-size: 0.9rem;
+        font-size: 0.81rem;
     }
 
     header {
@@ -1092,7 +1125,7 @@ header h1 {
     }
 
     .panel h2 {
-        font-size: 1rem;
+        font-size: 0.9rem;
         margin-bottom: 10px;
     }
 
@@ -1102,7 +1135,7 @@ header h1 {
 
     .btn {
         padding: 8px;
-        font-size: 0.85rem;
+        font-size: 0.765rem;
         margin-top: 6px;
     }
 
@@ -1126,7 +1159,7 @@ header h1 {
 
     /* Reloj compacto */
     .clock-time {
-        font-size: 1.2rem;
+        font-size: 1.08rem;
     }
 
     .clock-player {
@@ -1134,23 +1167,42 @@ header h1 {
     }
 
     .clock-label {
-        font-size: 0.75rem;
+        font-size: 0.675rem;
     }
     
     /* Estadísticas compactas */
     .stat-value {
-        font-size: 1.5rem;
+        font-size: 1.35rem;
     }
     
     .stat-label {
-        font-size: 0.75rem;
+        font-size: 0.675rem;
     }
+}
+
+/* Footer */
+.app-footer {
+    text-align: center;
+    padding: 20px;
+    margin-top: 30px;
+    font-size: 0.72rem;
+    opacity: 0.6;
+}
+
+.app-footer a {
+    color: #4b5563;
+    text-decoration: none;
+}
+
+.app-footer a:hover {
+    opacity: 1;
+    text-decoration: underline;
 }
 
 /* Media query SOLO para smartphone vertical (portrait) */
 @media (max-width: 600px) and (orientation: portrait) {
     header h1 {
-        font-size: 2rem;
+        font-size: 1.8rem;
     }
 
     body {
@@ -1183,13 +1235,13 @@ header h1 {
     /* Mensajes responsive móvil */
     .message-box {
         padding: 20px 30px;
-        font-size: 1.1rem;
+        font-size: 0.99rem;
         max-width: 90%;
         margin: 0 10px;
     }
     
     .message-close-btn {
-        font-size: 1.5rem;
+        font-size: 1.35rem;
         width: 30px;
         height: 30px;
     }
@@ -1234,11 +1286,11 @@ header h1 {
     }
     
     .stat-value {
-        font-size: 1.6rem;
+        font-size: 1.44rem;
     }
     
     .stat-label {
-        font-size: 0.75rem;
+        font-size: 0.675rem;
     }
 
     /* Reorganizar todos los paneles en una columna */
@@ -1301,7 +1353,7 @@ header h1 {
     }
 
     .clock-time {
-        font-size: 1.3rem;
+        font-size: 1.17rem;
     }
 
     /* Historial de movimientos eliminado */
@@ -1309,7 +1361,7 @@ header h1 {
     /* Botones más compactos */
     .btn {
         padding: 10px;
-        font-size: 0.9rem;
+        font-size: 0.81rem;
     }
 
     header {
@@ -1317,7 +1369,7 @@ header h1 {
     }
 
     .subtitle {
-        font-size: 1rem;
+        font-size: 0.9rem;
     }
 }
 

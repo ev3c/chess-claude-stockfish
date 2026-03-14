@@ -411,56 +411,73 @@ function detectOpening() {
 }
 
 function showOpeningName(name) {
-    let banner = document.getElementById('opening-banner');
-    if (!banner) {
-        banner = document.createElement('div');
-        banner.id = 'opening-banner';
-        banner.className = 'opening-banner';
+    let log = document.getElementById('opening-log');
+    if (!log) {
+        log = document.createElement('div');
+        log.id = 'opening-log';
+        log.className = 'opening-log';
         const boardContainer = document.querySelector('.board-container');
-        boardContainer.insertBefore(banner, boardContainer.firstChild);
+        boardContainer.insertBefore(log, boardContainer.firstChild);
     }
 
-    banner.textContent = name;
-    banner.classList.remove('opening-fade-out');
-    banner.classList.add('opening-fade-in');
-    banner.style.display = 'block';
+    // Marcar todos los anteriores como "old"
+    log.querySelectorAll('.opening-banner').forEach(b => {
+        b.classList.add('old');
+        b.classList.remove('opening-fade-in');
+    });
+
+    const entry = document.createElement('div');
+    entry.className = 'opening-banner opening-fade-in';
+    entry.textContent = name;
+    log.appendChild(entry);
+    log.style.display = 'flex';
 }
 
 function recalcOpening() {
     const history = game.moveHistoryUCI || [];
     lastOpeningMoveCount = history.length;
 
+    // Limpiar log existente
+    const log = document.getElementById('opening-log');
+    if (log) log.remove();
+
     if (history.length === 0) {
         currentOpeningName = '';
-        const banner = document.getElementById('opening-banner');
-        if (banner) banner.style.display = 'none';
         return;
     }
 
     if (history.length > 16) {
-        hideOpeningBanner();
         return;
     }
 
-    let bestMatch = '';
-    for (let len = history.length; len >= 1; len--) {
-        const key = history.slice(0, len).join(' ');
-        if (OPENING_NAMES[key]) {
-            bestMatch = OPENING_NAMES[key];
-            break;
+    // Reconstruir todo el historial de aperturas detectadas
+    let prevName = '';
+    for (let i = 1; i <= history.length; i++) {
+        let bestMatch = '';
+        for (let len = i; len >= 1; len--) {
+            const key = history.slice(0, len).join(' ');
+            if (OPENING_NAMES[key]) {
+                bestMatch = OPENING_NAMES[key];
+                break;
+            }
+        }
+        const name = bestMatch || (prevName ? '' : 'Variante desconocida');
+        if (name && name !== prevName) {
+            showOpeningName(name);
+            prevName = name;
         }
     }
-
-    currentOpeningName = bestMatch || 'Variante desconocida';
-    showOpeningName(currentOpeningName);
+    currentOpeningName = prevName || 'Variante desconocida';
 }
 
 function hideOpeningBanner() {
-    const banner = document.getElementById('opening-banner');
-    if (banner && banner.style.display !== 'none') {
-        banner.classList.remove('opening-fade-in');
-        banner.classList.add('opening-fade-out');
-        setTimeout(() => { banner.style.display = 'none'; }, 600);
+    const log = document.getElementById('opening-log');
+    if (log && log.style.display !== 'none') {
+        log.querySelectorAll('.opening-banner').forEach(b => {
+            b.classList.remove('opening-fade-in');
+            b.classList.add('opening-fade-out');
+        });
+        setTimeout(() => { log.style.display = 'none'; }, 600);
     }
 }
 
@@ -1136,6 +1153,43 @@ function resetStats() {
     });
 }
 
+function resignGame() {
+    if (!game || game.gameOver) {
+        showMessage('No hay partida en curso', 'warning', 2000);
+        return;
+    }
+    showConfirmDialog('¿Seguro que quieres abandonar la partida?', () => {
+        game.gameOver = true;
+        stopClock();
+        recordGameResult('loss');
+        clearAutoSavedGame();
+        showMessage('Has abandonado la partida', 'error', 3000);
+    });
+}
+
+function offerDraw() {
+    if (!game || game.gameOver) {
+        showMessage('No hay partida en curso', 'warning', 2000);
+        return;
+    }
+    if (!game.moveHistory || game.moveHistory.length < 2) {
+        showMessage('Es muy pronto para pedir tablas', 'warning', 2000);
+        return;
+    }
+    showConfirmDialog('¿Quieres ofrecer tablas?', () => {
+        const accepted = Math.random() < 0.3;
+        if (accepted) {
+            game.gameOver = true;
+            stopClock();
+            recordGameResult('draw');
+            clearAutoSavedGame();
+            showMessage('Tablas aceptadas', 'info', 3000);
+        } else {
+            showMessage('El rival rechaza las tablas', 'warning', 2000);
+        }
+    });
+}
+
 function showConfirmDialog(message, onConfirm) {
     let overlay = document.getElementById('game-list-overlay');
     if (overlay) overlay.remove();
@@ -1220,6 +1274,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Botones de acciones
+    document.getElementById('resign-game').addEventListener('click', resignGame);
+    document.getElementById('offer-draw').addEventListener('click', offerDraw);
     document.getElementById('resume-game').addEventListener('click', resumeGame);
     document.getElementById('undo-move').addEventListener('click', undoMove);
     document.getElementById('hint-move').addEventListener('click', getHint);
@@ -1237,12 +1293,20 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('nav-next').addEventListener('click', goToNextMove);
     document.getElementById('nav-last').addEventListener('click', goToLastMove);
 
-    // Verificar si hay una partida en curso para reanudar
-    checkForGameInProgress();
-    
-    // Iniciar primera partida
+    // Auto-guardar al cerrar o recargar la página
+    window.addEventListener('beforeunload', () => {
+        autoSaveGame();
+    });
+
+    // Restaurar partida en curso o iniciar nueva
     applyBoardTheme();
-    startNewGame();
+    const autoSavedGame = localStorage.getItem('auto_saved_game');
+    if (autoSavedGame) {
+        resumeGame(true);
+    } else {
+        startNewGame();
+    }
+    checkForGameInProgress();
 });
 
 // Función para obtener movimientos de la IA
@@ -1260,8 +1324,8 @@ function startNewGame() {
     currentMoveIndex = -1;
     currentOpeningName = '';
     lastOpeningMoveCount = 0;
-    const banner = document.getElementById('opening-banner');
-    if (banner) banner.style.display = 'none';
+    const openingLog = document.getElementById('opening-log');
+    if (openingLog) openingLog.remove();
     
     // Resetear reloj
     stopClock();
@@ -1302,6 +1366,7 @@ function undoMove() {
     updateMoveHistory();
     updateUndoButton();
     recalcOpening();
+    autoSaveGame();
 }
 
 function updateUndoButton() {
@@ -1817,11 +1882,11 @@ function checkForGameInProgress() {
     }
 }
 
-function resumeGame() {
+function resumeGame(silent) {
     const autoSavedGame = localStorage.getItem('auto_saved_game');
     
     if (!autoSavedGame) {
-        showMessage('No hay partida en curso para reanudar', 'warning', 2000);
+        if (!silent) showMessage('No hay partida en curso para reanudar', 'warning', 2000);
         return;
     }
     
@@ -1860,6 +1925,7 @@ function resumeGame() {
         game.board = savedState.board;
         game.currentTurn = savedState.currentTurn;
         game.moveHistory = savedState.moveHistory || [];
+        game.moveHistoryUCI = savedState.moveHistoryUCI || [];
         game.capturedPieces = savedState.capturedPieces;
         game.enPassantTarget = savedState.enPassantTarget || null;
         game.castlingRights = savedState.castlingRights;
@@ -1872,18 +1938,31 @@ function resumeGame() {
         updateMoveHistory();
         updateUndoButton();
         updateClockDisplay();
+        updateNavigationButtons();
         
-        // Reiniciar el reloj si el juego no ha terminado
-        if (!game.gameOver) {
+        // Solo iniciar reloj si hay movimientos y la partida no ha terminado
+        const hasMoves = game.moveHistory && game.moveHistory.length > 0;
+        if (!game.gameOver && hasMoves) {
             startClock();
         }
         
-        showMessage('Partida reanudada correctamente', 'success', 2000);
+        // Restaurar banner de apertura
+        if (hasMoves) {
+            recalcOpening();
+        }
+        
+        // Si es el turno de la IA, que mueva
+        if (!game.gameOver && game.currentTurn !== playerColor) {
+            setTimeout(() => makeAIMove(), 800);
+        }
+        
+        if (!silent) showMessage('Partida reanudada correctamente', 'success', 2000);
     } catch (error) {
         console.error('Error al reanudar partida:', error);
-        showMessage('Error al reanudar la partida', 'error', 3000);
+        if (!silent) showMessage('Error al reanudar la partida', 'error', 3000);
         localStorage.removeItem('auto_saved_game');
         checkForGameInProgress();
+        startNewGame();
     }
 }
 
@@ -1902,6 +1981,7 @@ function autoSaveGame() {
         castlingRights: game.castlingRights,
         gameOver: game.gameOver,
         gameStateHistory: game.gameStateHistory || [],
+        moveHistoryUCI: game.moveHistoryUCI || [],
         playerColor: playerColor,
         aiDifficulty: aiDifficulty,
         boardTheme: boardTheme,

@@ -8,12 +8,12 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>♟</text></svg>">
-    <link rel="stylesheet" href="style.css?v=3">
+    <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>♔ Ajedrez con IA ♚ <span class="version-tag">v1.4</span></h1>
+            <h1>♔ Ajedrez con IA ♚ <span class="version-tag">v1.5</span></h1>
         </header>
 
         <div class="game-container">
@@ -152,6 +152,8 @@
 
                        <div class="panel">
                            <h2>Acciones</h2>
+                           <button id="resign-game" class="btn btn-danger">🏳️ Abandonar</button>
+                           <button id="offer-draw" class="btn btn-warning">🤝 Pedir Tablas</button>
                            <button id="resume-game" class="btn btn-success" style="display: none;">▶ Reanudar Partida</button>
                            <button id="undo-move" class="btn btn-primary">⬅ Deshacer Movimiento</button>
                            <button id="hint-move" class="btn btn-primary">💡 Sugerencia de IA</button>
@@ -183,8 +185,12 @@
         </div>
     </div>
 
-    <script src="chess-logic.js?v=3"></script>
-    <script src="app.js?v=3"></script>
+    <footer class="app-footer">
+        <a href="mailto:ev3c.android@gmail.com">ev3c.android@gmail.com</a>
+    </footer>
+
+    <script src="chess-logic.js?v=4"></script>
+    <script src="app.js?v=4"></script>
 </body>
 </html>
 
