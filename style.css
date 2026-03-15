@@ -112,6 +112,16 @@ header h1 {
     line-height: 1.4;
 }
 
+.training-desc {
+    font-size: 0.74rem;
+    color: #4b5563;
+    line-height: 1.5;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid #ddd6fe;
+    font-style: italic;
+}
+
 .config-section label {
     display: block;
     margin-bottom: 8px;

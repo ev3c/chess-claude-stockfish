@@ -115,6 +115,49 @@ const OPENING_BOOK = {
     'e2e4 c7c5 g1f3': ['d7d6', 'b8c6', 'e7e6', 'g7g6'],
     'e2e4 c7c5 g1f3 d7d6': ['d2d4', 'f1b5', 'b1c3'],
     'e2e4 c7c5 g1f3 b8c6': ['d2d4', 'f1b5', 'b1c3'],
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 a7a6': ['c1g5', 'c1e3', 'f2f3', 'f1e2'],
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 g7g6': ['c1e3', 'f1e2', 'f2f3'],
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 a7a6 c1g5': ['e7e6'],
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 g7g6 c1e3': ['f8g7'],
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 g7g6 c1e3 f8g7': ['f2f3'],
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 g7g6 c1e3 f8g7 f2f3': ['e8g8'],
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 g7g6 c1e3 f8g7 f2f3 e8g8': ['d1d2'],
+
+    // Española profunda
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7': ['f1e1'],
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7 f1e1': ['b7b5'],
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7 f1e1 b7b5 a4b3': ['d7d6'],
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7 f1e1 b7b5 a4b3 d7d6 c2c3': ['e8g8'],
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7 f1e1 b7b5 a4b3 d7d6 c2c3 e8g8': ['h2h3'],
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7 f1e1 b7b5 a4b3 d7d6 c2c3 e8g8 h2h3': ['c6b8', 'c8b7', 'c6a5'],
+
+    // India de Rey profunda
+    'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6 g1f3': ['e8g8'],
+    'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6 g1f3 e8g8': ['f1e2'],
+    'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6 g1f3 e8g8 f1e2': ['e7e5'],
+    'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6 g1f3 e8g8 f1e2 e7e5 e1g1': ['b8c6', 'b8a6', 'f6d7'],
+    'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6 g1f3 e8g8 f1e2 e7e5 e1g1 b8c6': ['d4d5'],
+
+    // GDR profunda
+    'd2d4 d7d5 c2c4 e7e6 b1c3 g8f6 c1g5': ['f8e7'],
+    'd2d4 d7d5 c2c4 e7e6 b1c3 g8f6 c1g5 f8e7': ['e2e3'],
+    'd2d4 d7d5 c2c4 e7e6 b1c3 g8f6 c1g5 f8e7 e2e3': ['e8g8'],
+    'd2d4 d7d5 c2c4 e7e6 b1c3 g8f6 c1g5 f8e7 e2e3 e8g8': ['g1f3'],
+    'd2d4 d7d5 c2c4 e7e6 b1c3 g8f6 c1g5 f8e7 e2e3 e8g8 g1f3': ['b8d7'],
+    'd2d4 d7d5 c2c4 e7e6 b1c3 g8f6 c1g5 f8e7 e2e3 e8g8 g1f3 b8d7': ['a1c1'],
+
+    // Semi-Eslava profunda
+    'd2d4 d7d5 c2c4 c7c6 g1f3 g8f6 b1c3 e7e6': ['e2e3', 'c1g5'],
+    'd2d4 d7d5 c2c4 c7c6 g1f3 g8f6 b1c3 e7e6 e2e3': ['b8d7'],
+    'd2d4 d7d5 c2c4 c7c6 g1f3 g8f6 b1c3 e7e6 e2e3 b8d7 f1d3': ['d5c4'],
+
+    // Londres profundo
+    'd2d4 d7d5 c1f4 g8f6 e2e3': ['c7c5', 'e7e6'],
+    'd2d4 d7d5 c1f4 g8f6 e2e3 c7c5': ['c2c3'],
+    'd2d4 d7d5 c1f4 g8f6 e2e3 c7c5 c2c3': ['b8c6'],
+    'd2d4 d7d5 c1f4 g8f6 e2e3 c7c5 c2c3 b8c6': ['g1f3'],
+    'd2d4 d7d5 c1f4 g8f6 e2e3 e7e6': ['g1f3'],
+    'd2d4 d7d5 c1f4 g8f6 e2e3 e7e6 g1f3': ['f8d6'],
 };
 
 // Nombres de aperturas por secuencia de movimientos UCI
@@ -373,6 +416,242 @@ const OPENING_NAMES = {
     'g2g3 d7d5': '1...d5 — Húngara: Clásica',
     'g2g3 e7e5': '1...e5 — Húngara: Línea Principal',
     'g2g3 g8f6': '1...Cf6 — Húngara: India',
+
+    // ========== VARIANTES PROFUNDAS (movimientos 9-20) ==========
+
+    // --- ESPAÑOLA (Ruy López) profunda ---
+    // Cerrada: línea principal Breyer/Chigorin
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7 f1e1': '6.Te1 — Española Cerrada: Línea Principal',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7 f1e1 b7b5': '6...b5 — Española Cerrada: Variante Clásica',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7 f1e1 b7b5 a4b3': '7.Ab3 — Española Cerrada: Ab3',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7 f1e1 b7b5 a4b3 d7d6': '7...d6 — Española Cerrada: Preparando O-O',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7 f1e1 b7b5 a4b3 d7d6 c2c3': '8.c3 — Española Cerrada: Sistema Clásico',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7 f1e1 b7b5 a4b3 d7d6 c2c3 e8g8': '8...O-O — Española Cerrada: Posición Tabiya',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7 f1e1 b7b5 a4b3 d7d6 c2c3 e8g8 h2h3': '9.h3 — Española Cerrada: Evitando Ag4',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7 f1e1 b7b5 a4b3 d7d6 c2c3 e8g8 h2h3 c6b8': '9...Cb8 — Española: Variante Breyer',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7 f1e1 b7b5 a4b3 d7d6 c2c3 e8g8 h2h3 c6b8 d2d4': '10.d4 — Breyer: Línea Principal',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7 f1e1 b7b5 a4b3 d7d6 c2c3 e8g8 h2h3 c6b8 d2d4 b8d7': '10...Cbd7 — Breyer: Reagrupamiento',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7 f1e1 b7b5 a4b3 d7d6 c2c3 e8g8 h2h3 c8b7': '9...Ab7 — Española: Variante Zaitsev',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7 f1e1 b7b5 a4b3 d7d6 c2c3 e8g8 h2h3 c6a5': '9...Ca5 — Española: Variante Chigorin',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7 f1e1 b7b5 a4b3 d7d6 c2c3 e8g8 h2h3 c6a5 b3c2': '10.Ac2 — Chigorin: Línea Principal',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7 f1e1 b7b5 a4b3 d7d6 c2c3 e8g8 h2h3 c6a5 b3c2 c7c5': '10...c5 — Chigorin: Contrajuego Central',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7 f1e1 b7b5 a4b3 d7d6 c2c3 e8g8 h2h3 c6a5 b3c2 c7c5 d2d4': '11.d4 — Chigorin: Ruptura Central',
+    // Berlinesa profunda
+    'e2e4 e7e5 g1f3 b8c6 f1b5 g8f6 e1g1': '4.O-O — Berlinesa: Línea Principal',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 g8f6 e1g1 f6e4': '4...Cxe4 — Berlinesa: Muro de Berlín',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 g8f6 e1g1 f6e4 d2d4': '5.d4 — Berlinesa: Muro, Línea Principal',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 g8f6 e1g1 f6e4 d2d4 e4d6': '5...Cd6 — Berlinesa: Muro, Variante Moderna',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 g8f6 e1g1 f6e4 d2d4 e4d6 b5c6 d7c6': '6.Axc6 — Berlinesa: Final del Muro',
+    // Española Abierta profunda
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f6e4': '5...Cxe4 — Española: Variante Abierta',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f6e4 d2d4': '6.d4 — Española Abierta: Línea Principal',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f6e4 d2d4 b7b5': '6...b5 — Española Abierta: Clásica',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f6e4 d2d4 b7b5 a4b3': '7.Ab3 — Española Abierta: Ab3',
+    // Marshall
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7 f1e1 b7b5 a4b3 e8g8': '7...O-O — Española: Preparando Marshall',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7 f1e1 b7b5 a4b3 e8g8 c2c3 d7d5': '8...d5 — Española: Gambito Marshall',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7 f1e1 b7b5 a4b3 e8g8 c2c3 d7d5 e4d5': '9.exd5 — Marshall: Línea Principal',
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7 f1e1 b7b5 a4b3 e8g8 c2c3 d7d5 e4d5 f6d5': '9...Cxd5 — Marshall: Recuperación',
+
+    // --- ITALIANA profunda ---
+    'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 c2c3 g8f6': '4...Cf6 — Italiana: Giuoco Piano, Línea Principal',
+    'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 c2c3 g8f6 d2d4': '5.d4 — Italiana: Ruptura Central',
+    'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 c2c3 g8f6 d2d4 e5d4': '5...exd4 — Italiana: Cambio Central',
+    'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 c2c3 g8f6 d2d4 e5d4 c3d4': '6.cxd4 — Italiana: Centro Abierto',
+    'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 d2d3 g8f6': '4...Cf6 — Giuoco Pianissimo: Línea Principal',
+    'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 d2d3 g8f6 c2c3': '5.c3 — Giuoco Pianissimo: Moderno',
+    'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 d2d3 g8f6 c2c3 d7d6': '5...d6 — Giuoco Pianissimo: Clásica',
+    'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 d2d3 g8f6 c2c3 d7d6 e1g1': '6.O-O — Giuoco Pianissimo: Enroque',
+    'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 d2d3 g8f6 c2c3 d7d6 e1g1 e8g8': '6...O-O — Giuoco Pianissimo: Posición Tabiya',
+    'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 d2d3 g8f6 c2c3 d7d6 e1g1 e8g8 f1e1': '7.Te1 — Giuoco Pianissimo: Refuerzo Central',
+    'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 d2d3 g8f6 c2c3 d7d6 e1g1 e8g8 f1e1 a7a6': '7...a6 — Giuoco Pianissimo: Preparando b5',
+    // Gambito Evans profundo
+    'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 b2b4 c5b4': '4...Axb4 — Evans Aceptado',
+    'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 b2b4 c5b4 c2c3': '5.c3 — Evans: Línea Principal',
+    'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 b2b4 c5b4 c2c3 b4a5': '5...Aa5 — Evans: Retirada Clásica',
+    'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 b2b4 c5b4 c2c3 b4a5 d2d4': '6.d4 — Evans: Ruptura Central',
+
+    // --- SICILIANA NAJDORF profunda ---
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 a7a6 c1g5': '6.Ag5 — Najdorf: Ataque Inglés',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 a7a6 c1g5 e7e6': '6...e6 — Najdorf: Variante Principal',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 a7a6 c1g5 e7e6 f2f4': '7.f4 — Najdorf: Ataque Inglés con f4',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 a7a6 c1g5 e7e6 f2f4 f8e7': '7...Ae7 — Najdorf: Línea Clásica',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 a7a6 c1g5 e7e6 f2f4 d8b6': '7...Db6 — Najdorf: Envenenado',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 a7a6 c1e3': '6.Ae3 — Najdorf: Sistema Inglés Moderno',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 a7a6 c1e3 e7e5': '6...e5 — Najdorf: Ae3 con e5',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 a7a6 c1e3 e7e5 d4b3': '7.Cb3 — Najdorf: Ae3 e5 Cb3',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 a7a6 c1e3 e7e6': '6...e6 — Najdorf: Ae3, Scheveningen',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 a7a6 f2f3': '6.f3 — Najdorf: Ataque Inglés f3',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 a7a6 f2f3 e7e5': '6...e5 — Najdorf: f3 con e5',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 a7a6 f1e2': '6.Ae2 — Najdorf: Variante Opočenský',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 a7a6 f1e2 e7e5': '6...e5 — Najdorf: Ae2 con e5',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 a7a6 f1e2 e7e5 d4b3': '7.Cb3 — Najdorf: Ae2 e5 Cb3',
+
+    // --- SICILIANA DRAGÓN profunda ---
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 g7g6 c1e3': '6.Ae3 — Dragón: Ataque Yugoslavo',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 g7g6 c1e3 f8g7': '6...Ag7 — Dragón: Yugoslavo, Línea Principal',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 g7g6 c1e3 f8g7 f2f3': '7.f3 — Dragón: Yugoslavo con f3',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 g7g6 c1e3 f8g7 f2f3 e8g8': '7...O-O — Dragón: Yugoslavo, Enroque',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 g7g6 c1e3 f8g7 f2f3 e8g8 d1d2': '8.Dd2 — Dragón: Yugoslavo Clásico',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 g7g6 c1e3 f8g7 f2f3 e8g8 d1d2 b8c6': '8...Cc6 — Dragón: Yugoslavo, Preparando Ataque',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 g7g6 c1e3 f8g7 f2f3 e8g8 d1d2 b8c6 e1c1': '9.O-O-O — Dragón: Enroques Opuestos',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 g7g6 f1e2': '6.Ae2 — Dragón: Variante Clásica',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 g7g6 f1e2 f8g7': '6...Ag7 — Dragón Clásica: Fianchetto',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 g7g6 f1e2 f8g7 e1g1': '7.O-O — Dragón Clásica: Enroque',
+    'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 g7g6 f1e2 f8g7 e1g1 e8g8': '7...O-O — Dragón Clásica: Posición Tabiya',
+
+    // --- SICILIANA SVESHNIKOV profunda ---
+    'e2e4 c7c5 g1f3 b8c6 d2d4 c5d4 f3d4 g8f6 b1c3 e7e5': '5...e5 — Sveshnikov: Línea Principal',
+    'e2e4 c7c5 g1f3 b8c6 d2d4 c5d4 f3d4 g8f6 b1c3 e7e5 d4b5': '6.Cdb5 — Sveshnikov: Variante Principal',
+    'e2e4 c7c5 g1f3 b8c6 d2d4 c5d4 f3d4 g8f6 b1c3 e7e5 d4b5 d7d6': '6...d6 — Sveshnikov: Línea Clásica',
+    'e2e4 c7c5 g1f3 b8c6 d2d4 c5d4 f3d4 g8f6 b1c3 e7e5 d4b5 d7d6 c1g5': '7.Ag5 — Sveshnikov: Ataque con Ag5',
+    'e2e4 c7c5 g1f3 b8c6 d2d4 c5d4 f3d4 g8f6 b1c3 e7e5 d4b5 d7d6 c1g5 a7a6': '7...a6 — Sveshnikov: Expulsando el Caballo',
+    'e2e4 c7c5 g1f3 b8c6 d2d4 c5d4 f3d4 g8f6 b1c3 e7e5 d4b5 d7d6 c1g5 a7a6 b5a3': '8.Ca3 — Sveshnikov: Retirada a a3',
+    'e2e4 c7c5 g1f3 b8c6 d2d4 c5d4 f3d4 g8f6 b1c3 e7e5 d4b5 d7d6 c1g5 a7a6 b5a3 b7b5': '8...b5 — Sveshnikov: Expansión en el Flanco',
+
+    // --- FRANCESA profunda ---
+    // Winawer profunda
+    'e2e4 e7e6 d2d4 d7d5 b1c3 f8b4 e4e5 c7c5 a2a3': '5.a3 — Winawer: Variante con a3',
+    'e2e4 e7e6 d2d4 d7d5 b1c3 f8b4 e4e5 c7c5 a2a3 b4c3': '5...Axc3+ — Winawer: Cambio de Alfil',
+    'e2e4 e7e6 d2d4 d7d5 b1c3 f8b4 e4e5 c7c5 a2a3 b4c3 b2c3': '6.bxc3 — Winawer: Estructura Doblada',
+    'e2e4 e7e6 d2d4 d7d5 b1c3 f8b4 e4e5 c7c5 a2a3 b4c3 b2c3 g8e7': '6...Ce7 — Winawer: Línea Principal Moderna',
+    'e2e4 e7e6 d2d4 d7d5 b1c3 f8b4 e4e5 c7c5 a2a3 b4c3 b2c3 g8e7 d1g4': '7.Dg4 — Winawer: Ataque con Dg4',
+    // Clásica profunda
+    'e2e4 e7e6 d2d4 d7d5 b1c3 g8f6 c1g5 f8e7': '4...Ae7 — Francesa Clásica: Línea McCutcheon',
+    'e2e4 e7e6 d2d4 d7d5 b1c3 g8f6 c1g5 f8e7 e4e5': '5.e5 — Francesa Clásica: Avance',
+    'e2e4 e7e6 d2d4 d7d5 b1c3 g8f6 c1g5 f8e7 e4e5 f6d7': '5...Cd7 — Francesa Clásica: Retirada',
+    'e2e4 e7e6 d2d4 d7d5 b1c3 g8f6 c1g5 f8e7 e4e5 f6d7 g5e7 d8e7': '6.Axe7 Dxe7 — Francesa Clásica: Cambio',
+    // Avance profunda
+    'e2e4 e7e6 d2d4 d7d5 e4e5 c7c5 c2c3 b8c6': '4...Cc6 — Francesa Avance: Desarrollo',
+    'e2e4 e7e6 d2d4 d7d5 e4e5 c7c5 c2c3 b8c6 g1f3': '5.Cf3 — Francesa Avance: Clásica',
+    'e2e4 e7e6 d2d4 d7d5 e4e5 c7c5 c2c3 b8c6 g1f3 d8b6': '5...Db6 — Francesa Avance: Presión sobre d4',
+    'e2e4 e7e6 d2d4 d7d5 e4e5 c7c5 c2c3 b8c6 g1f3 d8b6 a2a3': '6.a3 — Francesa Avance: Línea Moderna',
+
+    // --- CARO-KANN profunda ---
+    'e2e4 c7c6 d2d4 d7d5 b1c3 d5e4 c3e4 c8f5 e4g3': '5.Cg3 — Caro-Kann Clásica: Cg3',
+    'e2e4 c7c6 d2d4 d7d5 b1c3 d5e4 c3e4 c8f5 e4g3 f5g6': '5...Ag6 — Caro-Kann: Retirada del Alfil',
+    'e2e4 c7c6 d2d4 d7d5 b1c3 d5e4 c3e4 c8f5 e4g3 f5g6 h2h4': '6.h4 — Caro-Kann: Ataque con h4',
+    'e2e4 c7c6 d2d4 d7d5 b1c3 d5e4 c3e4 c8f5 e4g3 f5g6 h2h4 h7h6': '6...h6 — Caro-Kann: Frenando h5',
+    'e2e4 c7c6 d2d4 d7d5 b1c3 d5e4 c3e4 c8f5 e4g3 f5g6 h2h4 h7h6 g1f3': '7.Cf3 — Caro-Kann Clásica: Línea Principal',
+    'e2e4 c7c6 d2d4 d7d5 b1c3 d5e4 c3e4 c8f5 e4g3 f5g6 h2h4 h7h6 g1f3 b8d7': '7...Cd7 — Caro-Kann: Desarrollo Flexible',
+    'e2e4 c7c6 d2d4 d7d5 e4e5 c8f5 b1c3': '4.Cc3 — Caro-Kann Avance: Variante Tal',
+    'e2e4 c7c6 d2d4 d7d5 e4e5 c8f5 g1f3': '4.Cf3 — Caro-Kann Avance: Línea Corta',
+    'e2e4 c7c6 d2d4 d7d5 e4e5 c8f5 g1f3 e7e6': '4...e6 — Caro-Kann Avance: Clásica',
+    'e2e4 c7c6 d2d4 d7d5 e4e5 c8f5 g1f3 e7e6 f1e2': '5.Ae2 — Caro-Kann Avance: Línea Principal',
+
+    // --- GAMBITO DE DAMA REHUSADO profundo ---
+    'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7 f1e1 b7b5 a4b3 e8g8 c2c3 d7d5 e4d5 f6d5 f3e5': '10.Cxe5 — Marshall: Línea Principal',
+    'd2d4 d7d5 c2c4 e7e6 b1c3 g8f6 c1g5 f8e7 e2e3': '5.e3 — GDR Ortodoxa: Línea Principal',
+    'd2d4 d7d5 c2c4 e7e6 b1c3 g8f6 c1g5 f8e7 e2e3 e8g8': '5...O-O — GDR Ortodoxa: Enroque',
+    'd2d4 d7d5 c2c4 e7e6 b1c3 g8f6 c1g5 f8e7 e2e3 e8g8 g1f3': '6.Cf3 — GDR Ortodoxa: Desarrollo',
+    'd2d4 d7d5 c2c4 e7e6 b1c3 g8f6 c1g5 f8e7 e2e3 e8g8 g1f3 b8d7': '6...Cbd7 — GDR Ortodoxa: Clásica',
+    'd2d4 d7d5 c2c4 e7e6 b1c3 g8f6 c1g5 f8e7 e2e3 e8g8 g1f3 b8d7 a1c1': '7.Tc1 — GDR Ortodoxa: Torre en c1',
+    'd2d4 d7d5 c2c4 e7e6 b1c3 g8f6 c1g5 f8e7 e2e3 e8g8 g1f3 b8d7 a1c1 c7c6': '7...c6 — GDR Ortodoxa: Posición Tabiya',
+    'd2d4 d7d5 c2c4 e7e6 b1c3 g8f6 c1g5 f8e7 e2e3 e8g8 g1f3 b8d7 a1c1 c7c6 f1d3': '8.Ad3 — GDR Ortodoxa: Sistema Clásico',
+    'd2d4 d7d5 c2c4 e7e6 b1c3 g8f6 c1g5 f8e7 e2e3 e8g8 g1f3 b8d7 a1c1 c7c6 f1d3 d5c4': '8...dxc4 — GDR Ortodoxa: Captura Central',
+    'd2d4 d7d5 c2c4 e7e6 b1c3 g8f6 c1g5 f8e7 e2e3 e8g8 g1f3 b8d7 a1c1 c7c6 f1d3 d5c4 d3c4': '9.Axc4 — GDR Ortodoxa: Recuperación',
+
+    // --- ESLAVA / SEMI-ESLAVA profunda ---
+    'd2d4 d7d5 c2c4 c7c6 g1f3 g8f6 b1c3 e7e6 e2e3 b8d7': '5...Cbd7 — Semi-Eslava: Meran, Desarrollo',
+    'd2d4 d7d5 c2c4 c7c6 g1f3 g8f6 b1c3 e7e6 e2e3 b8d7 f1d3': '6.Ad3 — Semi-Eslava: Meran, Ad3',
+    'd2d4 d7d5 c2c4 c7c6 g1f3 g8f6 b1c3 e7e6 e2e3 b8d7 f1d3 d5c4': '6...dxc4 — Semi-Eslava: Meran Aceptada',
+    'd2d4 d7d5 c2c4 c7c6 g1f3 g8f6 b1c3 e7e6 e2e3 b8d7 f1d3 d5c4 d3c4': '7.Axc4 — Semi-Eslava: Meran, Línea Principal',
+    'd2d4 d7d5 c2c4 c7c6 g1f3 g8f6 b1c3 e7e6 e2e3 b8d7 f1d3 d5c4 d3c4 b7b5': '7...b5 — Semi-Eslava: Meran, Variante Principal',
+    'd2d4 d7d5 c2c4 c7c6 g1f3 g8f6 b1c3 e7e6 c1g5 b8d7': '5...Cbd7 — Semi-Eslava: Anti-Meran con Ag5',
+    'd2d4 d7d5 c2c4 c7c6 g1f3 g8f6 b1c3 e7e6 c1g5 h7h6': '5...h6 — Semi-Eslava: Anti-Moscú',
+    'd2d4 d7d5 c2c4 c7c6 g1f3 g8f6 b1c3 d5c4 a2a4': '5.a4 — Eslava: Variante Clásica con a4',
+    'd2d4 d7d5 c2c4 c7c6 g1f3 g8f6 b1c3 d5c4 a2a4 c8f5': '5...Af5 — Eslava Checa: Línea Principal',
+    'd2d4 d7d5 c2c4 c7c6 g1f3 g8f6 b1c3 d5c4 a2a4 c8f5 e2e3': '6.e3 — Eslava Checa: Línea Clásica',
+
+    // --- INDIA DE REY profunda ---
+    'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6 g1f3 e8g8': '5...O-O — India de Rey Clásica: Enroque',
+    'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6 g1f3 e8g8 f1e2': '6.Ae2 — India de Rey: Variante Clásica',
+    'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6 g1f3 e8g8 f1e2 e7e5': '6...e5 — India de Rey: Variante Principal',
+    'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6 g1f3 e8g8 f1e2 e7e5 e1g1': '7.O-O — India de Rey: Posición Tabiya',
+    'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6 g1f3 e8g8 f1e2 e7e5 e1g1 b8c6': '7...Cc6 — India de Rey: Sistema Clásico',
+    'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6 g1f3 e8g8 f1e2 e7e5 e1g1 b8c6 d4d5': '8.d5 — India de Rey: Mar del Plata',
+    'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6 g1f3 e8g8 f1e2 e7e5 e1g1 b8c6 d4d5 c6e7': '8...Ce7 — India de Rey: Mar del Plata, Línea Principal',
+    'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6 g1f3 e8g8 f1e2 e7e5 e1g1 b8c6 d4d5 c6e7 c3e1': '9.Ce1 — India de Rey: Petrosián',
+    'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6 g1f3 e8g8 f1e2 e7e5 e1g1 b8c6 d4d5 c6e7 f3e1': '9.Cd2 — India de Rey: Bayoneta (preparación)',
+    'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6 g1f3 e8g8 f1e2 e7e5 e1g1 b8a6': '7...Ca6 — India de Rey: Variante Moderna',
+    'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6 g1f3 e8g8 f1e2 e7e5 e1g1 f6d7': '7...Cd7 — India de Rey: Variante Gligoric',
+    // Sämisch profunda
+    'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6 f2f3 e8g8': '5...O-O — Sämisch: Enroque',
+    'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6 f2f3 e8g8 c1e3': '6.Ae3 — Sämisch: Línea Principal',
+    'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6 f2f3 e8g8 c1e3 e7e5': '6...e5 — Sämisch: Contraataque Central',
+    'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6 f2f3 e8g8 c1e3 b8c6': '6...Cc6 — Sämisch: Desarrollo Flexible',
+
+    // --- NIMZO-INDIA profunda ---
+    'd2d4 g8f6 c2c4 e7e6 b1c3 f8b4 d1c2 e8g8': '4...O-O — Nimzo-India Clásica: Enroque',
+    'd2d4 g8f6 c2c4 e7e6 b1c3 f8b4 d1c2 e8g8 a2a3': '5.a3 — Nimzo-India Clásica: Expulsando Alfil',
+    'd2d4 g8f6 c2c4 e7e6 b1c3 f8b4 d1c2 e8g8 a2a3 b4c3': '5...Axc3+ — Nimzo-India: Cambio en c3',
+    'd2d4 g8f6 c2c4 e7e6 b1c3 f8b4 d1c2 e8g8 a2a3 b4c3 d1c3': '6.Dxc3 — Nimzo-India: Recuperación',
+    'd2d4 g8f6 c2c4 e7e6 b1c3 f8b4 e2e3 e8g8': '4...O-O — Nimzo-India Rubinstein: Enroque',
+    'd2d4 g8f6 c2c4 e7e6 b1c3 f8b4 e2e3 e8g8 f1d3': '5.Ad3 — Rubinstein: Línea Principal',
+    'd2d4 g8f6 c2c4 e7e6 b1c3 f8b4 e2e3 e8g8 f1d3 d7d5': '5...d5 — Rubinstein: Central',
+    'd2d4 g8f6 c2c4 e7e6 b1c3 f8b4 e2e3 e8g8 f1d3 d7d5 g1f3': '6.Cf3 — Rubinstein: Desarrollo',
+    'd2d4 g8f6 c2c4 e7e6 b1c3 f8b4 e2e3 e8g8 f1d3 d7d5 g1f3 c7c5': '6...c5 — Rubinstein: Contrajuego',
+    'd2d4 g8f6 c2c4 e7e6 b1c3 f8b4 e2e3 c7c5': '4...c5 — Nimzo-India: Variante Hübner',
+    'd2d4 g8f6 c2c4 e7e6 b1c3 f8b4 e2e3 b7b6': '4...b6 — Nimzo-India: Fischer',
+
+    // --- CATALANA profunda ---
+    'd2d4 g8f6 c2c4 e7e6 g2g3 d7d5 f1g2': '4.Ag2 — Catalana: Fianchetto',
+    'd2d4 g8f6 c2c4 e7e6 g2g3 d7d5 f1g2 f8e7': '4...Ae7 — Catalana: Cerrada',
+    'd2d4 g8f6 c2c4 e7e6 g2g3 d7d5 f1g2 d5c4': '4...dxc4 — Catalana: Abierta',
+    'd2d4 g8f6 c2c4 e7e6 g2g3 d7d5 f1g2 d5c4 g1f3': '5.Cf3 — Catalana Abierta: Línea Principal',
+    'd2d4 g8f6 c2c4 e7e6 g2g3 d7d5 f1g2 d5c4 g1f3 f8e7': '5...Ae7 — Catalana Abierta: Clásica',
+    'd2d4 g8f6 c2c4 e7e6 g2g3 d7d5 f1g2 d5c4 g1f3 a7a6': '5...a6 — Catalana Abierta: Variante Moderna',
+    'd2d4 g8f6 c2c4 e7e6 g2g3 d7d5 f1g2 f8e7 g1f3': '5.Cf3 — Catalana Cerrada: Desarrollo',
+    'd2d4 g8f6 c2c4 e7e6 g2g3 d7d5 f1g2 f8e7 g1f3 e8g8': '5...O-O — Catalana Cerrada: Enroque',
+    'd2d4 g8f6 c2c4 e7e6 g2g3 d7d5 f1g2 f8e7 g1f3 e8g8 e1g1': '6.O-O — Catalana Cerrada: Posición Tabiya',
+
+    // --- BENONI profunda ---
+    'd2d4 g8f6 c2c4 c7c5 d4d5 e7e6 b1c3': '4.Cc3 — Benoni Moderna: Línea Principal',
+    'd2d4 g8f6 c2c4 c7c5 d4d5 e7e6 b1c3 e6d5': '4...exd5 — Benoni: Captura Central',
+    'd2d4 g8f6 c2c4 c7c5 d4d5 e7e6 b1c3 e6d5 c4d5': '5.cxd5 — Benoni: Recuperación',
+    'd2d4 g8f6 c2c4 c7c5 d4d5 e7e6 b1c3 e6d5 c4d5 d7d6': '5...d6 — Benoni Moderna: Posición Tabiya',
+    'd2d4 g8f6 c2c4 c7c5 d4d5 e7e6 b1c3 e6d5 c4d5 d7d6 e2e4': '6.e4 — Benoni: Cuatro Peones',
+    'd2d4 g8f6 c2c4 c7c5 d4d5 e7e6 b1c3 e6d5 c4d5 d7d6 e2e4 g7g6': '6...g6 — Benoni: Fianchetto de Rey',
+    'd2d4 g8f6 c2c4 c7c5 d4d5 e7e6 b1c3 e6d5 c4d5 d7d6 g1f3': '6.Cf3 — Benoni: Línea Clásica',
+    'd2d4 g8f6 c2c4 c7c5 d4d5 e7e6 b1c3 e6d5 c4d5 d7d6 g1f3 g7g6': '6...g6 — Benoni Clásica: Fianchetto',
+
+    // --- PETROV profunda ---
+    'e2e4 e7e5 g1f3 g8f6 f3e5 d7d6 e5f3': '4.Cf3 — Petrov: Retirada',
+    'e2e4 e7e5 g1f3 g8f6 f3e5 d7d6 e5f3 f6e4': '4...Cxe4 — Petrov: Recuperación Simétrica',
+    'e2e4 e7e5 g1f3 g8f6 f3e5 d7d6 e5f3 f6e4 d2d4': '5.d4 — Petrov: Centro Fuerte',
+    'e2e4 e7e5 g1f3 g8f6 f3e5 d7d6 e5f3 f6e4 d2d4 d7d5': '5...d5 — Petrov: Línea Simétrica',
+    'e2e4 e7e5 g1f3 g8f6 f3e5 d7d6 e5f3 f6e4 d2d4 d7d5 f1d3': '6.Ad3 — Petrov: Desarrollo Clásico',
+    'e2e4 e7e5 g1f3 g8f6 d2d4 f6e4': '3...Cxe4 — Petrov: Ataque Steinitz, Captura',
+    'e2e4 e7e5 g1f3 g8f6 d2d4 f6e4 f1d3': '4.Ad3 — Petrov Steinitz: Desarrollo',
+    'e2e4 e7e5 g1f3 g8f6 d2d4 f6e4 f1d3 d7d5': '4...d5 — Petrov Steinitz: Central',
+    'e2e4 e7e5 g1f3 g8f6 d2d4 f6e4 f1d3 d7d5 f3e5': '5.Cxe5 — Petrov Steinitz: Línea Principal',
+
+    // --- SISTEMA LONDRES profundo ---
+    'd2d4 d7d5 c1f4 g8f6 e2e3 c7c5': '3...c5 — Londres: Contrajuego Central',
+    'd2d4 d7d5 c1f4 g8f6 e2e3 c7c5 c2c3': '4.c3 — Londres: Refuerzo Central',
+    'd2d4 d7d5 c1f4 g8f6 e2e3 c7c5 c2c3 b8c6': '4...Cc6 — Londres: Desarrollo',
+    'd2d4 d7d5 c1f4 g8f6 e2e3 c7c5 c2c3 b8c6 g1f3': '5.Cf3 — Londres: Línea Principal',
+    'd2d4 d7d5 c1f4 g8f6 e2e3 c7c5 c2c3 b8c6 g1f3 d8b6': '5...Db6 — Londres: Presión sobre b2',
+    'd2d4 d7d5 c1f4 g8f6 e2e3 e7e6': '3...e6 — Londres: Configuración Cerrada',
+    'd2d4 d7d5 c1f4 g8f6 e2e3 e7e6 g1f3': '4.Cf3 — Londres: Sistema Clásico',
+    'd2d4 d7d5 c1f4 g8f6 e2e3 e7e6 g1f3 f8d6': '4...Ad6 — Londres: Cambio de Alfil',
+    'd2d4 d7d5 c1f4 g8f6 e2e3 e7e6 g1f3 f8d6 f4d6': '5.Axd6 — Londres: Cambio Directo',
+    'd2d4 d7d5 c1f4 g8f6 g1f3 c7c5': '3...c5 — Londres Moderna: Contrajuego',
+    'd2d4 d7d5 c1f4 g8f6 g1f3 e7e6': '3...e6 — Londres Moderna: Clásica',
+    'd2d4 d7d5 c1f4 g8f6 g1f3 e7e6 e2e3': '4.e3 — Londres Moderna: Sólida',
+
+    // --- INGLESA profunda ---
+    'c2c4 e7e5 b1c3 g8f6 g1f3 b8c6': '3...Cc6 — Inglesa: Cuatro Caballos',
+    'c2c4 e7e5 b1c3 g8f6 g1f3 b8c6 g2g3': '4.g3 — Inglesa: Cuatro Caballos con g3',
+    'c2c4 e7e5 b1c3 g8f6 g1f3 b8c6 g2g3 d7d5': '4...d5 — Inglesa: Cuatro Caballos Central',
+    'c2c4 e7e5 b1c3 g8f6 g1f3 b8c6 g2g3 d7d5 c4d5': '5.cxd5 — Inglesa: Captura Central',
+    'c2c4 e7e5 b1c3 b8c6': '2...Cc6 — Inglesa: Gran Prix Invertida',
+    'c2c4 e7e5 g2g3 g8f6': '2...Cf6 — Inglesa Fianchetto: Desarrollo',
+    'c2c4 e7e5 g2g3 g8f6 f1g2': '3.Ag2 — Inglesa: Fianchetto Completo',
+    'c2c4 c7c5 b1c3 g8f6': '2...Cf6 — Inglesa Simétrica: Desarrollo',
+    'c2c4 c7c5 b1c3 g8f6 g2g3': '3.g3 — Inglesa Simétrica: Fianchetto',
+    'c2c4 c7c5 g1f3 g8f6': '2...Cf6 — Inglesa Simétrica: Dos Caballos',
+    'c2c4 c7c5 g1f3 b8c6': '2...Cc6 — Inglesa Simétrica: Clásica',
 };
 
 let currentOpeningName = '';
@@ -380,44 +659,76 @@ let lastOpeningMoveCount = 0;
 let trainingOpening = null; // Apertura seleccionada para entrenamiento
 
 const OPENING_TRAINING = {
-    'italiana': { name: 'Apertura Italiana (Giuoco Piano)', moves: 'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5', san: '1.e4 e5 2.Cf3 Cc6 3.Ac4 Ac5' },
-    'española': { name: 'Apertura Española (Ruy López)', moves: 'e2e4 e7e5 g1f3 b8c6 f1b5', san: '1.e4 e5 2.Cf3 Cc6 3.Ab5' },
-    'escocesa': { name: 'Apertura Escocesa', moves: 'e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4', san: '1.e4 e5 2.Cf3 Cc6 3.d4 exd4 4.Cxd4' },
-    'petrov': { name: 'Defensa Petrov', moves: 'e2e4 e7e5 g1f3 g8f6', san: '1.e4 e5 2.Cf3 Cf6' },
-    'vienesa': { name: 'Apertura Vienesa', moves: 'e2e4 e7e5 b1c3', san: '1.e4 e5 2.Cc3' },
-    'gambito-rey': { name: 'Gambito de Rey', moves: 'e2e4 e7e5 f2f4', san: '1.e4 e5 2.f4' },
-    'gambito-evans': { name: 'Gambito Evans', moves: 'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 b2b4', san: '1.e4 e5 2.Cf3 Cc6 3.Ac4 Ac5 4.b4' },
-    'dos-caballos': { name: 'Dos Caballos', moves: 'e2e4 e7e5 g1f3 b8c6 f1c4 g8f6', san: '1.e4 e5 2.Cf3 Cc6 3.Ac4 Cf6' },
-    'siciliana-najdorf': { name: 'Siciliana Najdorf', moves: 'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 a7a6', san: '1.e4 c5 2.Cf3 d6 3.d4 cxd4 4.Cxd4 Cf6 5.Cc3 a6' },
-    'siciliana-dragon': { name: 'Siciliana Dragón', moves: 'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 g7g6', san: '1.e4 c5 2.Cf3 d6 3.d4 cxd4 4.Cxd4 Cf6 5.Cc3 g6' },
-    'siciliana-sveshnikov': { name: 'Siciliana Sveshnikov', moves: 'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 e7e5', san: '1.e4 c5 2.Cf3 d6 3.d4 cxd4 4.Cxd4 Cf6 5.Cc3 e5' },
-    'siciliana-clasica': { name: 'Siciliana Clásica', moves: 'e2e4 c7c5 g1f3 b8c6', san: '1.e4 c5 2.Cf3 Cc6' },
-    'siciliana-alapin': { name: 'Siciliana Alapin', moves: 'e2e4 c7c5 c2c3', san: '1.e4 c5 2.c3' },
-    'siciliana-smith-morra': { name: 'Gambito Smith-Morra', moves: 'e2e4 c7c5 d2d4 c5d4', san: '1.e4 c5 2.d4 cxd4' },
-    'francesa-winawer': { name: 'Francesa Winawer', moves: 'e2e4 e7e6 d2d4 d7d5 b1c3 f8b4', san: '1.e4 e6 2.d4 d5 3.Cc3 Ab4' },
-    'francesa-clasica': { name: 'Francesa Clásica', moves: 'e2e4 e7e6 d2d4 d7d5 b1c3 g8f6', san: '1.e4 e6 2.d4 d5 3.Cc3 Cf6' },
-    'francesa-avance': { name: 'Francesa Avance', moves: 'e2e4 e7e6 d2d4 d7d5 e4e5', san: '1.e4 e6 2.d4 d5 3.e5' },
-    'francesa-tarrasch': { name: 'Francesa Tarrasch', moves: 'e2e4 e7e6 d2d4 d7d5 b1d2', san: '1.e4 e6 2.d4 d5 3.Cd2' },
-    'caro-kann-clasica': { name: 'Caro-Kann Clásica', moves: 'e2e4 c7c6 d2d4 d7d5 b1c3 d5e4 c3e4', san: '1.e4 c6 2.d4 d5 3.Cc3 dxe4 4.Cxe4' },
-    'caro-kann-avance': { name: 'Caro-Kann Avance', moves: 'e2e4 c7c6 d2d4 d7d5 e4e5', san: '1.e4 c6 2.d4 d5 3.e5' },
-    'escandinava': { name: 'Defensa Escandinava', moves: 'e2e4 d7d5 e4d5 d8d5 b1c3', san: '1.e4 d5 2.exd5 Dxd5 3.Cc3' },
-    'pirc': { name: 'Defensa Pirc', moves: 'e2e4 d7d6 d2d4 g8f6 b1c3 g7g6', san: '1.e4 d6 2.d4 Cf6 3.Cc3 g6' },
-    'gda': { name: 'Gambito de Dama Aceptado', moves: 'd2d4 d7d5 c2c4 d5c4', san: '1.d4 d5 2.c4 dxc4' },
-    'gdr-ortodoxa': { name: 'GDR Ortodoxa', moves: 'd2d4 d7d5 c2c4 e7e6 b1c3 g8f6 c1g5', san: '1.d4 d5 2.c4 e6 3.Cc3 Cf6 4.Ag5' },
-    'eslava': { name: 'Defensa Eslava', moves: 'd2d4 d7d5 c2c4 c7c6 g1f3 g8f6', san: '1.d4 d5 2.c4 c6 3.Cf3 Cf6' },
-    'semi-eslava': { name: 'Semi-Eslava', moves: 'd2d4 d7d5 c2c4 c7c6 g1f3 g8f6 b1c3 e7e6', san: '1.d4 d5 2.c4 c6 3.Cf3 Cf6 4.Cc3 e6' },
-    'india-rey': { name: 'India de Rey', moves: 'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6', san: '1.d4 Cf6 2.c4 g6 3.Cc3 Ag7 4.e4 d6' },
-    'nimzo-india': { name: 'Nimzo-India', moves: 'd2d4 g8f6 c2c4 e7e6 b1c3 f8b4', san: '1.d4 Cf6 2.c4 e6 3.Cc3 Ab4' },
-    'india-dama': { name: 'India de Dama', moves: 'd2d4 g8f6 c2c4 e7e6 g1f3 b7b6', san: '1.d4 Cf6 2.c4 e6 3.Cf3 b6' },
-    'benoni': { name: 'Benoni Moderna', moves: 'd2d4 g8f6 c2c4 c7c5 d4d5', san: '1.d4 Cf6 2.c4 c5 3.d5' },
-    'budapest': { name: 'Gambito Budapest', moves: 'd2d4 g8f6 c2c4 e7e5', san: '1.d4 Cf6 2.c4 e5' },
-    'holandesa': { name: 'Defensa Holandesa', moves: 'd2d4 f7f5', san: '1.d4 f5' },
-    'londres': { name: 'Sistema Londres', moves: 'd2d4 d7d5 c1f4 g8f6 e2e3', san: '1.d4 d5 2.Af4 Cf6 3.e3' },
-    'colle': { name: 'Sistema Colle', moves: 'd2d4 d7d5 g1f3 g8f6 e2e3', san: '1.d4 d5 2.Cf3 Cf6 3.e3' },
-    'inglesa': { name: 'Apertura Inglesa', moves: 'c2c4 e7e5 b1c3', san: '1.c4 e5 2.Cc3' },
-    'reti': { name: 'Apertura Réti', moves: 'g1f3 d7d5 c2c4', san: '1.Cf3 d5 2.c4' },
-    'catalana': { name: 'Apertura Catalana', moves: 'd2d4 g8f6 c2c4 e7e6 g2g3 d7d5', san: '1.d4 Cf6 2.c4 e6 3.g3 d5' },
-    'larsen': { name: 'Apertura Larsen', moves: 'b2b3', san: '1.b3' },
+    'italiana': { name: 'Apertura Italiana (Giuoco Piano)', moves: 'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5', san: '1.e4 e5 2.Cf3 Cc6 3.Ac4 Ac5', desc: 'Busca control central y desarrollo rápido apuntando al punto débil f7. Juego abierto con opciones tácticas para ambos bandos.' },
+    'española': { name: 'Apertura Española (Ruy López)', moves: 'e2e4 e7e5 g1f3 b8c6 f1b5', san: '1.e4 e5 2.Cf3 Cc6 3.Ab5', desc: 'Presiona el caballo que defiende e5, buscando ventaja posicional a largo plazo. La apertura más profunda y estudiada del ajedrez.' },
+    'escocesa': { name: 'Apertura Escocesa', moves: 'e2e4 e7e5 g1f3 b8c6 d2d4 e5d4 f3d4', san: '1.e4 e5 2.Cf3 Cc6 3.d4 exd4 4.Cxd4', desc: 'Abre el centro inmediatamente, buscando juego activo de piezas y diagonales libres para los alfiles.' },
+    'petrov': { name: 'Defensa Petrov', moves: 'e2e4 e7e5 g1f3 g8f6', san: '1.e4 e5 2.Cf3 Cf6', desc: 'Defensa simétrica y sólida. Las negras contraatacan el peón e4 en vez de defender e5, buscando igualdad rápida.' },
+    'vienesa': { name: 'Apertura Vienesa', moves: 'e2e4 e7e5 b1c3', san: '1.e4 e5 2.Cc3', desc: 'Prepara f4 sin bloquear el peón f. Combina ideas del Gambito de Rey con desarrollo flexible del caballo.' },
+    'gambito-rey': { name: 'Gambito de Rey', moves: 'e2e4 e7e5 f2f4', san: '1.e4 e5 2.f4', desc: 'Sacrifica un peón por iniciativa y ataque al rey. Apertura romántica y agresiva que busca abrir la columna f.' },
+    'gambito-evans': { name: 'Gambito Evans', moves: 'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 b2b4', san: '1.e4 e5 2.Cf3 Cc6 3.Ac4 Ac5 4.b4', desc: 'Sacrifica un peón de flanco para ganar tiempos de desarrollo y construir un centro fuerte con c3 y d4.' },
+    'dos-caballos': { name: 'Dos Caballos', moves: 'e2e4 e7e5 g1f3 b8c6 f1c4 g8f6', san: '1.e4 e5 2.Cf3 Cc6 3.Ac4 Cf6', desc: 'Contraataque directo al peón e4. Las negras prefieren actividad a solidez, aceptando complicaciones tácticas.' },
+    'siciliana-najdorf': { name: 'Siciliana Najdorf', moves: 'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 a7a6', san: '1.e4 c5 2.Cf3 d6 3.d4 cxd4 4.Cxd4 Cf6 5.Cc3 a6', desc: 'La variante más popular de la Siciliana. ...a6 prepara ...e5 o ...b5 para contrajuego en el flanco de dama manteniendo flexibilidad.' },
+    'siciliana-dragon': { name: 'Siciliana Dragón', moves: 'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 g7g6', san: '1.e4 c5 2.Cf3 d6 3.d4 cxd4 4.Cxd4 Cf6 5.Cc3 g6', desc: 'Fianchetto del alfil en g7 creando presión en la gran diagonal. Lleva a ataques opuestos: blancas al rey, negras al flanco de dama.' },
+    'siciliana-sveshnikov': { name: 'Siciliana Sveshnikov', moves: 'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 e7e5', san: '1.e4 c5 2.Cf3 d6 3.d4 cxd4 4.Cxd4 Cf6 5.Cc3 e5', desc: 'Golpe central agresivo que expulsa el caballo. Acepta debilidad en d5 a cambio de juego activo y contrajuego dinámico.' },
+    'siciliana-clasica': { name: 'Siciliana Clásica', moves: 'e2e4 c7c5 g1f3 b8c6', san: '1.e4 c5 2.Cf3 Cc6', desc: 'Desarrollo natural del caballo presionando d4. Posición flexible que puede transponerse a múltiples sistemas.' },
+    'siciliana-alapin': { name: 'Siciliana Alapin', moves: 'e2e4 c7c5 c2c3', san: '1.e4 c5 2.c3', desc: 'Blancas preparan d4 reforzado con c3. Evita la complejidad teórica de la Siciliana Abierta a cambio de un centro sólido.' },
+    'siciliana-smith-morra': { name: 'Gambito Smith-Morra', moves: 'e2e4 c7c5 d2d4 c5d4', san: '1.e4 c5 2.d4 cxd4', desc: 'Gambito agresivo que sacrifica un peón por desarrollo rápido, columnas abiertas y fuerte iniciativa.' },
+    'francesa-winawer': { name: 'Francesa Winawer', moves: 'e2e4 e7e6 d2d4 d7d5 b1c3 f8b4', san: '1.e4 e6 2.d4 d5 3.Cc3 Ab4', desc: 'Clava el caballo que defiende e4. Lleva a juego desequilibrado con peones doblados y ataques en flancos opuestos.' },
+    'francesa-clasica': { name: 'Francesa Clásica', moves: 'e2e4 e7e6 d2d4 d7d5 b1c3 g8f6', san: '1.e4 e6 2.d4 d5 3.Cc3 Cf6', desc: 'Presión directa sobre e4. Juego más sólido que la Winawer, con planes estratégicos de ruptura con ...c5 o ...f6.' },
+    'francesa-avance': { name: 'Francesa Avance', moves: 'e2e4 e7e6 d2d4 d7d5 e4e5', san: '1.e4 e6 2.d4 d5 3.e5', desc: 'Fija la estructura de peones y gana espacio. Las negras buscan romper con ...c5 y presionar la cadena de peones blancos.' },
+    'francesa-tarrasch': { name: 'Francesa Tarrasch', moves: 'e2e4 e7e6 d2d4 d7d5 b1d2', san: '1.e4 e6 2.d4 d5 3.Cd2', desc: 'Evita el clavado de la Winawer. Juego más tranquilo que permite recapturar en e4 con el caballo manteniendo la estructura.' },
+    'caro-kann-clasica': { name: 'Caro-Kann Clásica', moves: 'e2e4 c7c6 d2d4 d7d5 b1c3 d5e4 c3e4', san: '1.e4 c6 2.d4 d5 3.Cc3 dxe4 4.Cxe4', desc: 'Defensa sólida que desarrolla el alfil de dama antes de cerrar la posición. Busca igualdad con estructura de peones sana.' },
+    'caro-kann-avance': { name: 'Caro-Kann Avance', moves: 'e2e4 c7c6 d2d4 d7d5 e4e5', san: '1.e4 c6 2.d4 d5 3.e5', desc: 'Gana espacio en el centro. Las negras buscan contrajuego con ...c5 y ...Af5, presionando la cadena de peones.' },
+    'escandinava': { name: 'Defensa Escandinava', moves: 'e2e4 d7d5 e4d5 d8d5 b1c3', san: '1.e4 d5 2.exd5 Dxd5 3.Cc3', desc: 'Desafía e4 inmediatamente. La dama sale temprano pero obtiene desarrollo rápido del alfil de dama y estructura sólida.' },
+    'pirc': { name: 'Defensa Pirc', moves: 'e2e4 d7d6 d2d4 g8f6 b1c3 g7g6', san: '1.e4 d6 2.d4 Cf6 3.Cc3 g6', desc: 'Hipermoderna: permite que las blancas construyan un gran centro para luego atacarlo con ...e5 o ...c5 y el alfil fianchetado.' },
+    'gda': { name: 'Gambito de Dama Aceptado', moves: 'd2d4 d7d5 c2c4 d5c4', san: '1.d4 d5 2.c4 dxc4', desc: 'Las negras capturan el peón del gambito para luego cederlo, ganando tiempos para desarrollar el alfil de dama activamente.' },
+    'gdr-ortodoxa': { name: 'GDR Ortodoxa', moves: 'd2d4 d7d5 c2c4 e7e6 b1c3 g8f6 c1g5', san: '1.d4 d5 2.c4 e6 3.Cc3 Cf6 4.Ag5', desc: 'Sistema clásico donde las blancas presionan el centro con piezas desarrolladas. Juego posicional profundo y maniobras estratégicas.' },
+    'eslava': { name: 'Defensa Eslava', moves: 'd2d4 d7d5 c2c4 c7c6 g1f3 g8f6', san: '1.d4 d5 2.c4 c6 3.Cf3 Cf6', desc: 'Defiende d5 con c6 sin bloquear el alfil de dama. Estructura sólida con planes de contrajuego en el flanco de dama.' },
+    'semi-eslava': { name: 'Semi-Eslava', moves: 'd2d4 d7d5 c2c4 c7c6 g1f3 g8f6 b1c3 e7e6', san: '1.d4 d5 2.c4 c6 3.Cf3 Cf6 4.Cc3 e6', desc: 'Combina la solidez de la Eslava con la flexibilidad de la Francesa. Posiciones ricas en planes y complicaciones tácticas.' },
+    'india-rey': { name: 'India de Rey', moves: 'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6', san: '1.d4 Cf6 2.c4 g6 3.Cc3 Ag7 4.e4 d6', desc: 'Las negras permiten un centro fuerte blanco para luego atacarlo con ...e5. El alfil en g7 es una pieza clave para el contraataque.' },
+    'nimzo-india': { name: 'Nimzo-India', moves: 'd2d4 g8f6 c2c4 e7e6 b1c3 f8b4', san: '1.d4 Cf6 2.c4 e6 3.Cc3 Ab4', desc: 'Clava el caballo c3 que controla e4. Dobla los peones blancos y obtiene control posicional a cambio de la pareja de alfiles.' },
+    'india-dama': { name: 'India de Dama', moves: 'd2d4 g8f6 c2c4 e7e6 g1f3 b7b6', san: '1.d4 Cf6 2.c4 e6 3.Cf3 b6', desc: 'Fianchetto del alfil de dama para controlar la diagonal e4-a8. Juego flexible con presión sobre el centro blanco.' },
+    'benoni': { name: 'Benoni Moderna', moves: 'd2d4 g8f6 c2c4 c7c5 d4d5', san: '1.d4 Cf6 2.c4 c5 3.d5', desc: 'Crea asimetría con peones enfrentados. Las negras buscan contrajuego en el flanco de dama con ...b5 y presión en la columna c.' },
+    'budapest': { name: 'Gambito Budapest', moves: 'd2d4 g8f6 c2c4 e7e5', san: '1.d4 Cf6 2.c4 e5', desc: 'Gambito sorpresa que sacrifica un peón por desarrollo activo. El caballo va a g4 o e4 creando amenazas inmediatas.' },
+    'holandesa': { name: 'Defensa Holandesa', moves: 'd2d4 f7f5', san: '1.d4 f5', desc: 'Control agresivo de la casilla e4. Las negras buscan ataque en el flanco de rey, con planes de ...Cf6, ...e6 y ...g5.' },
+    'londres': { name: 'Sistema Londres', moves: 'd2d4 d7d5 c1f4 g8f6 e2e3', san: '1.d4 d5 2.Af4 Cf6 3.e3', desc: 'Sistema universal y sólido. Las blancas construyen una estructura con Af4, e3, Cf3, Ad3 y c3 contra cualquier defensa.' },
+    'colle': { name: 'Sistema Colle', moves: 'd2d4 d7d5 g1f3 g8f6 e2e3', san: '1.d4 d5 2.Cf3 Cf6 3.e3', desc: 'Sistema tranquilo que busca la ruptura e3-e4 preparada con Ad3 y Cbd2. Ideal para jugadores posicionales.' },
+    'inglesa': { name: 'Apertura Inglesa', moves: 'c2c4 e7e5 b1c3', san: '1.c4 e5 2.Cc3', desc: 'Siciliana invertida con un tiempo extra. Control del centro desde los flancos con planes de g3, Ag2 y presión en columna c.' },
+    'reti': { name: 'Apertura Réti', moves: 'g1f3 d7d5 c2c4', san: '1.Cf3 d5 2.c4', desc: 'Hipermoderna: ataca el centro desde el flanco. Flexible, puede transponerse a Inglesa, Catalana o Gambito de Dama.' },
+    'catalana': { name: 'Apertura Catalana', moves: 'd2d4 g8f6 c2c4 e7e6 g2g3 d7d5', san: '1.d4 Cf6 2.c4 e6 3.g3 d5', desc: 'Fianchetto del alfil de rey que presiona la gran diagonal a8-h1. Combina solidez posicional con presión persistente.' },
+    'larsen': { name: 'Apertura Larsen', moves: 'b2b3', san: '1.b3', desc: 'Fianchetto temprano del alfil de dama. Apertura flexible y poco teórica que busca control a distancia del centro.' },
+
+    // --- Variantes profundas ---
+    'italiana-pianissimo': { name: 'Giuoco Pianissimo (Tabiya)', moves: 'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 d2d3 g8f6 c2c3 d7d6 e1g1 e8g8 f1e1 a7a6', san: '1.e4 e5 2.Cf3 Cc6 3.Ac4 Ac5 4.d3 Cf6 5.c3 d6 6.O-O O-O 7.Te1 a6', desc: 'Juego lento y estratégico. Las blancas preparan d4 con c3 mientras mantienen tensión central. Maniobras de piezas y planes a largo plazo.' },
+    'gambito-evans-deep': { name: 'Gambito Evans Aceptado', moves: 'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 b2b4 c5b4 c2c3 b4a5 d2d4', san: '1.e4 e5 2.Cf3 Cc6 3.Ac4 Ac5 4.b4 Axb4 5.c3 Aa5 6.d4', desc: 'Tras el sacrificio de peón, las blancas construyen un centro dominante con c3+d4 y desarrollo rápido con fuerte iniciativa.' },
+    'española-cerrada': { name: 'Española Cerrada (Tabiya)', moves: 'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7 f1e1 b7b5 a4b3 d7d6 c2c3 e8g8 h2h3', san: '1.e4 e5 2.Cf3 Cc6 3.Ab5 a6 4.Aa4 Cf6 5.O-O Ae7 6.Te1 b5 7.Ab3 d6 8.c3 O-O 9.h3', desc: 'Posición tabiya donde se decide el plan: Breyer (Cb8), Chigorin (Ca5) o Zaitsev (Ab7). Juego estratégico profundo.' },
+    'española-breyer': { name: 'Española Breyer', moves: 'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7 f1e1 b7b5 a4b3 d7d6 c2c3 e8g8 h2h3 c6b8 d2d4', san: '1.e4 e5 2.Cf3 Cc6 3.Ab5 a6 4.Aa4 Cf6 5.O-O Ae7 6.Te1 b5 7.Ab3 d6 8.c3 O-O 9.h3 Cb8 10.d4', desc: 'Reagrupamiento del caballo vía b8-d7 para reforzar el centro. Idea moderna y flexible que prepara ...Ab7 y ...c5.' },
+    'española-chigorin': { name: 'Española Chigorin', moves: 'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7 f1e1 b7b5 a4b3 d7d6 c2c3 e8g8 h2h3 c6a5 b3c2 c7c5 d2d4', san: '1.e4 e5 2.Cf3 Cc6 3.Ab5 a6 4.Aa4 Cf6 5.O-O Ae7 6.Te1 b5 7.Ab3 d6 8.c3 O-O 9.h3 Ca5 10.Ac2 c5 11.d4', desc: 'Ca5 apunta a ocupar c4 y presionar el flanco de dama. Con ...c5 se genera contrajuego central contra d4.' },
+    'española-marshall': { name: 'Gambito Marshall', moves: 'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6 e1g1 f8e7 f1e1 b7b5 a4b3 e8g8 c2c3 d7d5 e4d5 f6d5', san: '1.e4 e5 2.Cf3 Cc6 3.Ab5 a6 4.Aa4 Cf6 5.O-O Ae7 6.Te1 b5 7.Ab3 O-O 8.c3 d5 9.exd5 Cxd5', desc: 'Gambito de peón por ataque directo al rey. Las negras obtienen piezas activas, columnas abiertas y fuerte iniciativa.' },
+    'española-berlinesa': { name: 'Berlinesa: Muro de Berlín', moves: 'e2e4 e7e5 g1f3 b8c6 f1b5 g8f6 e1g1 f6e4 d2d4 e4d6 b5c6 d7c6', san: '1.e4 e5 2.Cf3 Cc6 3.Ab5 Cf6 4.O-O Cxe4 5.d4 Cd6 6.Axc6 dxc6', desc: 'Lleva a un final técnico sin damas. Las negras tienen pareja de alfiles y peones doblados pero estructura sólida.' },
+    'petrov-deep': { name: 'Petrov Clásica', moves: 'e2e4 e7e5 g1f3 g8f6 f3e5 d7d6 e5f3 f6e4 d2d4 d7d5 f1d3', san: '1.e4 e5 2.Cf3 Cf6 3.Cxe5 d6 4.Cf3 Cxe4 5.d4 d5 6.Ad3', desc: 'Posición simétrica donde las blancas mantienen ligera ventaja de espacio. Juego técnico con maniobras precisas.' },
+    'najdorf-ag5': { name: 'Najdorf 6.Ag5 (Envenenado)', moves: 'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 a7a6 c1g5 e7e6 f2f4 d8b6', san: '1.e4 c5 2.Cf3 d6 3.d4 cxd4 4.Cxd4 Cf6 5.Cc3 a6 6.Ag5 e6 7.f4 Db6', desc: 'Variante del Peón Envenenado: Db6 amenaza b2. Extremadamente compleja y táctica, favorita de Fischer y Kasparov.' },
+    'najdorf-ae3': { name: 'Najdorf 6.Ae3', moves: 'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 a7a6 c1e3 e7e5 d4b3', san: '1.e4 c5 2.Cf3 d6 3.d4 cxd4 4.Cxd4 Cf6 5.Cc3 a6 6.Ae3 e5 7.Cb3', desc: 'Sistema inglés moderno contra la Najdorf. Las blancas buscan juego posicional con f3, Dd2 y enroque largo.' },
+    'dragon-yugoslavo': { name: 'Dragón Yugoslavo', moves: 'e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 g7g6 c1e3 f8g7 f2f3 e8g8 d1d2 b8c6 e1c1', san: '1.e4 c5 2.Cf3 d6 3.d4 cxd4 4.Cxd4 Cf6 5.Cc3 g6 6.Ae3 Ag7 7.f3 O-O 8.Dd2 Cc6 9.O-O-O', desc: 'Enroques opuestos con ataques mutuos. Las blancas lanzan peones del flanco de rey (h4-h5) mientras las negras atacan con ...a5-a4.' },
+    'sveshnikov-deep': { name: 'Sveshnikov Cdb5', moves: 'e2e4 c7c5 g1f3 b8c6 d2d4 c5d4 f3d4 g8f6 b1c3 e7e5 d4b5 d7d6 c1g5 a7a6 b5a3 b7b5', san: '1.e4 c5 2.Cf3 Cc6 3.d4 cxd4 4.Cxd4 Cf6 5.Cc3 e5 6.Cdb5 d6 7.Ag5 a6 8.Ca3 b5', desc: 'Lucha por la casilla d5. Las negras aceptan debilidades estructurales a cambio de piezas activas y contrajuego dinámico.' },
+    'winawer-deep': { name: 'Winawer con Dg4', moves: 'e2e4 e7e6 d2d4 d7d5 b1c3 f8b4 e4e5 c7c5 a2a3 b4c3 b2c3 g8e7 d1g4', san: '1.e4 e6 2.d4 d5 3.Cc3 Ab4 4.e5 c5 5.a3 Axc3+ 6.bxc3 Ce7 7.Dg4', desc: 'Ataque directo al flanco de rey. Las negras deben decidir entre proteger g7 o enrocar largo, llevando a juego desequilibrado.' },
+    'francesa-clasica-deep': { name: 'Francesa Clásica McCutcheon', moves: 'e2e4 e7e6 d2d4 d7d5 b1c3 g8f6 c1g5 f8e7 e4e5 f6d7 g5e7 d8e7', san: '1.e4 e6 2.d4 d5 3.Cc3 Cf6 4.Ag5 Ae7 5.e5 Cd7 6.Axe7 Dxe7', desc: 'Tras los cambios, las negras buscan romper con ...c5 y ...f6. Posición cerrada con juego estratégico en torno a la cadena de peones.' },
+    'francesa-avance-deep': { name: 'Francesa Avance con Db6', moves: 'e2e4 e7e6 d2d4 d7d5 e4e5 c7c5 c2c3 b8c6 g1f3 d8b6 a2a3', san: '1.e4 e6 2.d4 d5 3.e5 c5 4.c3 Cc6 5.Cf3 Db6 6.a3', desc: 'Db6 presiona b2 y d4 simultáneamente. Las blancas refuerzan con a3 y buscan mantener la cadena de peones intacta.' },
+    'caro-kann-deep': { name: 'Caro-Kann Clásica con h4', moves: 'e2e4 c7c6 d2d4 d7d5 b1c3 d5e4 c3e4 c8f5 e4g3 f5g6 h2h4 h7h6 g1f3', san: '1.e4 c6 2.d4 d5 3.Cc3 dxe4 4.Cxe4 Af5 5.Cg3 Ag6 6.h4 h6 7.Cf3', desc: 'h4 gana espacio y amenaza h5 atrapando el alfil. Las negras deben jugar ...h6 preventivamente, creando debilidades potenciales.' },
+    'caro-kann-avance-deep': { name: 'Caro-Kann Avance con Ae2', moves: 'e2e4 c7c6 d2d4 d7d5 e4e5 c8f5 g1f3 e7e6 f1e2', san: '1.e4 c6 2.d4 d5 3.e5 Af5 4.Cf3 e6 5.Ae2', desc: 'Sistema tranquilo donde las blancas buscan mantener la ventaja de espacio. Las negras preparan ...c5 para romper la cadena.' },
+    'gdr-ortodoxa-deep': { name: 'GDR Ortodoxa (Tabiya)', moves: 'd2d4 d7d5 c2c4 e7e6 b1c3 g8f6 c1g5 f8e7 e2e3 e8g8 g1f3 b8d7 a1c1 c7c6 f1d3 d5c4 d3c4', san: '1.d4 d5 2.c4 e6 3.Cc3 Cf6 4.Ag5 Ae7 5.e3 O-O 6.Cf3 Cbd7 7.Tc1 c6 8.Ad3 dxc4 9.Axc4', desc: 'Posición tabiya de la Ortodoxa. Las negras liberan su posición con ...dxc4 y buscan igualar con ...e5 o ...c5.' },
+    'eslava-checa': { name: 'Eslava Checa con Af5', moves: 'd2d4 d7d5 c2c4 c7c6 g1f3 g8f6 b1c3 d5c4 a2a4 c8f5 e2e3', san: '1.d4 d5 2.c4 c6 3.Cf3 Cf6 4.Cc3 dxc4 5.a4 Af5 6.e3', desc: 'Las negras capturan c4 y desarrollan el alfil a f5 antes de jugar ...e6. a4 impide ...b5 defendiendo el peón extra.' },
+    'semi-eslava-meran': { name: 'Semi-Eslava Meran', moves: 'd2d4 d7d5 c2c4 c7c6 g1f3 g8f6 b1c3 e7e6 e2e3 b8d7 f1d3 d5c4 d3c4 b7b5', san: '1.d4 d5 2.c4 c6 3.Cf3 Cf6 4.Cc3 e6 5.e3 Cbd7 6.Ad3 dxc4 7.Axc4 b5', desc: 'Contrajuego agresivo con ...b5 ganando espacio en el flanco de dama. Las negras buscan activar el alfil de dama y presionar.' },
+    'india-rey-clasica': { name: 'India de Rey Clásica', moves: 'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6 g1f3 e8g8 f1e2 e7e5 e1g1', san: '1.d4 Cf6 2.c4 g6 3.Cc3 Ag7 4.e4 d6 5.Cf3 O-O 6.Ae2 e5 7.O-O', desc: 'Posición tabiya. Las negras eligen entre Cc6 (Mar del Plata), Ca6 (Moderna), Cd7 (Gligoric) según el plan de ataque deseado.' },
+    'india-rey-mar-plata': { name: 'India de Rey Mar del Plata', moves: 'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6 g1f3 e8g8 f1e2 e7e5 e1g1 b8c6 d4d5 c6e7', san: '1.d4 Cf6 2.c4 g6 3.Cc3 Ag7 4.e4 d6 5.Cf3 O-O 6.Ae2 e5 7.O-O Cc6 8.d5 Ce7', desc: 'Variante más combativa de la India de Rey. Ataques en flancos opuestos: blancas con c5 en el flanco de dama, negras con f5 en el de rey.' },
+    'india-rey-samisch': { name: 'India de Rey Sämisch', moves: 'd2d4 g8f6 c2c4 g7g6 b1c3 f8g7 e2e4 d7d6 f2f3 e8g8 c1e3 e7e5', san: '1.d4 Cf6 2.c4 g6 3.Cc3 Ag7 4.e4 d6 5.f3 O-O 6.Ae3 e5', desc: 'f3 refuerza e4 y prepara enroque largo con ataque al flanco de rey. Juego agresivo donde ambos bandos atacan sin contemplaciones.' },
+    'nimzo-rubinstein': { name: 'Nimzo-India Rubinstein', moves: 'd2d4 g8f6 c2c4 e7e6 b1c3 f8b4 e2e3 e8g8 f1d3 d7d5 g1f3 c7c5', san: '1.d4 Cf6 2.c4 e6 3.Cc3 Ab4 4.e3 O-O 5.Ad3 d5 6.Cf3 c5', desc: 'Las negras presionan d4 con ...c5 y ...d5. Si bxc3, las blancas tienen pareja de alfiles pero peones doblados.' },
+    'nimzo-clasica': { name: 'Nimzo-India Clásica Dc2', moves: 'd2d4 g8f6 c2c4 e7e6 b1c3 f8b4 d1c2 e8g8 a2a3 b4c3 d1c3', san: '1.d4 Cf6 2.c4 e6 3.Cc3 Ab4 4.Dc2 O-O 5.a3 Axc3+ 6.Dxc3', desc: 'Dc2 evita los peones doblados. Las blancas obtienen pareja de alfiles y centro fuerte, las negras buen desarrollo.' },
+    'benoni-deep': { name: 'Benoni Clásica Fianchetto', moves: 'd2d4 g8f6 c2c4 c7c5 d4d5 e7e6 b1c3 e6d5 c4d5 d7d6 g1f3 g7g6', san: '1.d4 Cf6 2.c4 c5 3.d5 e6 4.Cc3 exd5 5.cxd5 d6 6.Cf3 g6', desc: 'Fianchetto del alfil para presionar d5 y e4. Las negras buscan contrajuego con ...b5 y actividad en la columna e.' },
+    'londres-deep': { name: 'Londres Línea Principal', moves: 'd2d4 d7d5 c1f4 g8f6 e2e3 c7c5 c2c3 b8c6 g1f3', san: '1.d4 d5 2.Af4 Cf6 3.e3 c5 4.c3 Cc6 5.Cf3', desc: 'Estructura sólida con Af4+e3+c3+Cf3. Las blancas buscan Ad3, Cbd2 y eventualmente e4 para obtener ventaja de espacio.' },
+    'inglesa-4caballos': { name: 'Inglesa Cuatro Caballos', moves: 'c2c4 e7e5 b1c3 g8f6 g1f3 b8c6 g2g3 d7d5 c4d5', san: '1.c4 e5 2.Cc3 Cf6 3.Cf3 Cc6 4.g3 d5 5.cxd5', desc: 'Posición simétrica con tensión central. Las blancas buscan explotar el fianchetto y presión en la columna c.' },
+    'catalana-abierta': { name: 'Catalana Abierta', moves: 'd2d4 g8f6 c2c4 e7e6 g2g3 d7d5 f1g2 d5c4 g1f3 a7a6', san: '1.d4 Cf6 2.c4 e6 3.g3 d5 4.Ag2 dxc4 5.Cf3 a6', desc: 'Las negras capturan c4 y defienden con ...a6. El alfil en g2 ejerce presión constante en la diagonal, buscando recuperar el peón.' },
+    'catalana-cerrada': { name: 'Catalana Cerrada', moves: 'd2d4 g8f6 c2c4 e7e6 g2g3 d7d5 f1g2 f8e7 g1f3 e8g8 e1g1', san: '1.d4 Cf6 2.c4 e6 3.g3 d5 4.Ag2 Ae7 5.Cf3 O-O 6.O-O', desc: 'Las negras mantienen la tensión en el centro sin capturar c4. Juego posicional profundo con maniobras estratégicas sutiles.' },
 };
 
 function detectOpening() {
@@ -427,8 +738,8 @@ function detectOpening() {
     if (history.length <= lastOpeningMoveCount) return;
     lastOpeningMoveCount = history.length;
 
-    // A partir del movimiento 9 (18 half-moves), ocultar el banner
-    if (history.length > 16) {
+    // A partir del movimiento 21 (42 half-moves), ocultar el banner
+    if (history.length > 40) {
         hideOpeningBanner();
         return;
     }
@@ -503,7 +814,7 @@ function recalcOpening() {
         return;
     }
 
-    if (history.length > 16) {
+    if (history.length > 40) {
         return;
     }
 
@@ -540,7 +851,7 @@ function hideOpeningBanner() {
 
 function getOpeningBookMove() {
     const moveCount = (game.moveHistoryUCI || []).length;
-    if (moveCount > 10) return null;
+    if (moveCount > 20) return null;
 
     const history = game.moveHistoryUCI || [];
 
@@ -1354,6 +1665,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('nav-next').addEventListener('click', goToNextMove);
     document.getElementById('nav-last').addEventListener('click', goToLastMove);
 
+    // Bloquear zoom con gesto de pinza en móviles
+    document.addEventListener('touchmove', (e) => {
+        if (e.touches.length > 1) e.preventDefault();
+    }, { passive: false });
+    document.addEventListener('gesturestart', (e) => e.preventDefault());
+    document.addEventListener('gesturechange', (e) => e.preventDefault());
+
     // Auto-guardar al cerrar o recargar la página
     window.addEventListener('beforeunload', () => {
         autoSaveGame();
@@ -1434,6 +1752,9 @@ function onOpeningSelect() {
     trainingOpening = opening;
     document.getElementById('opening-training-name').textContent = opening.name;
     document.getElementById('opening-training-moves').textContent = opening.san;
+    const descEl = document.getElementById('opening-training-desc');
+    descEl.textContent = opening.desc || '';
+    descEl.style.display = opening.desc ? 'block' : 'none';
     info.style.display = 'block';
     btn.style.display = 'block';
 }

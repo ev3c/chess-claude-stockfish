@@ -77,9 +77,17 @@
                             <option value="">— Modo libre —</option>
                             <optgroup label="1.e4 — Juego Abierto">
                                 <option value="italiana">Apertura Italiana (Giuoco Piano)</option>
+                                <option value="italiana-pianissimo">Giuoco Pianissimo (mov.8)</option>
+                                <option value="gambito-evans-deep">Gambito Evans Aceptado (mov.6)</option>
                                 <option value="española">Apertura Española (Ruy López)</option>
+                                <option value="española-cerrada">Española Cerrada Tabiya (mov.9)</option>
+                                <option value="española-breyer">Española Breyer (mov.10)</option>
+                                <option value="española-chigorin">Española Chigorin (mov.11)</option>
+                                <option value="española-marshall">Gambito Marshall (mov.10)</option>
+                                <option value="española-berlinesa">Berlinesa: Muro de Berlín (mov.6)</option>
                                 <option value="escocesa">Apertura Escocesa</option>
                                 <option value="petrov">Defensa Petrov</option>
+                                <option value="petrov-deep">Petrov Clásica (mov.6)</option>
                                 <option value="vienesa">Apertura Vienesa</option>
                                 <option value="gambito-rey">Gambito de Rey</option>
                                 <option value="gambito-evans">Gambito Evans</option>
@@ -87,42 +95,64 @@
                             </optgroup>
                             <optgroup label="1.e4 — Semiabiertas">
                                 <option value="siciliana-najdorf">Siciliana Najdorf</option>
+                                <option value="najdorf-ag5">Najdorf 6.Ag5 Envenenado (mov.8)</option>
+                                <option value="najdorf-ae3">Najdorf 6.Ae3 (mov.7)</option>
                                 <option value="siciliana-dragon">Siciliana Dragón</option>
+                                <option value="dragon-yugoslavo">Dragón Yugoslavo (mov.9)</option>
                                 <option value="siciliana-sveshnikov">Siciliana Sveshnikov</option>
+                                <option value="sveshnikov-deep">Sveshnikov Cdb5 (mov.8)</option>
                                 <option value="siciliana-clasica">Siciliana Clásica</option>
                                 <option value="siciliana-alapin">Siciliana Alapin</option>
                                 <option value="siciliana-smith-morra">Gambito Smith-Morra</option>
                                 <option value="francesa-winawer">Francesa Winawer</option>
+                                <option value="winawer-deep">Winawer con Dg4 (mov.7)</option>
                                 <option value="francesa-clasica">Francesa Clásica</option>
+                                <option value="francesa-clasica-deep">Francesa Clásica McCutcheon (mov.6)</option>
                                 <option value="francesa-avance">Francesa Avance</option>
+                                <option value="francesa-avance-deep">Francesa Avance Db6 (mov.6)</option>
                                 <option value="francesa-tarrasch">Francesa Tarrasch</option>
                                 <option value="caro-kann-clasica">Caro-Kann Clásica</option>
+                                <option value="caro-kann-deep">Caro-Kann Clásica h4 (mov.7)</option>
                                 <option value="caro-kann-avance">Caro-Kann Avance</option>
+                                <option value="caro-kann-avance-deep">Caro-Kann Avance Ae2 (mov.5)</option>
                                 <option value="escandinava">Defensa Escandinava</option>
                                 <option value="pirc">Defensa Pirc</option>
                             </optgroup>
                             <optgroup label="1.d4 — Gambito de Dama">
                                 <option value="gda">Gambito de Dama Aceptado</option>
                                 <option value="gdr-ortodoxa">GDR Ortodoxa</option>
+                                <option value="gdr-ortodoxa-deep">GDR Ortodoxa Tabiya (mov.9)</option>
                                 <option value="eslava">Defensa Eslava</option>
+                                <option value="eslava-checa">Eslava Checa Af5 (mov.6)</option>
                                 <option value="semi-eslava">Semi-Eslava</option>
+                                <option value="semi-eslava-meran">Semi-Eslava Meran b5 (mov.8)</option>
                             </optgroup>
                             <optgroup label="1.d4 — Defensas Indias">
                                 <option value="india-rey">India de Rey</option>
+                                <option value="india-rey-clasica">India de Rey Clásica (mov.7)</option>
+                                <option value="india-rey-mar-plata">India de Rey Mar del Plata (mov.9)</option>
+                                <option value="india-rey-samisch">India de Rey Sämisch (mov.7)</option>
                                 <option value="nimzo-india">Nimzo-India</option>
+                                <option value="nimzo-rubinstein">Nimzo-India Rubinstein (mov.7)</option>
+                                <option value="nimzo-clasica">Nimzo-India Clásica Dc2 (mov.5)</option>
                                 <option value="india-dama">India de Dama</option>
                                 <option value="benoni">Benoni Moderna</option>
+                                <option value="benoni-deep">Benoni Clásica Fianchetto (mov.7)</option>
                                 <option value="budapest">Gambito Budapest</option>
                                 <option value="holandesa">Defensa Holandesa</option>
                             </optgroup>
                             <optgroup label="1.d4 — Sistemas">
                                 <option value="londres">Sistema Londres</option>
+                                <option value="londres-deep">Londres Línea Principal (mov.5)</option>
                                 <option value="colle">Sistema Colle</option>
                             </optgroup>
                             <optgroup label="Otras Aperturas">
                                 <option value="inglesa">Apertura Inglesa</option>
+                                <option value="inglesa-4caballos">Inglesa Cuatro Caballos (mov.5)</option>
                                 <option value="reti">Apertura Réti</option>
                                 <option value="catalana">Apertura Catalana</option>
+                                <option value="catalana-abierta">Catalana Abierta (mov.6)</option>
+                                <option value="catalana-cerrada">Catalana Cerrada (mov.6)</option>
                                 <option value="larsen">Apertura Larsen</option>
                             </optgroup>
                         </select>
@@ -130,6 +160,7 @@
                     <div id="opening-training-info" class="opening-training-info" style="display:none;">
                         <p id="opening-training-name" class="training-name"></p>
                         <p id="opening-training-moves" class="training-moves"></p>
+                        <p id="opening-training-desc" class="training-desc"></p>
                     </div>
                     <button id="start-opening-training" class="btn btn-primary" style="display:none;">♟ Iniciar Entrenamiento</button>
                 </div>
