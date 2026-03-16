@@ -1356,19 +1356,23 @@ header h1 {
 /* Media query SOLO para smartphone vertical (portrait) */
 @media (max-width: 600px) and (orientation: portrait) {
     header h1 {
-        font-size: 1.8rem;
+        font-size: 2rem;
     }
 
     body {
         padding: 10px;
+        font-size: 1rem;
     }
     
     .game-container {
         flex-direction: column;
         gap: 15px;
     }
+
+    .panel h2 {
+        font-size: 1.15rem;
+    }
     
-    /* Navegador de movimientos más compacto en móvil */
     .move-navigator {
         padding: 8px;
         gap: 6px;
@@ -1378,26 +1382,25 @@ header h1 {
     .nav-btn {
         width: 35px;
         height: 35px;
-        font-size: 1rem;
+        font-size: 1.1rem;
     }
     
     .move-item {
-        font-size: 0.8rem;
-        padding: 4px 8px;
+        font-size: 0.92rem;
+        padding: 5px 9px;
     }
     
-    /* Mensajes responsive móvil */
     .message-box {
-        padding: 20px 30px;
-        font-size: 0.99rem;
+        padding: 22px 32px;
+        font-size: 1.08rem;
         max-width: 90%;
         margin: 0 10px;
     }
     
     .message-close-btn {
-        font-size: 1.35rem;
-        width: 30px;
-        height: 30px;
+        font-size: 1.5rem;
+        width: 34px;
+        height: 34px;
     }
 
     /* Orden específico para móviles */
@@ -1406,28 +1409,55 @@ header h1 {
         width: 100%;
     }
 
-    #clock-panel {
+    #captured-panel {
         order: 2 !important;
     }
 
-    .sidebar-left .panel:nth-child(2) {
-        /* Piezas capturadas */
+    #clock-panel {
         order: 3 !important;
     }
 
     .sidebar-left .panel:nth-child(1) {
-        /* Panel de configuración */
         order: 4 !important;
     }
 
-    .sidebar-right .panel:nth-child(2) {
-        /* Panel de acciones */
+    .sidebar-left .panel:nth-child(2) {
         order: 5 !important;
+    }
+
+    .sidebar-right .panel:nth-child(2) {
+        order: 6 !important;
     }
     
     .sidebar-right .panel:nth-child(3) {
-        /* Panel de estadísticas */
-        order: 6 !important;
+        order: 7 !important;
+    }
+
+    /* Piezas capturadas compactas en móvil */
+    #captured-panel .captured-section strong {
+        font-size: 0.82rem;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    #captured-panel .captured-section div {
+        font-size: 1.12rem;
+    }
+
+    #captured-panel .captured {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    #captured-panel .captured-section {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+    }
+
+    #captured-panel .captured-section strong {
+        min-width: 4.5em;
     }
     
     /* Estadísticas compactas en móvil */
@@ -1440,15 +1470,19 @@ header h1 {
     }
     
     .stat-value {
-        font-size: 1.44rem;
+        font-size: 1.55rem;
     }
     
     .stat-label {
-        font-size: 0.675rem;
+        font-size: 0.78rem;
     }
 
     .config-section label {
-        font-size: 0.81rem;
+        font-size: 0.92rem;
+    }
+
+    .select {
+        font-size: 0.95rem;
     }
 
     /* Reorganizar todos los paneles en una columna */
@@ -1488,7 +1522,7 @@ header h1 {
     }
 
     .eval-bar-label {
-        font-size: 0.54rem;
+        font-size: 0.62rem;
     }
 
     .rank-labels {
@@ -1497,7 +1531,7 @@ header h1 {
     
     .rank-label {
         height: 45px;
-        font-size: 0.8rem;
+        font-size: 0.9rem;
         min-width: 20px;
     }
     
@@ -1507,7 +1541,7 @@ header h1 {
     
     .file-label {
         width: 45px;
-        font-size: 0.8rem;
+        font-size: 0.9rem;
     }
 
     .board-wrapper {
@@ -1523,15 +1557,16 @@ header h1 {
     }
 
     .clock-time {
-        font-size: 1.17rem;
+        font-size: 1.28rem;
     }
 
-    /* Historial de movimientos eliminado */
+    .clock-label {
+        font-size: 0.95rem;
+    }
 
-    /* Botones más compactos */
     .btn {
-        padding: 10px;
-        font-size: 0.81rem;
+        padding: 10px 12px;
+        font-size: 0.92rem;
     }
 
     header {
@@ -1539,7 +1574,15 @@ header h1 {
     }
 
     .subtitle {
-        font-size: 0.9rem;
+        font-size: 1rem;
+    }
+
+    .training-name, .training-moves, .training-desc {
+        font-size: 0.88rem;
+    }
+
+    .quiz-score {
+        font-size: 1rem;
     }
 }
 
