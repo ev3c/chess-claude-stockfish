@@ -1954,7 +1954,97 @@ document.addEventListener('DOMContentLoaded', () => {
         startNewGame();
     }
     checkForGameInProgress();
+    initCustomDropdowns();
+    window.addEventListener('resize', initCustomDropdowns);
 });
+
+function initCustomDropdowns() {
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    document.querySelectorAll('.select').forEach(select => {
+        if (!select.closest('.custom-select-wrap')) {
+            const wrap = document.createElement('div');
+            wrap.className = 'custom-select-wrap';
+            select.parentNode.insertBefore(wrap, select);
+            wrap.appendChild(select);
+
+            const trigger = document.createElement('button');
+            trigger.type = 'button';
+            trigger.className = 'custom-select-trigger';
+            trigger.textContent = select.options[select.selectedIndex]?.text || '';
+            wrap.appendChild(trigger);
+
+            const list = document.createElement('div');
+            list.className = 'custom-select-list';
+            wrap.appendChild(list);
+
+            function buildList() {
+                list.innerHTML = '';
+                for (const node of select.children) {
+                    if (node.tagName === 'OPTGROUP') {
+                        const g = document.createElement('div');
+                        g.className = 'custom-select-optgroup';
+                        g.textContent = node.label;
+                        list.appendChild(g);
+                        for (const opt of node.children) {
+                            const o = document.createElement('div');
+                            o.className = 'custom-select-option' + (opt.value === select.value ? ' selected' : '');
+                            o.textContent = opt.textContent;
+                            o.dataset.value = opt.value;
+                            o.tabIndex = 0;
+                            o.addEventListener('click', () => selectOption(opt.value));
+                            list.appendChild(o);
+                        }
+                    } else if (node.tagName === 'OPTION') {
+                        const o = document.createElement('div');
+                        o.className = 'custom-select-option' + (node.value === select.value ? ' selected' : '');
+                        o.textContent = node.textContent;
+                        o.dataset.value = node.value;
+                        o.tabIndex = 0;
+                        o.addEventListener('click', () => selectOption(node.value));
+                        list.appendChild(o);
+                    }
+                }
+            }
+
+            function selectOption(val) {
+                select.value = val;
+                trigger.textContent = select.options[select.selectedIndex]?.text || '';
+                list.classList.remove('open');
+                trigger.classList.remove('open');
+                list.querySelectorAll('.custom-select-option').forEach(o => {
+                    o.classList.toggle('selected', o.dataset.value === val);
+                });
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const open = list.classList.toggle('open');
+                trigger.classList.toggle('open', open);
+                if (open) buildList();
+            });
+
+            document.addEventListener('click', function closeDropdown(e) {
+                if (!wrap.contains(e.target)) {
+                    list.classList.remove('open');
+                    trigger.classList.remove('open');
+                }
+            });
+        }
+
+        const wrap = select.closest('.custom-select-wrap');
+        const trigger = wrap?.querySelector('.custom-select-trigger');
+        const list = wrap?.querySelector('.custom-select-list');
+        if (wrap && trigger && list) {
+            if (isMobile) {
+                trigger.style.display = 'block';
+                trigger.textContent = select.options[select.selectedIndex]?.text || '';
+            } else {
+                trigger.style.display = 'none';
+            }
+        }
+    });
+}
 
 // Función para obtener movimientos de la IA
 async function getAIMove() {
