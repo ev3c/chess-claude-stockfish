@@ -656,7 +656,12 @@ const OPENING_NAMES = {
 
 let currentOpeningName = '';
 let lastOpeningMoveCount = 0;
-let trainingOpening = null; // Apertura seleccionada para entrenamiento
+let trainingOpening = null;
+let quizMode = false;
+let quizMoves = [];
+let quizIndex = 0;
+let quizCorrect = 0;
+let quizWrong = 0;
 
 const OPENING_TRAINING = {
     'italiana': { name: 'Apertura Italiana (Giuoco Piano)', moves: 'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5', san: '1.e4 e5 2.Cf3 Cc6 3.Ac4 Ac5', desc: 'Busca control central y desarrollo rápido apuntando al punto débil f7. Juego abierto con opciones tácticas para ambos bandos.' },
@@ -896,8 +901,8 @@ async function getStockfishBestMove() {
         return bookMove;
     }
     
-    // Intentar usar Stockfish API (niveles 15-20)
-    if (aiDifficulty >= 15) {
+    // Intentar usar Stockfish API (niveles 12+)
+    if (aiDifficulty >= 12) {
         try {
             return await getStockfishAPIMove();
         } catch (error) {
@@ -917,8 +922,8 @@ async function getStockfishAPIMove() {
     // Construir FEN de la posición actual
     const fen = game.toFEN();
     
-    // Mapear dificultad (15-20) a profundidad de búsqueda (10-18)
-    const depth = Math.min(18, 8 + aiDifficulty);
+    // Mapear dificultad (12-20) a profundidad de búsqueda
+    const depth = Math.min(18, Math.max(10, Math.floor(aiDifficulty * 0.9)));
     
     const response = await fetch('https://chess-api.com/v1', {
         method: 'POST',
@@ -1032,6 +1037,17 @@ const KING_MIDDLE_TABLE = [
     [ 20, 30, 10,  0,  0, 10, 30, 20]
 ];
 
+const KING_END_TABLE = [
+    [-50,-40,-30,-20,-20,-30,-40,-50],
+    [-30,-20,-10,  0,  0,-10,-20,-30],
+    [-30,-10, 20, 30, 30, 20,-10,-30],
+    [-30,-10, 30, 40, 40, 30,-10,-30],
+    [-30,-10, 30, 40, 40, 30,-10,-30],
+    [-30,-10, 20, 30, 30, 20,-10,-30],
+    [-30,-30,  0,  0,  0,  0,-30,-30],
+    [-50,-30,-30,-30,-30,-30,-30,-50]
+];
+
 // Análisis local mejorado (fallback)
 async function getLocalBestMove() {
     console.log('Usando análisis local mejorado - Nivel:', aiDifficulty);
@@ -1048,35 +1064,34 @@ async function getLocalBestMove() {
     let useFullEval = true;
     let randomnessFactor = 0;
     
+    let useQuiescence = false;
+
     if (aiDifficulty <= 3) {
-        // Muy fácil: movimientos casi aleatorios
         depth = 1;
         useFullEval = false;
         randomnessFactor = 0.8;
     } else if (aiDifficulty <= 5) {
-        // Fácil: evaluación básica
-        depth = 1;
+        depth = 2;
         useFullEval = false;
-        randomnessFactor = 0.5;
+        randomnessFactor = 0.4;
     } else if (aiDifficulty <= 8) {
-        // Principiante: evaluación completa, poca profundidad
-        depth = 1;
-        useFullEval = true;
-        randomnessFactor = 0.3;
-    } else if (aiDifficulty <= 12) {
-        // Intermedio: búsqueda a profundidad 2
         depth = 2;
         useFullEval = true;
         randomnessFactor = 0.15;
-    } else if (aiDifficulty <= 16) {
-        // Avanzado: búsqueda a profundidad 2 (optimizado)
-        depth = 2;
-        useFullEval = true;
-        randomnessFactor = 0.05;
-    } else {
-        // Experto/Maestro: búsqueda a profundidad 3 (optimizado)
+    } else if (aiDifficulty <= 12) {
         depth = 3;
         useFullEval = true;
+        useQuiescence = true;
+        randomnessFactor = 0.03;
+    } else if (aiDifficulty <= 16) {
+        depth = 4;
+        useFullEval = true;
+        useQuiescence = true;
+        randomnessFactor = 0;
+    } else {
+        depth = 4;
+        useFullEval = true;
+        useQuiescence = true;
         randomnessFactor = 0;
     }
     
@@ -1094,18 +1109,18 @@ async function getLocalBestMove() {
     });
     
     // Limitar movimientos evaluados en niveles bajos/medios
-    const maxMovesToEvaluate = depth > 2 ? 20 : (depth > 1 ? 30 : allMoves.length);
+    const maxMovesToEvaluate = depth >= 4 ? 15 : (depth >= 3 ? 20 : (depth >= 2 ? 30 : allMoves.length));
     const movesToEvaluate = allMoves.slice(0, Math.min(allMoves.length, maxMovesToEvaluate));
     
     for (const move of movesToEvaluate) {
         let score;
         
-        if (useFullEval && depth > 1) {
-            // Minimax con profundidad
-            score = evaluateMoveWithMinimax(move, depth, game.currentTurn);
+        if (depth > 1) {
+            score = evaluateMoveWithMinimax(move, depth, game.currentTurn, useQuiescence);
+        } else if (useFullEval) {
+            score = evaluateMoveSimple(move, true);
         } else {
-            // Evaluación simple
-            score = evaluateMoveSimple(move, useFullEval);
+            score = evaluateMoveSimple(move, false);
         }
         
         // Añadir aleatoriedad según nivel
@@ -1149,27 +1164,38 @@ function getAllPossibleMoves(color) {
     return allMoves;
 }
 
-// Evaluación simple de un movimiento
 function evaluateMoveSimple(move, useFullEval) {
     let score = 0;
     
-    // Captura de pieza
     const capturedPiece = game.getPiece(move.toRow, move.toCol);
     if (capturedPiece) {
-        score += PIECE_VALUES[capturedPiece.type] || 0;
+        // MVV-LVA: prefer capturing high-value pieces with low-value pieces
+        score += (PIECE_VALUES[capturedPiece.type] || 0) * 10 - (PIECE_VALUES[move.piece.type] || 0);
     }
-    
+
+    // Position improvement via PST delta
+    const fromBonus = getPositionBonus(move.piece.type, move.fromRow, move.fromCol, move.piece.color);
+    const toBonus = getPositionBonus(move.piece.type, move.toRow, move.toCol, move.piece.color);
+    score += (toBonus - fromBonus);
+
     if (useFullEval) {
-        // Bonificar control del centro
-        const centerSquares = [[3,3], [3,4], [4,3], [4,4]];
-        if (centerSquares.some(([r,c]) => r === move.toRow && c === move.toCol)) {
-            score += 30;
-        }
+        const center = [[3,3], [3,4], [4,3], [4,4]];
+        const extCenter = [[2,2],[2,3],[2,4],[2,5],[3,2],[3,5],[4,2],[4,5],[5,2],[5,3],[5,4],[5,5]];
+        if (center.some(([r,c]) => r === move.toRow && c === move.toCol)) score += 30;
+        else if (extCenter.some(([r,c]) => r === move.toRow && c === move.toCol)) score += 12;
         
-        // Bonificar desarrollo (mover piezas desde posición inicial)
         const isBackRank = (move.fromRow === 0 || move.fromRow === 7);
-        if (isBackRank && move.piece.type !== 'pawn') {
-            score += 10;
+        if (isBackRank && move.piece.type !== 'pawn' && move.piece.type !== 'king') score += 15;
+
+        // Castling bonus
+        if (move.piece.type === 'king' && Math.abs(move.toCol - move.fromCol) === 2) score += 60;
+
+        // Pawn promotion
+        if (move.piece.type === 'pawn' && (move.toRow === 0 || move.toRow === 7)) score += 800;
+
+        // Avoid moving queen early
+        if (move.piece.type === 'queen' && game.moveHistory && game.moveHistory.length < 10) {
+            if (isBackRank) score -= 20;
         }
     }
     
@@ -1177,8 +1203,7 @@ function evaluateMoveSimple(move, useFullEval) {
 }
 
 // Minimax con evaluación de posición (optimizado)
-function evaluateMoveWithMinimax(move, depth, maximizingColor) {
-    // Guardar estado actual completo (sin usar makeMove para evitar guardar en historial)
+function evaluateMoveWithMinimax(move, depth, maximizingColor, useQuiescence) {
     const savedBoard = game.board.map(row => [...row]);
     const savedTurn = game.currentTurn;
     const savedCaptured = {
@@ -1188,19 +1213,15 @@ function evaluateMoveWithMinimax(move, depth, maximizingColor) {
     const savedEnPassant = game.enPassantTarget ? { ...game.enPassantTarget } : null;
     const savedCastling = JSON.parse(JSON.stringify(game.castlingRights));
     
-    // Simular el movimiento directamente SIN guardar en historial
     simulateMove(move.fromRow, move.fromCol, move.toRow, move.toCol);
     
-    // Evaluar la posición resultante
     let score;
     if (depth <= 1) {
-        score = evaluatePosition(maximizingColor);
+        score = useQuiescence ? quiescence(-Infinity, Infinity, maximizingColor, 4) : evaluatePosition(maximizingColor);
     } else {
-        // Continuar búsqueda
-        score = minimax(depth - 1, -Infinity, Infinity, false, maximizingColor);
+        score = minimax(depth - 1, -Infinity, Infinity, false, maximizingColor, useQuiescence);
     }
     
-    // Restaurar estado completo
     game.board = savedBoard;
     game.currentTurn = savedTurn;
     game.capturedPieces = savedCaptured;
@@ -1210,50 +1231,143 @@ function evaluateMoveWithMinimax(move, depth, maximizingColor) {
     return score;
 }
 
-// Simular movimiento sin guardar en historial (solo para IA)
 function simulateMove(fromRow, fromCol, toRow, toCol) {
     const piece = game.board[fromRow][fromCol];
     const capturedPiece = game.board[toRow][toCol];
-    
-    // Capturar pieza si existe
+    const color = game.currentTurn;
+
     if (capturedPiece) {
-        game.capturedPieces[game.currentTurn].push(capturedPiece.piece);
+        game.capturedPieces[color].push(capturedPiece.piece);
     }
-    
-    // Mover la pieza
+
+    // En passant
+    if (piece && piece.type === 'pawn' && game.enPassantTarget &&
+        toRow === game.enPassantTarget.row && toCol === game.enPassantTarget.col) {
+        const epRow = color === 'white' ? toRow + 1 : toRow - 1;
+        const epPiece = game.board[epRow][toCol];
+        if (epPiece) game.capturedPieces[color].push(epPiece.piece);
+        game.board[epRow][toCol] = null;
+    }
+
+    // Update en passant target
+    if (piece && piece.type === 'pawn' && Math.abs(toRow - fromRow) === 2) {
+        game.enPassantTarget = { row: (fromRow + toRow) / 2, col: fromCol };
+    } else {
+        game.enPassantTarget = null;
+    }
+
+    // Castling
+    if (piece && piece.type === 'king' && Math.abs(toCol - fromCol) === 2) {
+        if (toCol === 6) {
+            game.board[fromRow][5] = game.board[fromRow][7];
+            game.board[fromRow][7] = null;
+        } else if (toCol === 2) {
+            game.board[fromRow][3] = game.board[fromRow][0];
+            game.board[fromRow][0] = null;
+        }
+    }
+
     game.board[toRow][toCol] = piece;
     game.board[fromRow][fromCol] = null;
-    
-    // Cambiar turno
-    game.currentTurn = game.currentTurn === 'white' ? 'black' : 'white';
+
+    // Promotion (always queen for AI simulation)
+    if (piece && piece.type === 'pawn' && (toRow === 0 || toRow === 7)) {
+        game.board[toRow][toCol] = { type: 'queen', color: piece.color, piece: `${piece.color === 'white' ? 'w' : 'b'}Q` };
+    }
+
+    // Update castling rights
+    if (piece && piece.type === 'king') {
+        if (game.castlingRights[color]) {
+            game.castlingRights[color].kingSide = false;
+            game.castlingRights[color].queenSide = false;
+        }
+    }
+    if (piece && piece.type === 'rook') {
+        if (game.castlingRights[color]) {
+            if (fromCol === 7) game.castlingRights[color].kingSide = false;
+            if (fromCol === 0) game.castlingRights[color].queenSide = false;
+        }
+    }
+
+    game.currentTurn = color === 'white' ? 'black' : 'white';
 }
 
 // Algoritmo Minimax con poda alpha-beta (optimizado)
-function minimax(depth, alpha, beta, isMaximizing, maximizingColor) {
+function quiescence(alpha, beta, maximizingColor, maxDepth) {
+    const standPat = evaluatePosition(maximizingColor);
+    if (maxDepth <= 0) return standPat;
+
+    const currentColor = game.currentTurn;
+    const isMaximizing = (currentColor === maximizingColor);
+
+    if (isMaximizing) {
+        if (standPat >= beta) return beta;
+        if (standPat > alpha) alpha = standPat;
+    } else {
+        if (standPat <= alpha) return alpha;
+        if (standPat < beta) beta = standPat;
+    }
+
+    const moves = getAllPossibleMoves(currentColor);
+    const captures = moves.filter(m => game.getPiece(m.toRow, m.toCol) !== null);
+    if (captures.length === 0) return standPat;
+
+    captures.sort((a, b) => {
+        const va = PIECE_VALUES[game.getPiece(a.toRow, a.toCol)?.type] || 0;
+        const vb = PIECE_VALUES[game.getPiece(b.toRow, b.toCol)?.type] || 0;
+        return vb - va;
+    });
+
+    for (const move of captures) {
+        const sb = game.board.map(r => [...r]);
+        const st = game.currentTurn;
+        const sc = { white: [...game.capturedPieces.white], black: [...game.capturedPieces.black] };
+        const se = game.enPassantTarget ? { ...game.enPassantTarget } : null;
+        const sk = JSON.parse(JSON.stringify(game.castlingRights));
+
+        simulateMove(move.fromRow, move.fromCol, move.toRow, move.toCol);
+        const score = quiescence(alpha, beta, maximizingColor, maxDepth - 1);
+
+        game.board = sb; game.currentTurn = st;
+        game.capturedPieces = sc; game.enPassantTarget = se; game.castlingRights = sk;
+
+        if (isMaximizing) {
+            if (score > alpha) alpha = score;
+            if (alpha >= beta) return beta;
+        } else {
+            if (score < beta) beta = score;
+            if (alpha >= beta) return alpha;
+        }
+    }
+
+    return isMaximizing ? alpha : beta;
+}
+
+function minimax(depth, alpha, beta, isMaximizing, maximizingColor, useQuiescence) {
     if (depth === 0) {
-        return evaluatePosition(maximizingColor);
+        return useQuiescence ? quiescence(alpha, beta, maximizingColor, 4) : evaluatePosition(maximizingColor);
     }
     
     const currentColor = game.currentTurn;
     const moves = getAllPossibleMoves(currentColor);
     
     if (moves.length === 0) {
-        // Jaque mate o ahogado
-        if (game.gameOver) {
-            return isMaximizing ? -100000 : 100000;
+        if (game.isInCheck(currentColor)) {
+            return isMaximizing ? (-100000 + (4 - depth)) : (100000 - (4 - depth));
         }
         return 0;
     }
     
-    // Ordenar movimientos: primero capturas (mejora poda alpha-beta)
+    // MVV-LVA ordering: capturas valiosas primero, luego jaques, luego desarrollo
     moves.sort((a, b) => {
-        const captureA = game.getPiece(a.toRow, a.toCol) ? 1 : 0;
-        const captureB = game.getPiece(b.toRow, b.toCol) ? 1 : 0;
-        return captureB - captureA;
+        const victimA = game.getPiece(a.toRow, a.toCol);
+        const victimB = game.getPiece(b.toRow, b.toCol);
+        const scoreA = victimA ? (PIECE_VALUES[victimA.type] || 0) - (PIECE_VALUES[a.piece?.type] || 0) / 100 : 0;
+        const scoreB = victimB ? (PIECE_VALUES[victimB.type] || 0) - (PIECE_VALUES[b.piece?.type] || 0) / 100 : 0;
+        return scoreB - scoreA;
     });
-    
-    // Limitar número de movimientos evaluados en niveles intermedios
-    const movesToEvaluate = depth > 1 ? moves.slice(0, Math.min(moves.length, 25)) : moves;
+
+    const movesToEvaluate = depth > 2 ? moves.slice(0, Math.min(moves.length, 20)) : moves;
     
     if (isMaximizing) {
         let maxScore = -Infinity;
@@ -1269,7 +1383,7 @@ function minimax(depth, alpha, beta, isMaximizing, maximizingColor) {
             
             // Simular sin guardar en historial
             simulateMove(move.fromRow, move.fromCol, move.toRow, move.toCol);
-            const score = minimax(depth - 1, alpha, beta, false, maximizingColor);
+            const score = minimax(depth - 1, alpha, beta, false, maximizingColor, useQuiescence);
             
             game.board = savedBoard;
             game.currentTurn = savedTurn;
@@ -1279,7 +1393,7 @@ function minimax(depth, alpha, beta, isMaximizing, maximizingColor) {
             
             maxScore = Math.max(maxScore, score);
             alpha = Math.max(alpha, score);
-            if (beta <= alpha) break; // Poda alpha-beta
+            if (beta <= alpha) break;
         }
         return maxScore;
     } else {
@@ -1294,9 +1408,8 @@ function minimax(depth, alpha, beta, isMaximizing, maximizingColor) {
             const savedEnPassant = game.enPassantTarget ? { ...game.enPassantTarget } : null;
             const savedCastling = JSON.parse(JSON.stringify(game.castlingRights));
             
-            // Simular sin guardar en historial
             simulateMove(move.fromRow, move.fromCol, move.toRow, move.toCol);
-            const score = minimax(depth - 1, alpha, beta, true, maximizingColor);
+            const score = minimax(depth - 1, alpha, beta, true, maximizingColor, useQuiescence);
             
             game.board = savedBoard;
             game.currentTurn = savedTurn;
@@ -1315,26 +1428,158 @@ function minimax(depth, alpha, beta, isMaximizing, maximizingColor) {
 // Evaluación completa de la posición
 function evaluatePosition(forColor) {
     let score = 0;
-    
+    let friendlyBishops = 0, enemyBishops = 0;
+    let friendlyRooks = 0, enemyRooks = 0;
+    let friendlyKnights = 0, enemyKnights = 0;
+    const enemyColor = forColor === 'white' ? 'black' : 'white';
+    const friendlyPawnCols = new Array(8).fill(0);
+    const enemyPawnCols = new Array(8).fill(0);
+    const friendlyPawnRows = [];
+    const enemyPawnRows = [];
+    let friendlyKingRow = 0, friendlyKingCol = 0;
+    let enemyKingRow = 0, enemyKingCol = 0;
+
     for (let row = 0; row < 8; row++) {
         for (let col = 0; col < 8; col++) {
             const piece = game.getPiece(row, col);
             if (!piece) continue;
-            
+
             const pieceValue = PIECE_VALUES[piece.type] || 0;
             const positionBonus = getPositionBonus(piece.type, row, col, piece.color);
-            
             const totalValue = pieceValue + positionBonus;
-            
+
             if (piece.color === forColor) {
                 score += totalValue;
+                if (piece.type === 'bishop') friendlyBishops++;
+                if (piece.type === 'knight') friendlyKnights++;
+                if (piece.type === 'rook') friendlyRooks++;
+                if (piece.type === 'pawn') { friendlyPawnCols[col]++; friendlyPawnRows.push({ row, col }); }
+                if (piece.type === 'king') { friendlyKingRow = row; friendlyKingCol = col; }
             } else {
                 score -= totalValue;
+                if (piece.type === 'bishop') enemyBishops++;
+                if (piece.type === 'knight') enemyKnights++;
+                if (piece.type === 'rook') enemyRooks++;
+                if (piece.type === 'pawn') { enemyPawnCols[col]++; enemyPawnRows.push({ row, col }); }
+                if (piece.type === 'king') { enemyKingRow = row; enemyKingCol = col; }
             }
         }
     }
-    
+
+    // Bishop pair
+    if (friendlyBishops >= 2) score += 40;
+    if (enemyBishops >= 2) score -= 40;
+
+    // Pawn structure
+    for (let col = 0; col < 8; col++) {
+        // Doubled pawns
+        if (friendlyPawnCols[col] > 1) score -= 20 * (friendlyPawnCols[col] - 1);
+        if (enemyPawnCols[col] > 1) score += 20 * (enemyPawnCols[col] - 1);
+
+        // Isolated pawns (no friendly pawn on adjacent columns)
+        if (friendlyPawnCols[col] > 0) {
+            const left = col > 0 ? friendlyPawnCols[col - 1] : 0;
+            const right = col < 7 ? friendlyPawnCols[col + 1] : 0;
+            if (left === 0 && right === 0) score -= 15;
+        }
+        if (enemyPawnCols[col] > 0) {
+            const left = col > 0 ? enemyPawnCols[col - 1] : 0;
+            const right = col < 7 ? enemyPawnCols[col + 1] : 0;
+            if (left === 0 && right === 0) score += 15;
+        }
+    }
+
+    // Passed pawns
+    for (const fp of friendlyPawnRows) {
+        let passed = true;
+        const dir = forColor === 'white' ? -1 : 1;
+        for (let r = fp.row + dir; r >= 0 && r < 8; r += dir) {
+            for (let dc = -1; dc <= 1; dc++) {
+                const c = fp.col + dc;
+                if (c < 0 || c > 7) continue;
+                const p = game.getPiece(r, c);
+                if (p && p.type === 'pawn' && p.color === enemyColor) { passed = false; break; }
+            }
+            if (!passed) break;
+        }
+        if (passed) {
+            const advance = forColor === 'white' ? (7 - fp.row) : fp.row;
+            score += 20 + advance * 10;
+        }
+    }
+    for (const ep of enemyPawnRows) {
+        let passed = true;
+        const dir = enemyColor === 'white' ? -1 : 1;
+        for (let r = ep.row + dir; r >= 0 && r < 8; r += dir) {
+            for (let dc = -1; dc <= 1; dc++) {
+                const c = ep.col + dc;
+                if (c < 0 || c > 7) continue;
+                const p = game.getPiece(r, c);
+                if (p && p.type === 'pawn' && p.color === forColor) { passed = false; break; }
+            }
+            if (!passed) break;
+        }
+        if (passed) {
+            const advance = enemyColor === 'white' ? (7 - ep.row) : ep.row;
+            score -= 20 + advance * 10;
+        }
+    }
+
+    // Rook on open/semi-open file
+    for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+            const p = game.getPiece(row, col);
+            if (!p || p.type !== 'rook') continue;
+            if (p.color === forColor) {
+                if (friendlyPawnCols[col] === 0 && enemyPawnCols[col] === 0) score += 25;
+                else if (friendlyPawnCols[col] === 0) score += 12;
+            } else {
+                if (friendlyPawnCols[col] === 0 && enemyPawnCols[col] === 0) score -= 25;
+                else if (enemyPawnCols[col] === 0) score -= 12;
+            }
+        }
+    }
+
+    // King safety: pawn shield in middlegame
+    if (!isEndgame()) {
+        score += evalKingSafety(friendlyKingRow, friendlyKingCol, forColor);
+        score -= evalKingSafety(enemyKingRow, enemyKingCol, enemyColor);
+    }
+
     return score;
+}
+
+function evalKingSafety(kingRow, kingCol, color) {
+    let shield = 0;
+    const pawnDir = color === 'white' ? -1 : 1;
+    const pawnRow = kingRow + pawnDir;
+    if (pawnRow >= 0 && pawnRow < 8) {
+        for (let dc = -1; dc <= 1; dc++) {
+            const c = kingCol + dc;
+            if (c < 0 || c > 7) continue;
+            const p = game.getPiece(pawnRow, c);
+            if (p && p.type === 'pawn' && p.color === color) shield += 10;
+            else shield -= 8;
+        }
+    }
+    // Penalize king on open center files
+    if (kingCol >= 2 && kingCol <= 5 && !isEndgame()) {
+        shield -= 15;
+    }
+    return shield;
+}
+
+function isEndgame() {
+    let material = 0;
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            const p = game.getPiece(r, c);
+            if (p && p.type !== 'king' && p.type !== 'pawn') {
+                material += PIECE_VALUES[p.type] || 0;
+            }
+        }
+    }
+    return material <= 2600;
 }
 
 // Obtener bonus de posición según tipo de pieza
@@ -1360,7 +1605,7 @@ function getPositionBonus(pieceType, row, col, color) {
             table = QUEEN_TABLE;
             break;
         case 'king':
-            table = KING_MIDDLE_TABLE;
+            table = isEndgame() ? KING_END_TABLE : KING_MIDDLE_TABLE;
             break;
         default:
             return 0;
@@ -1440,7 +1685,7 @@ function showMessage(message, type = 'info', duration = 3000) {
     
     const messageText = document.createElement('div');
     messageText.className = 'message-text';
-    messageText.textContent = message;
+    messageText.innerHTML = message;
     messageBox.appendChild(messageText);
     
     // Añadir botón de cerrar si el mensaje es permanente
@@ -1545,7 +1790,25 @@ function offerDraw() {
         return;
     }
     showConfirmDialog('¿Quieres ofrecer tablas?', () => {
-        const accepted = Math.random() < 0.3;
+        const aiColor = playerColor === 'white' ? 'black' : 'white';
+        const aiEval = evaluatePosition(aiColor) / 100;
+
+        // AI accepts if losing or equal, rejects if winning
+        let accepted = false;
+        if (aiEval < -0.5) {
+            // AI is losing: very likely to accept
+            accepted = Math.random() < 0.9;
+        } else if (aiEval < 0.3) {
+            // Position roughly equal: moderate chance
+            accepted = Math.random() < 0.5;
+        } else if (aiEval < 1.0) {
+            // AI has slight advantage: unlikely
+            accepted = Math.random() < 0.15;
+        } else {
+            // AI is clearly winning: almost never accepts
+            accepted = Math.random() < 0.03;
+        }
+
         if (accepted) {
             game.gameOver = true;
             stopClock();
@@ -1553,7 +1816,8 @@ function offerDraw() {
             clearAutoSavedGame();
             showMessage('Tablas aceptadas', 'info', 3000);
         } else {
-            showMessage('El rival rechaza las tablas', 'warning', 2000);
+            const evalText = aiEval > 1.0 ? ' (tiene ventaja)' : '';
+            showMessage(`El rival rechaza las tablas${evalText}`, 'warning', 2000);
         }
     });
 }
@@ -1644,7 +1908,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Botones de acciones
     document.getElementById('resign-game').addEventListener('click', resignGame);
     document.getElementById('offer-draw').addEventListener('click', offerDraw);
-    document.getElementById('resume-game').addEventListener('click', resumeGame);
+    document.getElementById('resume-game').addEventListener('click', function() {
+        if (this.onclick) return;
+        resumeGame();
+    });
     document.getElementById('undo-move').addEventListener('click', undoMove);
     document.getElementById('hint-move').addEventListener('click', getHint);
     document.getElementById('save-game').addEventListener('click', saveGame);
@@ -1658,6 +1925,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Entrenador de aperturas
     document.getElementById('opening-select').addEventListener('change', onOpeningSelect);
     document.getElementById('start-opening-training').addEventListener('click', startOpeningTraining);
+    document.getElementById('start-opening-quiz').addEventListener('click', startOpeningQuiz);
 
     // Navegación del historial
     document.getElementById('nav-first').addEventListener('click', goToFirstMove);
@@ -1704,7 +1972,9 @@ function confirmNewGame() {
 }
 
 function startNewGame() {
-    // Limpiar el guardado automático al iniciar nueva partida
+    quizMode = false;
+    document.getElementById('quiz-score').style.display = 'none';
+    document.getElementById('opening-training-moves').style.display = '';
     clearAutoSavedGame();
     
     game = new ChessGame();
@@ -1726,8 +1996,9 @@ function startNewGame() {
     updateCapturedPieces();
     updateMoveHistory();
     updateUndoButton();
+    updateEvalBar();
+    document.getElementById('resume-game').disabled = true;
     
-    // Si el jugador es negras, la IA mueve primero
     if (playerColor === 'black') {
         setTimeout(() => makeAIMove(), 800);
     }
@@ -1739,9 +2010,14 @@ function onOpeningSelect() {
     const btn = document.getElementById('start-opening-training');
     const key = select.value;
 
+    const quizBtn = document.getElementById('start-opening-quiz');
+    const quizScore = document.getElementById('quiz-score');
+
     if (!key) {
         info.style.display = 'none';
         btn.style.display = 'none';
+        quizBtn.style.display = 'none';
+        quizScore.style.display = 'none';
         trainingOpening = null;
         return;
     }
@@ -1757,12 +2033,79 @@ function onOpeningSelect() {
     descEl.style.display = opening.desc ? 'block' : 'none';
     info.style.display = 'block';
     btn.style.display = 'block';
+    quizBtn.style.display = 'block';
+    quizScore.style.display = 'none';
+}
+
+function showLoadedGameMessage(title, isFinished) {
+    const turnLabel = game.currentTurn === 'white' ? 'Blancas' : 'Negras';
+    let msg = `<strong>${title}</strong>`;
+
+    if (isFinished) {
+        if (game.isCheckmate()) {
+            const winner = game.currentTurn === 'white' ? 'Negras' : 'Blancas';
+            msg += `<br>¡Jaque Mate! Ganan las ${winner}`;
+        } else {
+            msg += `<br>Tablas por ahogado`;
+        }
+    } else {
+        msg += `<br>Turno: ${turnLabel}`;
+        msg += `<br>Pulsa Continuar Partida`;
+    }
+    msg += `<br>Pulsa ◀ ▶ para navegar por los movimientos`;
+
+    showMessage(msg, isFinished && game.isCheckmate() ? 'success' : 'info', 0);
+}
+
+function showContinueButton() {
+    const resumeBtn = document.getElementById('resume-game');
+    resumeBtn.disabled = false;
+    resumeBtn.onclick = function() {
+        resumeBtn.disabled = true;
+        resumeBtn.onclick = null;
+
+        // Restaurar a la última posición si se estaba navegando
+        const states = game.gameStateHistory || [];
+        if (states.length > 0 && currentMoveIndex !== -1) {
+            const last = states[states.length - 1];
+            game.board = JSON.parse(JSON.stringify(last.board));
+            game.currentTurn = last.currentTurn;
+            game.capturedPieces = JSON.parse(JSON.stringify(last.capturedPieces));
+            game.enPassantTarget = last.enPassantTarget ? { ...last.enPassantTarget } : null;
+            game.castlingRights = JSON.parse(JSON.stringify(last.castlingRights));
+            currentMoveIndex = -1;
+        }
+
+        game.gameOver = false;
+        const finished = game.isCheckmate() || game.isStalemate();
+        game.gameOver = finished;
+
+        if (finished) {
+            showLoadedGameMessage('Partida finalizada', true);
+        }
+
+        renderBoard();
+        updateCapturedPieces();
+        updateMoveHistory();
+        updateNavigationButtons();
+        updateEvalBar();
+        autoSaveGame();
+
+        if (!game.gameOver) {
+            startClock();
+            if (game.currentTurn !== playerColor) {
+                setTimeout(() => makeAIMove(), 800);
+            }
+        }
+    };
 }
 
 function startOpeningTraining() {
     if (!trainingOpening) return;
 
-    // Resetear sin activar IA
+    quizMode = false;
+    document.getElementById('quiz-score').style.display = 'none';
+    document.getElementById('opening-training-moves').style.display = '';
     clearAutoSavedGame();
     game = new ChessGame();
     selectedSquare = null;
@@ -1780,11 +2123,15 @@ function startOpeningTraining() {
     updateCapturedPieces();
     updateMoveHistory();
     updateUndoButton();
+    updateEvalBar();
 
     const uciMoves = trainingOpening.moves.split(' ');
 
     function playNextMove(index) {
-        if (index >= uciMoves.length || game.gameOver) return;
+        if (index >= uciMoves.length || game.gameOver) {
+            onTrainingFinished();
+            return;
+        }
 
         const uci = uciMoves[index];
         const fromCol = uci.charCodeAt(0) - 97;
@@ -1800,12 +2147,145 @@ function startOpeningTraining() {
             updateMoveHistory();
             updateUndoButton();
             detectOpening();
+            updateEvalBar();
 
             setTimeout(() => playNextMove(index + 1), 1200);
         }
     }
 
+    function onTrainingFinished() {
+        showLoadedGameMessage('Apertura completada', false);
+        showContinueButton();
+    }
+
     setTimeout(() => playNextMove(0), 600);
+}
+
+function startOpeningQuiz() {
+    if (!trainingOpening) return;
+
+    clearAutoSavedGame();
+    game = new ChessGame();
+    selectedSquare = null;
+    lastMoveSquares = { from: null, to: null };
+    currentMoveIndex = -1;
+    currentOpeningName = '';
+    lastOpeningMoveCount = 0;
+    const openingLog = document.getElementById('opening-log');
+    if (openingLog) openingLog.remove();
+    stopClock();
+    whiteTime = timePerPlayer * 60;
+    blackTime = timePerPlayer * 60;
+    updateClockDisplay();
+
+    quizMode = true;
+    quizMoves = trainingOpening.moves.split(' ');
+    quizIndex = 0;
+    quizCorrect = 0;
+    quizWrong = 0;
+
+    document.getElementById('quiz-correct-count').textContent = '0';
+    document.getElementById('quiz-wrong-count').textContent = '0';
+    document.getElementById('quiz-score').style.display = 'flex';
+    document.getElementById('opening-training-moves').style.display = 'none';
+
+    renderBoard();
+    updateCapturedPieces();
+    updateMoveHistory();
+    updateUndoButton();
+    updateEvalBar();
+
+    showMessage(`<strong>Quiz: ${trainingOpening.name}</strong><br>Juega todos los movimientos correctos (blancas y negras)<br><br><strong>Movimientos:</strong> ${trainingOpening.san}`, 'info', 0);
+}
+
+function quizCheckMove(fromRow, fromCol, toRow, toCol) {
+    if (!quizMode || quizIndex >= quizMoves.length) return false;
+
+    const expectedUci = quizMoves[quizIndex];
+    const playerUci = moveToUCI(fromRow, fromCol, toRow, toCol);
+
+    if (playerUci === expectedUci) {
+        // Correct move
+        quizCorrect++;
+        document.getElementById('quiz-correct-count').textContent = quizCorrect;
+
+        const result = game.makeMove(fromRow, fromCol, toRow, toCol);
+        if (result) {
+            lastMoveSquares = { from: { row: fromRow, col: fromCol }, to: { row: toRow, col: toCol } };
+            quizIndex++;
+            selectedSquare = null;
+            renderBoard();
+            updateCapturedPieces();
+            updateMoveHistory();
+            detectOpening();
+            updateEvalBar();
+
+            // Flash correct highlight
+            const squares = document.querySelectorAll('.square');
+            squares.forEach(sq => {
+                const r = parseInt(sq.dataset.row);
+                const c = parseInt(sq.dataset.col);
+                if (r === toRow && c === toCol) sq.classList.add('quiz-correct-move');
+            });
+            setTimeout(() => {
+                document.querySelectorAll('.quiz-correct-move').forEach(s => s.classList.remove('quiz-correct-move'));
+                if (quizIndex >= quizMoves.length) {
+                    quizFinished();
+                }
+            }, 800);
+        }
+        return true;
+    } else {
+        // Wrong move
+        quizWrong++;
+        document.getElementById('quiz-wrong-count').textContent = quizWrong;
+
+        // Show wrong highlight on player's target
+        const squares = document.querySelectorAll('.square');
+        squares.forEach(sq => {
+            const r = parseInt(sq.dataset.row);
+            const c = parseInt(sq.dataset.col);
+            if (r === toRow && c === toCol) sq.classList.add('quiz-wrong-move');
+        });
+
+        // Show correct move hint
+        const correctTo = {
+            col: expectedUci.charCodeAt(2) - 97,
+            row: 8 - parseInt(expectedUci[3])
+        };
+        const correctFrom = {
+            col: expectedUci.charCodeAt(0) - 97,
+            row: 8 - parseInt(expectedUci[1])
+        };
+        setTimeout(() => {
+            document.querySelectorAll('.quiz-wrong-move').forEach(s => s.classList.remove('quiz-wrong-move'));
+            const sqs = document.querySelectorAll('.square');
+            sqs.forEach(sq => {
+                const r = parseInt(sq.dataset.row);
+                const c = parseInt(sq.dataset.col);
+                if ((r === correctFrom.row && c === correctFrom.col) || (r === correctTo.row && c === correctTo.col)) {
+                    sq.classList.add('quiz-hint');
+                }
+            });
+            showMessage('Incorrecto. Las casillas marcadas muestran el movimiento correcto. Inténtalo de nuevo.', 'warning', 0);
+            setTimeout(() => {
+                document.querySelectorAll('.quiz-hint').forEach(s => s.classList.remove('quiz-hint'));
+            }, 8000);
+        }, 500);
+
+        selectedSquare = null;
+        renderBoard();
+        return true;
+    }
+}
+
+function quizFinished() {
+    quizMode = false;
+    document.getElementById('opening-training-moves').style.display = '';
+    const total = quizCorrect + quizWrong;
+    const pct = total > 0 ? Math.round(quizCorrect / total * 100) : 0;
+    showMessage(`<strong>Quiz completado: ${trainingOpening.name}</strong><br>Aciertos: ${quizCorrect} | Fallos: ${quizWrong} | Precisión: ${pct}%`, 'success', 0);
+    showContinueButton();
 }
 
 function applyBoardTheme() {
@@ -1829,6 +2309,7 @@ function undoMove() {
     updateCapturedPieces();
     updateMoveHistory();
     updateUndoButton();
+    updateEvalBar();
     recalcOpening();
     autoSaveGame();
 }
@@ -2098,35 +2579,48 @@ function loadGameByIndex(savedGames, index) {
         game.capturedPieces = savedGame.capturedPieces;
         game.enPassantTarget = savedGame.enPassantTarget || null;
         game.castlingRights = savedGame.castlingRights || game.castlingRights;
-        game.gameOver = true;
-        playerColor = savedGame.playerColor;
-        currentMoveIndex = -1;
+        playerColor = savedGame.playerColor || playerColor;
+        document.getElementById('player-color').value = playerColor;
+        selectedSquare = null;
+        lastMoveSquares = { from: null, to: null };
+        currentOpeningName = '';
+        lastOpeningMoveCount = 0;
+        const openingLog = document.getElementById('opening-log');
+        if (openingLog) openingLog.remove();
 
-        // Reconstruir gameStateHistory si no existe (partidas antiguas)
-        // Usamos los snapshots guardados o creamos uno solo con la posición final
         if (savedGame.gameStateHistory && savedGame.gameStateHistory.length > 0) {
             game.gameStateHistory = savedGame.gameStateHistory;
         } else {
             game.gameStateHistory = [];
         }
 
-        // Siempre añadir la posición final como último estado
         game.gameStateHistory.push({
             board: JSON.parse(JSON.stringify(game.board)),
             currentTurn: game.currentTurn,
             capturedPieces: JSON.parse(JSON.stringify(game.capturedPieces)),
             enPassantTarget: game.enPassantTarget ? { ...game.enPassantTarget } : null,
             castlingRights: JSON.parse(JSON.stringify(game.castlingRights)),
-            gameOver: true
+            gameOver: false
         });
-    
+
+        // Detectar si la posición es final
+        game.gameOver = false;
+        const isFinished = game.isCheckmate() || game.isStalemate();
+        game.gameOver = isFinished;
+
+        currentMoveIndex = -1;
         renderBoard();
         updateCapturedPieces();
         updateMoveHistory();
         updateUndoButton();
+        updateNavigationButtons();
+        updateEvalBar();
         recalcOpening();
-    
-        showMessage('Partida cargada — usa ◀ ▶ para navegar', 'success', 3000);
+        autoSaveGame();
+
+        const numMoves = (game.moveHistory || []).length;
+        showLoadedGameMessage(`Partida cargada: ${numMoves} movimientos`, isFinished);
+        if (!isFinished) showContinueButton();
     }
 }
 
@@ -2235,24 +2729,34 @@ function parsePGNAndLoad(pgnText) {
             movesPlayed++;
         }
 
-        // Añadir estado final para navegación
         game.gameStateHistory.push({
             board: JSON.parse(JSON.stringify(game.board)),
             currentTurn: game.currentTurn,
             capturedPieces: JSON.parse(JSON.stringify(game.capturedPieces)),
             enPassantTarget: game.enPassantTarget ? { ...game.enPassantTarget } : null,
             castlingRights: JSON.parse(JSON.stringify(game.castlingRights)),
-            gameOver: game.gameOver
+            gameOver: false
         });
 
-        game.gameOver = true;
+        selectedSquare = null;
+        lastMoveSquares = { from: null, to: null };
+        const openingLog = document.getElementById('opening-log');
+        if (openingLog) openingLog.remove();
+
+        const isFinished = game.isCheckmate() || game.isStalemate();
+        game.gameOver = isFinished;
+
         renderBoard();
         updateCapturedPieces();
         updateMoveHistory();
         updateUndoButton();
+        updateNavigationButtons();
+        updateEvalBar();
         recalcOpening();
+        autoSaveGame();
 
-        showMessage(`PGN importado: ${movesPlayed} movimientos — usa ◀ ▶ para navegar`, 'success', 3000);
+        showLoadedGameMessage(`PGN importado: ${movesPlayed} movimientos`, isFinished);
+        if (!isFinished) showContinueButton();
 
     } catch (error) {
         console.error('Error al importar PGN:', error);
@@ -2337,20 +2841,14 @@ function parseSANMove(san, gameState) {
 function checkForGameInProgress() {
     const autoSavedGame = localStorage.getItem('auto_saved_game');
     const resumeButton = document.getElementById('resume-game');
-    
-    if (autoSavedGame) {
-        // Hay una partida en curso, mostrar el botón
-        resumeButton.style.display = 'block';
-    } else {
-        resumeButton.style.display = 'none';
-    }
+    resumeButton.disabled = !autoSavedGame;
 }
 
 function resumeGame(silent) {
     const autoSavedGame = localStorage.getItem('auto_saved_game');
     
     if (!autoSavedGame) {
-        if (!silent) showMessage('No hay partida en curso para reanudar', 'warning', 2000);
+        if (!silent) showMessage('No hay partida en curso para continuar', 'warning', 2000);
         return;
     }
     
@@ -2403,8 +2901,8 @@ function resumeGame(silent) {
         updateUndoButton();
         updateClockDisplay();
         updateNavigationButtons();
+        updateEvalBar();
         
-        // Solo iniciar reloj si hay movimientos y la partida no ha terminado
         const hasMoves = game.moveHistory && game.moveHistory.length > 0;
         if (!game.gameOver && hasMoves) {
             startClock();
@@ -2420,10 +2918,10 @@ function resumeGame(silent) {
             setTimeout(() => makeAIMove(), 800);
         }
         
-        if (!silent) showMessage('Partida reanudada correctamente', 'success', 2000);
+        if (!silent) showMessage('Partida continuada correctamente', 'success', 2000);
     } catch (error) {
         console.error('Error al reanudar partida:', error);
-        if (!silent) showMessage('Error al reanudar la partida', 'error', 3000);
+        if (!silent) showMessage('Error al continuar la partida', 'error', 3000);
         localStorage.removeItem('auto_saved_game');
         checkForGameInProgress();
         startNewGame();
@@ -2671,19 +3169,42 @@ function renderCoordinateLabels() {
 
 function handleSquareClick(row, col) {
     if (game.gameOver) return;
-    
+
+    // Quiz mode: player must play both white and black moves
+    if (quizMode) {
+        const clickedPiece = game.getPiece(row, col);
+
+        if (selectedSquare) {
+            const validMoves = game.getValidMoves(selectedSquare.row, selectedSquare.col);
+            const targetMove = validMoves.find(m => m.row === row && m.col === col);
+
+            if (targetMove) {
+                quizCheckMove(selectedSquare.row, selectedSquare.col, row, col);
+                return;
+            } else if (clickedPiece && clickedPiece.color === game.currentTurn) {
+                selectedSquare = { row, col };
+                highlightValidMoves(row, col);
+            } else {
+                selectedSquare = null;
+                renderBoard();
+            }
+        } else if (clickedPiece && clickedPiece.color === game.currentTurn) {
+            selectedSquare = { row, col };
+            highlightValidMoves(row, col);
+        }
+        return;
+    }
+
     // Solo permitir mover las piezas del jugador (siempre vs IA)
     if (game.currentTurn !== playerColor) return;
     
     const clickedPiece = game.getPiece(row, col);
     
-    // Si hay un cuadrado seleccionado
     if (selectedSquare) {
         const validMoves = game.getValidMoves(selectedSquare.row, selectedSquare.col);
         const targetMove = validMoves.find(m => m.row === row && m.col === col);
         
         if (targetMove) {
-            // Realizar el movimiento
             const result = game.makeMove(selectedSquare.row, selectedSquare.col, row, col);
             
             // Guardar último movimiento para resaltar
@@ -2707,13 +3228,12 @@ function handleSquareClick(row, col) {
             updateMoveHistory();
             updateUndoButton();
             
-            // Guardar automáticamente el estado
             autoSaveGame();
             detectOpening();
+            updateEvalBar();
             
             handleGameResult(result);
             
-            // Turno de la IA (siempre activo)
             if (!game.gameOver && game.currentTurn !== playerColor) {
                 setTimeout(() => makeAIMove(), 800);
             }
@@ -2962,6 +3482,8 @@ function restoreGameState(stateIndex) {
     
     renderBoard();
     updateCapturedPieces();
+    updateNavigationButtons();
+    updateEvalBar();
 }
 
 function handleGameResult(result) {
@@ -3024,9 +3546,9 @@ async function makeAIMove() {
                 updateMoveHistory();
                 updateUndoButton();
                 
-                // Guardar automáticamente el estado
                 autoSaveGame();
                 detectOpening();
+                updateEvalBar();
             
                 handleGameResult(result);
             } else {
@@ -3046,5 +3568,33 @@ async function makeAIMove() {
 function showThinkingIndicator(show) {
     const indicator = document.getElementById('thinking-indicator');
     indicator.style.display = show ? 'flex' : 'none';
+}
+
+function updateEvalBar() {
+    if (!game || game.gameOver) return;
+
+    const rawScore = evaluatePosition('white');
+    // Convert centipawns to pawns, clamp to ±10
+    const evalPawns = Math.max(-10, Math.min(10, rawScore / 100));
+    // Map ±10 to 0%-100% (50% = equal, 100% = white winning)
+    const pct = Math.max(2, Math.min(98, 50 + evalPawns * 5));
+
+    const fill = document.getElementById('eval-bar-fill');
+    const label = document.getElementById('eval-bar-label');
+    if (!fill || !label) return;
+
+    fill.style.height = pct + '%';
+
+    const sign = evalPawns > 0 ? '+' : '';
+    label.textContent = sign + evalPawns.toFixed(1);
+
+    // Color the label based on who's winning
+    if (evalPawns > 0.3) {
+        label.style.color = '#fff';
+    } else if (evalPawns < -0.3) {
+        label.style.color = '#ccc';
+    } else {
+        label.style.color = '#aaa';
+    }
 }
 

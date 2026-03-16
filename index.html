@@ -8,12 +8,12 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>♟</text></svg>">
-    <link rel="stylesheet" href="style.css?v=5">
+    <link rel="stylesheet" href="style.css?v=18">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>♔ Ajedrez con IA ♚ <span class="version-tag">v1.6</span></h1>
+            <h1>♔ Ajedrez con IA ♚ <span class="version-tag">v1.7</span></h1>
         </header>
 
         <div class="game-container">
@@ -24,14 +24,14 @@
                     <div class="config-section" id="ai-settings">
                         <label>Nivel de Dificultad:</label>
                         <select id="ai-difficulty" class="select">
-                            <option value="1">Nivel 1 - Muy Fácil</option>
-                            <option value="3">Nivel 3 - Fácil</option>
-                            <option value="5">Nivel 5 - Principiante</option>
-                            <option value="8">Nivel 8 - Intermedio</option>
-                            <option value="12">Nivel 12 - Avanzado</option>
-                            <option value="15">Nivel 15 - Experto (Stockfish 17)</option>
-                            <option value="18">Nivel 18 - Maestro (Stockfish 17)</option>
-                            <option value="20" selected>Nivel 20 - Gran Maestro (Stockfish 17)</option>
+                            <option value="1">Nivel 1 - Muy Fácil (local, prof. 1)</option>
+                            <option value="3">Nivel 3 - Fácil (local, prof. 2)</option>
+                            <option value="5">Nivel 5 - Principiante (local, prof. 2)</option>
+                            <option value="8">Nivel 8 - Intermedio (local, prof. 2+)</option>
+                            <option value="12">Nivel 12 - Avanzado (Stockfish 17, prof. 10 | local prof. 3+Q)</option>
+                            <option value="15">Nivel 15 - Experto (Stockfish 17, prof. 13 | local prof. 4+Q)</option>
+                            <option value="18">Nivel 18 - Maestro (Stockfish 17, prof. 16 | local prof. 4+Q)</option>
+                            <option value="20" selected>Nivel 20 - Gran Maestro (Stockfish 17, prof. 18 | local prof. 4+Q)</option>
                         </select>
                     </div>
                     
@@ -163,6 +163,11 @@
                         <p id="opening-training-desc" class="training-desc"></p>
                     </div>
                     <button id="start-opening-training" class="btn btn-primary" style="display:none;">♟ Iniciar Entrenamiento</button>
+                    <button id="start-opening-quiz" class="btn btn-warning" style="display:none;">🧠 Quiz: Adivina el Movimiento</button>
+                    <div id="quiz-score" class="quiz-score" style="display:none;">
+                        <span class="quiz-correct">✓ <span id="quiz-correct-count">0</span></span>
+                        <span class="quiz-wrong">✗ <span id="quiz-wrong-count">0</span></span>
+                    </div>
                 </div>
 
                 <div class="panel">
@@ -183,6 +188,12 @@
             <div class="board-container">
                 <div class="board-wrapper">
                     <div class="board-with-coords">
+                        <div class="eval-bar-container">
+                            <div class="eval-bar">
+                                <div class="eval-bar-fill" id="eval-bar-fill"></div>
+                                <div class="eval-bar-label" id="eval-bar-label">0.0</div>
+                            </div>
+                        </div>
                         <div class="rank-labels" id="rank-labels-left"></div>
                         <div class="board-and-files">
                             <div id="chess-board" class="chess-board"></div>
@@ -250,7 +261,7 @@
                            <h2>Acciones</h2>
                            <button id="resign-game" class="btn btn-danger">🏳️ Abandonar</button>
                            <button id="offer-draw" class="btn btn-warning">🤝 Pedir Tablas</button>
-                           <button id="resume-game" class="btn btn-success" style="display: none;">▶ Reanudar Partida</button>
+                           <button id="resume-game" class="btn btn-success" disabled>▶ Continuar Partida</button>
                            <button id="undo-move" class="btn btn-primary">⬅ Deshacer Movimiento</button>
                            <button id="hint-move" class="btn btn-primary">💡 Sugerencia de IA</button>
                            <button id="save-game" class="btn btn-primary">💾 Guardar Partida</button>
@@ -285,8 +296,8 @@
         <a href="mailto:ev3c.android@gmail.com">ev3c.android@gmail.com</a>
     </footer>
 
-    <script src="chess-logic.js?v=5"></script>
-    <script src="app.js?v=5"></script>
+    <script src="chess-logic.js?v=18"></script>
+    <script src="app.js?v=18"></script>
 </body>
 </html>
 
