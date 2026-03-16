@@ -1178,19 +1178,6 @@ header h1 {
         max-width: 500px;
         margin: 0 20px;
     }
-
-    .select {
-        font-size: 0.63rem;
-        padding: 6px;
-    }
-
-    .panel h2 {
-        font-size: 0.81rem;
-    }
-
-    .config-section label {
-        font-size: 0.68rem;
-    }
 }
 
 /* Media query para smartphone horizontal (landscape) - usar visualización desktop */
@@ -1278,21 +1265,12 @@ header h1 {
     }
 
     .panel h2 {
-        font-size: 0.81rem;
+        font-size: 0.9rem;
         margin-bottom: 10px;
     }
 
     .config-section {
         margin-bottom: 12px;
-    }
-
-    .config-section label {
-        font-size: 0.65rem;
-    }
-
-    .select {
-        font-size: 0.6rem;
-        padding: 6px;
     }
 
     .btn {
@@ -1544,33 +1522,6 @@ header h1 {
 
     .subtitle {
         font-size: 0.9rem;
-    }
-
-    .select {
-        font-size: 0.58rem;
-        padding: 5px;
-    }
-
-    .panel h2 {
-        font-size: 0.72rem;
-    }
-
-    .config-section label {
-        font-size: 0.6rem;
-    }
-
-    .training-name,
-    .training-moves,
-    .training-desc {
-        font-size: 0.6rem;
-    }
-
-    .quiz-score {
-        font-size: 0.72rem;
-    }
-
-    .message-box {
-        font-size: 0.81rem;
     }
 }
 
