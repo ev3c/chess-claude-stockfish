@@ -1956,6 +1956,16 @@ document.addEventListener('DOMContentLoaded', () => {
     checkForGameInProgress();
     initCustomDropdowns();
     window.addEventListener('resize', initCustomDropdowns);
+
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('#new-game, #start-opening-training, #start-opening-quiz, #resume-game, #undo-move, #hint-move')) {
+            if (window.matchMedia('(max-width: 768px)').matches) {
+                setTimeout(() => {
+                    document.querySelector('.board-container')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 150);
+            }
+        }
+    });
 });
 
 function initCustomDropdowns() {
