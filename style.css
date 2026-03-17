@@ -44,6 +44,14 @@ header h1 {
     opacity: 0.9;
 }
 
+.famous-game-title {
+    font-size: 1rem;
+    color: #4b5563;
+    font-weight: 500;
+    margin-top: 4px;
+    display: none;
+}
+
 .game-container {
     display: flex;
     gap: 20px;
@@ -333,24 +341,26 @@ header h1 {
     font-weight: 600;
 }
 
-.captured {
+.captured-below {
     display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.captured-section strong {
-    display: block;
-    margin-bottom: 8px;
-    color: #555;
-}
-
-.captured-section div {
-    min-height: 30px;
-    padding: 8px;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    margin-top: 8px;
+    padding: 8px 12px;
     background: #f9fafb;
     border-radius: 6px;
-    font-size: 1.08rem;
+    font-size: 0.95rem;
+    color: #374151;
+}
+
+.captured-below span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+#captured-white, #captured-black {
+    font-weight: 500;
 }
 
 /* Historial de movimientos eliminado */
@@ -888,6 +898,60 @@ header h1 {
 .message-info {
     color: #3b82f6;
     border-left: 6px solid #3b82f6;
+}
+
+/* Overlay de promoción de peón */
+.promotion-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9998;
+}
+
+.promotion-dialog {
+    background: white;
+    padding: 20px 24px;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.promotion-title {
+    font-size: 1rem;
+    color: #374151;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.promotion-pieces {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.promotion-piece-btn {
+    width: 56px;
+    height: 56px;
+    font-size: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3f4f6;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.promotion-piece-btn:hover {
+    background: #667eea;
+    border-color: #667eea;
+    transform: scale(1.05);
 }
 
 /* Modal de lista de partidas */
@@ -1506,10 +1570,6 @@ header h1 {
         width: 100%;
     }
 
-    #captured-panel {
-        order: 2 !important;
-    }
-
     #clock-panel {
         order: 3 !important;
     }
@@ -1522,41 +1582,31 @@ header h1 {
         order: 5 !important;
     }
 
+    .sidebar-left .panel:nth-child(3) {
+        order: 6 !important;  /* Partidas Famosas debajo de Entrenar Aperturas */
+    }
+
     .sidebar-right .panel:nth-child(2) {
-        order: 6 !important;
+        order: 7 !important;
     }
     
     .sidebar-right .panel:nth-child(3) {
-        order: 7 !important;
+        order: 8 !important;
     }
 
-    /* Piezas capturadas compactas en móvil */
-    #captured-panel .captured-section strong {
-        font-size: 0.82rem;
-        font-weight: 600;
-        margin-bottom: 4px;
+    /* Piezas capturadas debajo del control de movimientos */
+    .captured-below {
+        font-size: 0.88rem;
+        padding: 6px 10px;
     }
 
-    #captured-panel .captured-section div {
-        font-size: 1.12rem;
+    /* Círculo rojo de captura más pequeño en smartphone */
+    .square.valid-move.has-piece::after {
+        width: 36px;
+        height: 36px;
+        border-width: 2px;
     }
 
-    #captured-panel .captured {
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    #captured-panel .captured-section {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        gap: 8px;
-    }
-
-    #captured-panel .captured-section strong {
-        min-width: 4.5em;
-    }
-    
     /* Estadísticas compactas en móvil */
     .stats-container {
         gap: 8px;

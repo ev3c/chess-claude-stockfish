@@ -26,6 +26,7 @@ let stats = {
 let stockfish = null;
 let stockfishReady = false;
 let pendingMove = null;
+let pendingPromotionMove = null; // { fromRow, fromCol, toRow, toCol, isQuiz } cuando hay promoción pendiente
 
 // Estilos de piezas disponibles (solo para el set clásico Unicode)
 const PIECE_SETS = {
@@ -663,6 +664,89 @@ let quizIndex = 0;
 let quizCorrect = 0;
 let quizWrong = 0;
 
+const FAMOUS_GAMES = {
+    'immortal': {
+        name: 'La Partida Inmortal',
+        pgn: '[Event "London"]\n[Site "London"]\n[Date "1851"]\n[White "Adolf Anderssen"]\n[Black "Lionel Kieseritzky"]\n[Result "1-0"]\n\n1.e4 e5 2.f4 exf4 3.Bc4 Qh4+ 4.Kf1 b5 5.Bxb5 Nf6 6.Nf3 Qh6 7.d3 Nh5 8.Nh4 Qg5 9.Nf5 c6 10.g4 Nf6 11.Rg1 cxb5 12.h4 Qg6 13.h5 Qg5 14.Qf3 Ng8 15.Bxf4 Qf6 16.Nc3 Bc5 17.Nd5 Qxb2 18.Bd6 Bxg1 19.e5 Qxa1+ 20.Ke2 Na6 21.Nxg7+ Kd8 22.Qf6+ Nxf6 23.Be7# 1-0'
+    },
+    'kasparov-deepblue': {
+        name: 'Kasparov vs Deep Blue, partida 6',
+        pgn: '[Event "IBM Man-Machine"]\n[Site "New York"]\n[Date "1997"]\n[White "Deep Blue"]\n[Black "Garry Kasparov"]\n[Result "1-0"]\n\n1.e4 c6 2.d4 d5 3.Nc3 dxe4 4.Nxe4 Nd7 5.Ng5 Ngf6 6.Bd3 e6 7.N1f3 h6 8.Nxe6 Qe7 9.O-O fxe6 10.Bg6+ Kd8 11.Bf4 b5 12.a4 Bb7 13.Re1 Nd5 14.Bg3 Kc8 15.axb5 cxb5 16.Qd3 Bc6 17.Bf5 exf5 18.Rxe7 Bxe7 19.c4 1-0'
+    },
+    'opera': {
+        name: 'La Partida de la Ópera',
+        pgn: '[Event "Paris"]\n[Site "Paris"]\n[Date "1858"]\n[White "Paul Morphy"]\n[Black "Duke Karl / Count Isouard"]\n[Result "1-0"]\n\n1.e4 e5 2.Nf3 d6 3.d4 Bg4 4.dxe5 Bxf3 5.Qxf3 dxe5 6.Bc4 Nf6 7.Qb3 Qe7 8.Nc3 c6 9.Bg5 b5 10.Nxb5 cxb5 11.Bxb5+ Nbd7 12.O-O-O Rd8 13.Rxd7 Rxd7 14.Rd1 Qe6 15.Bxd7+ Nxd7 16.Qb8+ Nxb8 17.Rd8# 1-0'
+    },
+    'evergreen': {
+        name: 'La Siempre Verde',
+        pgn: '[Event "Berlin"]\n[Site "Berlin"]\n[Date "1852"]\n[White "Adolf Anderssen"]\n[Black "Jean Dufresne"]\n[Result "1-0"]\n\n1.e4 e5 2.Nf3 Nc6 3.Bc4 Bc5 4.b4 Bxb4 5.c3 Ba5 6.d4 exd4 7.O-O d3 8.Qb3 Qf6 9.e5 Qg6 10.Re1 Nge7 11.Ba3 b5 12.Qxb5 Rb8 13.Qa4 Bb6 14.Nbd2 Bb7 15.Ne4 Qf5 16.Bxd3 Qh5 17.Nf6+ gxf6 18.exf6 Rg8 19.Rad1 Qxf3 20.Rxe7+ Nxe7 21.Qxd7+ Kxd7 22.Bf5+ Ke8 23.Bd7+ Kf8 24.Bxe7# 1-0'
+    },
+    'kasparov-topalov': {
+        name: 'Kasparov vs Topalov, Wijk aan Zee 1999',
+        pgn: '[Event "Hoogovens"]\n[Site "Wijk aan Zee"]\n[Date "1999.01.20"]\n[White "Garry Kasparov"]\n[Black "Veselin Topalov"]\n[Result "1-0"]\n\n1.e4 d6 2.d4 Nf6 3.Nc3 g6 4.Be3 Bg7 5.Qd2 c6 6.f3 b5 7.Nge2 Nbd7 8.Bh6 Bxh6 9.Qxh6 Bb7 10.a3 e5 11.O-O-O Qe7 12.Kb1 a6 13.Nc1 O-O-O 14.Nb3 exd4 15.Rxd4 c5 16.Rd1 Nb6 17.g3 Kb8 18.Na5 Ba8 19.Bh3 d5 20.Qf4+ Ka7 21.Rhe1 d4 22.Nd5 Nbxd5 23.exd5 Qd6 24.Rxd4 cxd4 25.Re7+ Kb6 26.Qxd4+ Kxa5 27.b4+ Ka4 28.Qc3 Qxd5 29.Ra7 Bb7 30.Rxb7 Qc4 31.Qxf6 Kxa3 32.Qxa6+ Kxb4 33.c3+ Kxc3 34.Qa1+ Kd2 35.Qb2+ Kd1 36.Bf1 Rd2 37.Rd7 Rxd7 38.Bxc4 bxc4 39.Qxh8 Rd3 40.Qa8 c3 41.Qa4+ Ke1 42.f4 f5 43.Kc1 Rd2 44.Qa7 1-0'
+    },
+    'fischer-spassky': {
+        name: 'Fischer vs Spassky, partida 6 (1972)',
+        pgn: '[Event "World Championship"]\n[Site "Reykjavik"]\n[Date "1972.07.23"]\n[White "Robert James Fischer"]\n[Black "Boris Spassky"]\n[Result "1-0"]\n\n1.c4 e6 2.Nf3 d5 3.d4 Nf6 4.Nc3 Be7 5.Bg5 O-O 6.e3 h6 7.Bh4 b6 8.cxd5 Nxd5 9.Bxe7 Qxe7 10.Nxd5 exd5 11.Rc1 Be6 12.Qa4 c5 13.Qa3 Rc8 14.Bb5 a6 15.dxc5 bxc5 16.O-O Ra7 17.Be2 Nd7 18.Nd4 Qf8 19.Nxe6 fxe6 20.e4 d4 21.f4 Qe7 22.e5 Rb8 23.Bc4 Kh8 24.Qh3 Nf8 25.b3 a5 26.f5 exf5 27.Rxf5 Nh7 28.Rcf1 Qd8 29.Qg3 Re7 30.h4 Rbb7 31.e6 Rbc7 32.Qe5 Qe8 33.a4 Qd8 34.R1f2 Qe8 35.R2f3 Qd8 36.Bd3 Qe8 37.Qe4 Nf6 38.Rxf6 gxf6 39.Rxf6 Kg8 40.Bc4 Kh8 41.Qf4 1-0'
+    },
+    'game-of-century': {
+        name: 'La Partida del Siglo (Byrne vs Fischer, 1956)',
+        pgn: '[Event "Rosenwald Memorial"]\n[Site "New York"]\n[Date "1956.10.17"]\n[White "Donald Byrne"]\n[Black "Robert James Fischer"]\n[Result "0-1"]\n\n1.Nf3 Nf6 2.c4 g6 3.Nc3 Bg7 4.d4 O-O 5.Bf4 d5 6.Qb3 dxc4 7.Qxc4 c6 8.e4 Nbd7 9.Rd1 Nb6 10.Qc5 Bg4 11.Bg5 Na4 12.Qa3 Nxc3 13.bxc3 Nxe4 14.Bxe7 Qb6 15.Bc4 Nxc3 16.Bc5 Rfe8+ 17.Kf1 Be6 18.Bxb6 Bxc4+ 19.Kg1 Ne2+ 20.Kf1 Nxd4+ 21.Kg1 Ne2+ 22.Kf1 Nc3+ 23.Kg1 axb6 24.Qb4 Ra4 25.Qxb6 Nxd1 26.h3 Rxa2 27.Kh2 Nxf2 28.Re1 Rxe1 29.Qd8+ Bf8 30.Nxe1 Bd5 31.Nf3 Ne4 32.Qb8 b5 33.h4 h5 34.Ne5 Kg7 35.Kg1 Bc5+ 36.Kf1 Ng3+ 37.Ke1 Bb4+ 38.Kd1 Bb3+ 39.Kc1 Ne2+ 40.Kb1 Nc3+ 41.Kc1 Rc2# 0-1'
+    },
+    'rubinstein-immortal': {
+        name: 'La Inmortal de Rubinstein (Rotlewi vs Rubinstein, 1907)',
+        pgn: '[Event "5th All-Russian Masters"]\n[Site "Lodz"]\n[Date "1907.12.26"]\n[White "Georg Rotlewi"]\n[Black "Akiba Rubinstein"]\n[Result "0-1"]\n\n1.d4 d5 2.Nf3 e6 3.e3 c5 4.c4 Nc6 5.Nc3 Nf6 6.dxc5 Bxc5 7.a3 a6 8.b4 Bd6 9.Bb2 O-O 10.Qd2 Qe7 11.Bd3 dxc4 12.Bxc4 b5 13.Bd3 Rd8 14.Qe2 Bb7 15.O-O Ne5 16.Nxe5 Bxe5 17.f4 Bc7 18.e4 Rac8 19.e5 Bb6+ 20.Kh1 Ng4 21.Be4 Qh4 22.g3 Rxc3 23.gxh4 Rd2 24.Qxd2 Bxe4+ 25.Qg2 Rh3 0-1'
+    },
+    'lasker-bauer': {
+        name: 'Lasker vs Bauer (1889) — Doble sacrificio de alfil',
+        pgn: '[Event "Amsterdam"]\n[Site "Amsterdam"]\n[Date "1889"]\n[White "Emanuel Lasker"]\n[Black "Johann Hermann Bauer"]\n[Result "1-0"]\n\n1.f4 d5 2.e3 Nf6 3.b3 e6 4.Bb2 Be7 5.Bd3 b6 6.Nc3 Bb7 7.Nf3 Nbd7 8.O-O O-O 9.Ne2 c5 10.Ng3 Qc7 11.Ne5 Nxe5 12.Bxe5 Qc6 13.Qe2 a6 14.Nh5 Nxh5 15.Bxh7+ Kxh7 16.Qxh5+ Kg8 17.Bxg7 Kxg7 18.Qg4+ Kh7 19.Rf3 e5 20.Rh3+ Qh6 21.Rxh6+ Kxh6 22.Qd7 Bf6 23.Qxb7 Kg7 24.Rf1 Rab8 25.Qd7 Rfd8 26.Qg4+ Kf8 27.fxe5 Bg7 28.e6 Rb7 29.Qg6 f6 30.Rxf6+ Bxf6 31.Qxf6+ Ke8 32.Qh8+ Ke7 33.Qg7+ Kxe6 34.Qxb7 Rd6 35.Qxa6 d4 36.exd4 cxd4 37.h4 d3 38.Qxd3 1-0'
+    },
+    'torre-lasker': {
+        name: 'Torre vs Lasker (1925) — El Molino',
+        pgn: '[Event "Moscow"]\n[Site "Moscow"]\n[Date "1925"]\n[White "Carlos Torre"]\n[Black "Emanuel Lasker"]\n[Result "1-0"]\n\n1.d4 Nf6 2.Nf3 e6 3.Bg5 c5 4.e3 cxd4 5.exd4 Be7 6.Nbd2 d6 7.c3 Nbd7 8.Bd3 b6 9.Nc4 Bb7 10.Qe2 Qc7 11.O-O O-O 12.Rfe1 Rfe8 13.Rad1 Nf8 14.Bc1 Nd5 15.Ng5 b5 16.Na3 b4 17.cxb4 Nxb4 18.Qh5 Bxg5 19.Bxg5 Nxd3 20.Rxd3 Qa5 21.b4 Qf5 22.Rg3 h6 23.Nc4 Qd5 24.Ne3 Qb5 25.Bf6 Qxh5 26.Rxg7+ Kh8 27.Rxf7+ Kg8 28.Rg7+ Kh8 29.Rxb7+ Kg8 30.Rg7+ Kh8 31.Rg5+ Kh7 32.Rxh5 Kg6 33.Rh3 Kxf6 34.Rxh6+ Kg5 35.Rh3 Reb8 36.Rg3+ Kf6 37.Rf3+ Kg6 38.a3 a5 39.bxa5 Rxa5 40.Nc4 Rd5 41.Rf4 Nd7 42.Rxe6+ Kg5 43.g3 1-0'
+    },
+    'karpov-kasparov-85': {
+        name: 'Karpov vs Kasparov, partida 16 (1985) — Brisbane Bombshell',
+        pgn: '[Event "World Championship"]\n[Site "Moscow"]\n[Date "1985.10.15"]\n[White "Anatoly Karpov"]\n[Black "Garry Kasparov"]\n[Result "0-1"]\n\n1.e4 c5 2.Nf3 e6 3.d4 cxd4 4.Nxd4 Nc6 5.Nb5 d6 6.c4 Nf6 7.N1c3 a6 8.Na3 d5 9.cxd5 exd5 10.exd5 Nb4 11.Be2 Bc5 12.O-O O-O 13.Bf3 Bf5 14.Bg5 Re8 15.Qd2 b5 16.Rad1 Nd3 17.Nab1 h6 18.Bh4 b4 19.Na4 Bd6 20.Bg3 Rc8 21.b3 g5 22.Bxd6 Qxd6 23.g3 Nd7 24.Bg2 Qf6 25.a3 a5 26.axb4 axb4 27.Qa2 Bg6 28.d6 g4 29.Qd2 Kg7 30.f3 Qxd6 31.fxg4 Qd4+ 32.Kh1 Nf6 33.Rf4 Ne4 34.Qxd3 Nf2+ 35.Rxf2 Bxd3 36.Rfd2 Qe3 37.Rxd3 Rc1 38.Nb2 Qf2 39.Nd2 Rxd1+ 40.Nxd1 Re1+ 0-1'
+    },
+    'polugaevsky-tal': {
+        name: 'Polugaevsky vs Tal (1969)',
+        pgn: '[Event "USSR Championship"]\n[Site "Moscow"]\n[Date "1969.09.07"]\n[White "Lev Polugaevsky"]\n[Black "Mikhail Tal"]\n[Result "1-0"]\n\n1.c4 Nf6 2.Nc3 e6 3.Nf3 d5 4.d4 c5 5.cxd5 Nxd5 6.e4 Nxc3 7.bxc3 cxd4 8.cxd4 Bb4+ 9.Bd2 Bxd2+ 10.Qxd2 O-O 11.Bc4 Nc6 12.O-O b6 13.Rad1 Bb7 14.Rfe1 Na5 15.Bd3 Rc8 16.d5 exd5 17.e5 Nc4 18.Qf4 Nb2 19.Bxh7+ Kxh7 20.Ng5+ Kg6 21.h4 Rc4 22.h5+ Kh6 23.Nxf7+ Kh7 24.Qf5+ Kg8 25.e6 Qf6 26.Qxf6 gxf6 27.Rd2 Rc6 28.Rxb2 Re8 29.Nh6+ Kh7 30.Nf5 Rexe6 31.Rxe6 Rxe6 32.Rc2 Rc6 33.Re2 Bc8 34.Re7+ Kh8 35.Nh4 f5 36.Ng6+ Kg8 37.Rxa7 1-0'
+    },
+    'deepblue-kasparov-96': {
+        name: 'Deep Blue vs Kasparov, partida 1 (1996)',
+        pgn: '[Event "Philadelphia"]\n[Site "Philadelphia"]\n[Date "1996.02.10"]\n[White "Deep Blue"]\n[Black "Garry Kasparov"]\n[Result "1-0"]\n\n1.e4 c5 2.c3 d5 3.exd5 Qxd5 4.d4 Nf6 5.Nf3 Bg4 6.Be2 e6 7.h3 Bh5 8.O-O Nc6 9.Be3 cxd4 10.cxd4 Bb4 11.a3 Ba5 12.Nc3 Qd6 13.Nb5 Qe7 14.Ne5 Bxe2 15.Qxe2 O-O 16.Rac1 Rac8 17.Bg5 Bb6 18.Bxf6 gxf6 19.Nc4 Rfd8 20.Nxb6 axb6 21.Rfd1 f5 22.Qe3 Qf6 23.Rxc8 Rxc8 24.Rc1 Rxc1 25.Qxc1 Kh7 26.Kf1 Kg7 27.Ke2 Kh6 28.Kd3 Kg5 29.f4+ Kh4 30.Qc4 f6 31.Qf7 Qxf7 32.Nxf7 Kg3 33.Nxe6 fxe5 34.fxe5 Kxh3 35.Kd4 Kg4 36.e6 h5 37.Rxh7 1-0'
+    },
+    'lasker-capablanca': {
+        name: 'Lasker vs Capablanca, San Petersburgo 1914',
+        pgn: '[Event "St. Petersburg"]\n[Site "St. Petersburg"]\n[Date "1914.05.18"]\n[White "Emanuel Lasker"]\n[Black "Jose Raul Capablanca"]\n[Result "1-0"]\n\n1.e4 e5 2.Nf3 Nc6 3.Bb5 a6 4.Bxc6 dxc6 5.d4 exd4 6.Qxd4 Qxd4 7.Nxd4 Bd6 8.Nc3 Ne7 9.O-O O-O 10.f4 Re8 11.Nb3 f6 12.f5 b6 13.Bf4 Bb7 14.Bxd6 cxd6 15.Nd4 Rad8 16.Ne6 Rd7 17.Rad1 Nc8 18.Rf2 b5 19.Rfd2 Rde7 20.b4 Kf7 21.a3 Ba8 22.Kf2 Ra7 23.g4 h6 24.Rd3 a5 25.h4 axb4 26.axb4 Rae7 27.Kf3 Rg8 28.Kf4 g6 29.Rg3 g5+ 30.Kf3 Nb6 31.hxg5 hxg5 32.Rh3 Rd7 33.Kg3 Ke8 34.Rdh1 Bb7 35.e5 dxe5 36.Ne4 Nd5 37.N6c5 Bc8 38.Nxd7 Bxd7 39.Rh7 Rf8 40.Ra1 Kd8 41.Ra8+ Bc8 42.Nc5 1-0'
+    },
+    'steinitz-mongredien': {
+        name: 'Steinitz vs Mongredien (1862)',
+        pgn: '[Event "5th BCA Congress"]\n[Site "London"]\n[Date "1862"]\n[White "Wilhelm Steinitz"]\n[Black "Augustus Mongredien"]\n[Result "1-0"]\n\n1.e4 d5 2.exd5 Qxd5 3.Nc3 Qd8 4.d4 e6 5.Nf3 Nf6 6.Bd3 Be7 7.O-O O-O 8.Be3 b6 9.Ne5 Bb7 10.f4 Nbd7 11.Qe2 Nd5 12.Nxd5 exd5 13.Rf3 f5 14.Rh3 g6 15.g4 fxg4 16.Rxh7 Nxe5 17.fxe5 Kxh7 18.Qxg4 Rg8 19.Qh5+ Kg7 20.Qh6+ Kf7 21.Qh7+ Ke6 22.Qh3+ Kf7 23.Rf1+ Ke8 24.Qe6 Rg7 25.Bg5 Qd7 26.Bxg6+ Rxg6 27.Qxg6+ Kd8 28.Rf8+ Qe8 29.Qxe8# 1-0'
+    },
+    'bogolyubov-monticelli': {
+        name: 'Bogolyubov vs Monticelli (1930) — The Full Monti',
+        pgn: '[Event "San Remo"]\n[Site "San Remo"]\n[Date "1930.01.21"]\n[White "Efim Bogoljubov"]\n[Black "Mario Monticelli"]\n[Result "0-1"]\n\n1.d4 Nf6 2.c4 e6 3.Nc3 Bb4 4.Nf3 b6 5.Bg5 Bxc3+ 6.bxc3 Bb7 7.e3 d6 8.Bd3 Nbd7 9.O-O Qe7 10.Nd2 h6 11.Bh4 g5 12.Bg3 O-O-O 13.a4 a5 14.Rb1 Rdg8 15.f3 h5 16.e4 h4 17.Be1 e5 18.h3 Nh5 19.c5 dxc5 20.d5 Nf4 21.Nc4 Rh6 22.Rf2 f5 23.d6 Rxd6 24.Nxd6 Qxd6 25.Bc4 Rf8 26.exf5 Rxf5 27.Rd2 Qe7 28.Qb3 Rf8 29.Bd3 e4 30.Be4 Bxe4 31.fxe4 Qxe4 32.Qc2 Qc6 33.c4 g4 34.Bh4 gxh3 35.g3 Ne5 36.Rb3 Ne2+ 37.Rxe2 Rf1+ 38.Kxf1 Qh1+ 39.Kf2 Ng4+ 0-1'
+    },
+    'vallejo-shirov': {
+        name: 'Vallejo vs Shirov, Linares 2002',
+        pgn: '[Event "Linares"]\n[Site "Linares"]\n[Date "2002.03.09"]\n[White "Francisco Vallejo Pons"]\n[Black "Alexei Shirov"]\n[Result "1-0"]\n\n1.e4 c5 2.Nf3 d6 3.Bc4 Nf6 4.d3 e6 5.Bb3 Be7 6.O-O O-O 7.c3 Nc6 8.Re1 b5 9.Nbd2 d5 10.e5 Nd7 11.d4 Ba6 12.Nf1 b4 13.Ba4 Rc8 14.Bxc6 Rxc6 15.cxb4 Bxf1 16.Rxf1 cxb4 17.Be3 Qa5 18.g3 Rfc8 19.Ne1 Qb5 20.h4 a5 21.b3 a4 22.Nd3 Rc3 23.Nf4 Nf8 24.Qg4 Qd7 25.h5 axb3 26.axb3 Rxb3 27.h6 g6 28.Nh3 Rbc3 29.Bg5 b3 30.Rfb1 Rb8 31.Kg2 Rc7 32.Rb2 Bxg5 33.Qxg5 Qe7 34.Qe3 Qb4 35.Qf4 Qe7 36.Qf3 Rcb7 37.Rab1 Nd7 38.Rxb3 Rxb3 39.Rxb3 Qf8 40.Rxb8 Nxb8 41.Ng5 Nd7 42.Qf4 Qe7 43.Qc1 Qd8 44.Nf3 Kf8 45.Ng5 Kg8 46.Nf3 Kf8 47.Kg1 Qb8 48.Qa3+ Ke8 49.Ng5 Nf8 50.Qa4+ Ke7 51.Kg2 Qb7 52.Qa3+ Ke8 53.Qf3 Qe7 54.Qf6 1-0'
+    },
+    'illescas-karpov': {
+        name: 'Illescas vs Karpov, Linares 1994 — The Reign in Spain',
+        pgn: '[Event "Linares"]\n[Site "Linares"]\n[Date "1994.02.26"]\n[White "Miguel Illescas Cordoba"]\n[Black "Anatoly Karpov"]\n[Result "0-1"]\n\n1.Nf3 Nf6 2.c4 b6 3.g3 Bb7 4.Bg2 e6 5.Nc3 Bb4 6.O-O O-O 7.Qc2 Re8 8.d4 Bxc3 9.Qxc3 d6 10.b3 Nbd7 11.Bb2 Be4 12.Rac1 Rc8 13.Rfd1 c6 14.Qb4 Qc7 15.Qd2 Qb7 16.Qf4 d5 17.Bf1 b5 18.cxb5 cxb5 19.Ne1 Qa6 20.a3 h6 21.Rxc8 Rxc8 22.Rc1 Nb8 23.e3 Rxc1 24.Bxc1 Qb6 25.Bd2 Nbd7 26.Bb4 a5 27.Be7 e5 28.Qh4 exd4 29.Qf4 dxe3 30.Qxe3 d4 31.Qf4 Qc6 32.Bxf6 Nxf6 33.Qb8+ Kh7 34.Qxb5 Qc1 35.Nd3 Qd1 36.Nc5 Bg6 37.Kg2 Ne4 38.Be2 Qe1 39.Nxe4 Bxe4+ 40.f3 Bg6 41.h4 h5 42.f4 Be4+ 43.Bf3 g6 44.Bxe4 Qxe4+ 45.Kf2 Qe3+ 46.Kg2 d3 47.Qc4 Qe2+ 48.Kg1 Qd1+ 49.Kf2 Qd2+ 50.Kf1 Qd1+ 51.Kf2 Qe2+ 52.Kg1 Kg8 53.Qc8+ Kg7 54.Qc3+ Kf8 55.Qc5+ Ke8 56.Qc6+ Ke7 57.Qc5+ Ke6 58.Qf2 Qd1+ 59.Kg2 Qxb3 60.Qe1+ Kd7 61.Qxa5 Qc2+ 62.Kh3 d2 63.Qd5+ Kc8 0-1'
+    },
+    'pomar-fischer': {
+        name: 'Pomar vs Fischer, Olimpiada La Habana 1966',
+        pgn: '[Event "Olympiad"]\n[Site "Havana"]\n[Date "1966"]\n[White "Arturo Pomar Salamanca"]\n[Black "Robert James Fischer"]\n[Result "0-1"]\n\n1.d4 Nf6 2.c4 c5 3.d5 e6 4.Nc3 exd5 5.cxd5 g6 6.e4 d6 7.Be2 Bg7 8.f4 O-O 9.Nf3 Re8 10.Nd2 c4 11.Bf3 Nbd7 12.O-O b5 13.Kh1 a6 14.a4 Rb8 15.axb5 axb5 16.e5 dxe5 17.Nde4 Nxe4 18.Nxe4 Nf6 19.d6 Be6 20.Nc5 e4 21.Nxe4 Nxe4 22.Bxe4 Qb6 23.f5 gxf5 24.Bc2 Qd4 25.Qh5 Qg4 26.Qxg4 fxg4 27.Bg5 Bxb2 28.Rad1 b4 29.d7 Red8 30.Ba4 b3 31.Rfe1 Kg7 32.Bxd8 Rxd8 33.Rd6 Bf6 34.Red1 Bg5 35.Rb6 h6 36.Rc6 Ra8 37.Bb5 Bxd7 38.h4 Bxc6 39.Bxc6 c3 40.hxg5 c2 41.gxh6+ Kh8 0-1'
+    },
+    'fischer-pomar-62': {
+        name: 'Fischer vs Pomar, Estocolmo 1962 — Jaque continuo',
+        pgn: '[Event "Stockholm Interzonal"]\n[Site "Stockholm"]\n[Date "1962.02.10"]\n[Round "9"]\n[White "Robert James Fischer"]\n[Black "Arturo Pomar Salamanca"]\n[Result "1/2-1/2"]\n[ECO "B29"]\n\n1.e4 c5 2.Nf3 Nf6 3.Nc3 d5 4.Bb5+ Bd7 5.e5 d4 6.exf6 dxc3 7.fxg7 cxd2+ 8.Qxd2 Bxg7 9.Qg5 Bf6 10.Bxd7+ Nxd7 11.Qh5 Qa5+ 12.Nd2 Qa6 13.Ne4 O-O-O 14.Qe2 Qe6 15.Nxf6 Qxe2+ 16.Kxe2 Nxf6 17.Be3 b6 18.Rad1 Rxd1 19.Rxd1 Rd8 20.Rxd8+ Kxd8 21.Kf3 Kd7 22.Kf4 Ng8 23.c4 f6 24.Ke4 e6 25.Bd2 Ne7 26.Bc3 Ng8 27.g4 Ke7 28.f4 h6 29.f5 exf5+ 30.gxf5 h5 31.Bd2 Kd7 32.a4 Ne7 33.Bc3 Ng8 34.Kf4 Ke7 35.b4 cxb4 36.Bxb4+ Kd7 37.Bf8 Ke8 38.Bd6 Kd7 39.c5 bxc5 40.Bxc5 a6 41.Ke4 Kc6 42.Bf8 Kd7 43.h3 Ke8 44.Bc5 Kd7 45.Bd4 Kd6 46.Bb2 Kc6 47.Bc3 Kd6 48.Bb4+ Kd7 49.a5 Nh6 50.Bc3 Ng8 51.Bb4 Nh6 52.Bc3 Ng8 53.Kd5 Ne7+ 54.Kc5 Nxf5 55.Bxf6 Ke6 56.Bg5 Nd6 57.Kb6 Kd5 58.Kxa6 Kc6 59.Bd2 Ne4 60.Bb4 Nf6 61.Ka7 Nd7 62.a6 Kc7 63.Ba5+ Kc6 64.Be1 Nc5 65.Bf2 Nd7 66.Bh4 Nc5 67.Be7 Nd7 68.Ba3 Kc7 69.Bb2 Kc6 70.Bd4 Kc7 71.Bg7 Kc6 72.Ba1 Nc5 73.Bd4 Nd7 74.Be3 Kc7 75.Bf4+ Kc6 76.Ka8 Kb6 77.a7 Kc6 1/2-1/2'
+    }
+};
+
 const OPENING_TRAINING = {
     'italiana': { name: 'Apertura Italiana (Giuoco Piano)', moves: 'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5', san: '1.e4 e5 2.Cf3 Cc6 3.Ac4 Ac5', desc: 'Busca control central y desarrollo rápido apuntando al punto débil f7. Juego abierto con opciones tácticas para ambos bandos.' },
     'española': { name: 'Apertura Española (Ruy López)', moves: 'e2e4 e7e5 g1f3 b8c6 f1b5', san: '1.e4 e5 2.Cf3 Cc6 3.Ab5', desc: 'Presiona el caballo que defiende e5, buscando ventaja posicional a largo plazo. La apertura más profunda y estudiada del ajedrez.' },
@@ -1075,9 +1159,10 @@ async function getLocalBestMove() {
         useFullEval = false;
         randomnessFactor = 0.4;
     } else if (aiDifficulty <= 8) {
-        depth = 2;
+        depth = 3;
         useFullEval = true;
-        randomnessFactor = 0.15;
+        useQuiescence = true;
+        randomnessFactor = 0.05;
     } else if (aiDifficulty <= 12) {
         depth = 3;
         useFullEval = true;
@@ -1914,8 +1999,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('undo-move').addEventListener('click', undoMove);
     document.getElementById('hint-move').addEventListener('click', getHint);
-    document.getElementById('save-game').addEventListener('click', saveGame);
-    document.getElementById('load-game').addEventListener('click', loadGame);
     document.getElementById('export-pgn').addEventListener('click', exportPGN);
     document.getElementById('import-pgn').addEventListener('click', importPGN);
 
@@ -1926,6 +2009,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('opening-select').addEventListener('change', onOpeningSelect);
     document.getElementById('start-opening-training').addEventListener('click', startOpeningTraining);
     document.getElementById('start-opening-quiz').addEventListener('click', startOpeningQuiz);
+
+    document.getElementById('famous-game-select').addEventListener('change', onFamousGameSelect);
+    document.getElementById('load-famous-game').addEventListener('click', loadFamousGame);
+    onFamousGameSelect();
 
     // Navegación del historial
     document.getElementById('nav-first').addEventListener('click', goToFirstMove);
@@ -2073,6 +2160,7 @@ function confirmNewGame() {
 
 function startNewGame() {
     quizMode = false;
+    setFamousGameTitle('');
     document.getElementById('quiz-score').style.display = 'none';
     document.getElementById('opening-training-moves').style.display = '';
     clearAutoSavedGame();
@@ -2135,6 +2223,28 @@ function onOpeningSelect() {
     btn.style.display = 'block';
     quizBtn.style.display = 'block';
     quizScore.style.display = 'none';
+}
+
+function onFamousGameSelect() {
+    const select = document.getElementById('famous-game-select');
+    const btn = document.getElementById('load-famous-game');
+    btn.disabled = !select.value;
+}
+
+function loadFamousGame() {
+    const select = document.getElementById('famous-game-select');
+    const key = select.value;
+    if (!key) return;
+
+    const famous = FAMOUS_GAMES[key];
+    if (!famous || !famous.pgn) return;
+
+    parsePGNAndLoad(famous.pgn, famous.name);
+    showMessage(`Partida cargada: ${famous.name}`, 'success', 3000);
+
+    if (window.matchMedia('(max-width: 600px)').matches) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 }
 
 function showLoadedGameMessage(title, isFinished) {
@@ -2298,18 +2408,18 @@ function startOpeningQuiz() {
     showMessage(`<strong>Quiz: ${trainingOpening.name}</strong><br>Juega todos los movimientos correctos (blancas y negras)<br><br><strong>Movimientos:</strong> ${trainingOpening.san}`, 'info', 0);
 }
 
-function quizCheckMove(fromRow, fromCol, toRow, toCol) {
+function quizCheckMove(fromRow, fromCol, toRow, toCol, promotionPiece) {
     if (!quizMode || quizIndex >= quizMoves.length) return false;
 
     const expectedUci = quizMoves[quizIndex];
-    const playerUci = moveToUCI(fromRow, fromCol, toRow, toCol);
+    const playerUci = moveToUCI(fromRow, fromCol, toRow, toCol, promotionPiece);
 
     if (playerUci === expectedUci) {
         // Correct move
         quizCorrect++;
         document.getElementById('quiz-correct-count').textContent = quizCorrect;
 
-        const result = game.makeMove(fromRow, fromCol, toRow, toCol);
+        const result = game.makeMove(fromRow, fromCol, toRow, toCol, promotionPiece);
         if (result) {
             lastMoveSquares = { from: { row: fromRow, col: fromCol }, to: { row: toRow, col: toCol } };
             quizIndex++;
@@ -2476,11 +2586,16 @@ function parseUCIMove(uciMove) {
     return { fromRow, fromCol, toRow, toCol };
 }
 
-function moveToUCI(fromRow, fromCol, toRow, toCol) {
+function moveToUCI(fromRow, fromCol, toRow, toCol, promotionPiece) {
     const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
     const fromSquare = files[fromCol] + (8 - fromRow);
     const toSquare = files[toCol] + (8 - toRow);
-    return fromSquare + toSquare;
+    let uci = fromSquare + toSquare;
+    if (promotionPiece) {
+        const p = { queen: 'q', rook: 'r', bishop: 'b', knight: 'n' }[promotionPiece];
+        if (p) uci += p;
+    }
+    return uci;
 }
 
 function saveGame() {
@@ -2730,13 +2845,23 @@ function exportPGN() {
         return;
     }
 
+    const pgn = buildPGNContent();
+
+    if (window.matchMedia('(max-width: 768px)').matches) {
+        const defaultName = `partida_${new Date().toISOString().slice(0,10)}_${String(new Date().getHours()).padStart(2,'0')}${String(new Date().getMinutes()).padStart(2,'0')}.pgn`;
+        showExportPGNDialog(defaultName, pgn);
+    } else {
+        doExportPGN(pgn, `partida_${new Date().getTime()}.pgn`);
+        showMessage('Archivo PGN exportado correctamente', 'success', 2000);
+    }
+}
+
+function buildPGNContent() {
     let pgn = '[Event "Partida vs Claude"]\n';
     pgn += `[Date "${new Date().toISOString().split('T')[0]}"]\n`;
     pgn += '[White "Jugador"]\n';
     pgn += '[Black "Claude AI"]\n';
     pgn += '\n';
-
-    // Convertir historial a formato PGN
     for (let i = 0; i < game.moveHistory.length; i += 2) {
         const moveNum = Math.floor(i / 2) + 1;
         pgn += `${moveNum}. ${game.moveHistory[i]}`;
@@ -2745,19 +2870,94 @@ function exportPGN() {
         }
         pgn += ' ';
     }
+    return pgn;
+}
 
-    // Crear y descargar archivo
+function showExportPGNDialog(defaultName, pgn) {
+    let overlay = document.getElementById('game-list-overlay');
+    if (overlay) overlay.remove();
+
+    overlay = document.createElement('div');
+    overlay.id = 'game-list-overlay';
+    overlay.className = 'message-overlay';
+    overlay.style.display = 'flex';
+    document.body.appendChild(overlay);
+
+    const modal = document.createElement('div');
+    modal.className = 'game-list-modal';
+
+    const title = document.createElement('h3');
+    title.textContent = 'Exportar PGN';
+    title.className = 'game-list-title';
+    modal.appendChild(title);
+
+    const label = document.createElement('label');
+    label.textContent = 'Nombre del archivo:';
+    label.style.cssText = 'display:block;margin-bottom:8px;color:#555;font-weight:600;font-size:0.9rem;';
+    modal.appendChild(label);
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = defaultName;
+    input.className = 'select';
+    input.style.marginBottom = '16px';
+    modal.appendChild(input);
+
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:8px;';
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'btn btn-success';
+    saveBtn.textContent = '💾 Guardar';
+    saveBtn.style.marginTop = '0';
+    saveBtn.addEventListener('click', async () => {
+        let filename = input.value.trim() || defaultName;
+        if (!filename.toLowerCase().endsWith('.pgn')) filename += '.pgn';
+        overlay.remove();
+
+        try {
+            if ('showSaveFilePicker' in window) {
+                const handle = await window.showSaveFilePicker({
+                    suggestedName: filename,
+                    types: [{ description: 'Archivo PGN', accept: { 'text/plain': ['.pgn'] } }]
+                });
+                const writable = await handle.createWritable();
+                await writable.write(pgn);
+                await writable.close();
+            } else {
+                doExportPGN(pgn, filename);
+            }
+            showMessage('Archivo PGN exportado correctamente', 'success', 2000);
+        } catch (err) {
+            if (err.name !== 'AbortError') {
+                doExportPGN(pgn, filename);
+                showMessage('Archivo PGN exportado correctamente', 'success', 2000);
+            }
+        }
+    });
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'btn btn-secondary';
+    cancelBtn.textContent = 'Cancelar';
+    cancelBtn.style.marginTop = '0';
+    cancelBtn.addEventListener('click', () => overlay.remove());
+
+    btnRow.appendChild(saveBtn);
+    btnRow.appendChild(cancelBtn);
+    modal.appendChild(btnRow);
+    overlay.appendChild(modal);
+}
+
+function doExportPGN(pgn, filename) {
     const blob = new Blob([pgn], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `partida_${new Date().getTime()}.pgn`;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-
-    showMessage('Archivo PGN exportado correctamente', 'success', 2000);
 }
 
 function importPGN() {
@@ -2780,8 +2980,17 @@ function importPGN() {
     input.click();
 }
 
-function parsePGNAndLoad(pgnText) {
+function setFamousGameTitle(name) {
+    const el = document.getElementById('famous-game-title');
+    if (el) {
+        el.textContent = name || '';
+        el.style.display = name ? 'block' : 'none';
+    }
+}
+
+function parsePGNAndLoad(pgnText, gameTitle) {
     try {
+        setFamousGameTitle(gameTitle || '');
         // Extraer movimientos: quitar headers [...]  y comentarios {...}
         let movesText = pgnText
             .replace(/\[.*?\]\s*/g, '')
@@ -2821,7 +3030,7 @@ function parsePGNAndLoad(pgnText) {
                 break;
             }
 
-            const result = game.makeMove(parsed.fromRow, parsed.fromCol, parsed.toRow, parsed.toCol);
+            const result = game.makeMove(parsed.fromRow, parsed.fromCol, parsed.toRow, parsed.toCol, parsed.promotion);
             if (!result) {
                 console.warn('Movimiento inválido:', sanMove);
                 break;
@@ -2929,7 +3138,14 @@ function parseSANMove(san, gameState) {
 
             const validMoves = gameState.getValidMoves(row, col);
             if (validMoves.some(m => m.row === toRank && m.col === toFile)) {
-                return { fromRow: row, fromCol: col, toRow: toRank, toCol: toFile };
+                const promoMap = { 'Q': 'queen', 'R': 'rook', 'B': 'bishop', 'N': 'knight' };
+                return {
+                    fromRow: row,
+                    fromCol: col,
+                    toRow: toRank,
+                    toCol: toFile,
+                    promotion: promotion ? promoMap[promotion] : undefined
+                };
             }
         }
     }
@@ -3279,6 +3495,14 @@ function handleSquareClick(row, col) {
             const targetMove = validMoves.find(m => m.row === row && m.col === col);
 
             if (targetMove) {
+                const piece = game.getPiece(selectedSquare.row, selectedSquare.col);
+                const isPromotion = piece && piece.type === 'pawn' && (row === 0 || row === 7);
+                if (isPromotion) {
+                    pendingPromotionMove = { fromRow: selectedSquare.row, fromCol: selectedSquare.col, toRow: row, toCol: col, isQuiz: true };
+                    selectedSquare = null;
+                    showPromotionDialog(piece.color);
+                    return;
+                }
                 quizCheckMove(selectedSquare.row, selectedSquare.col, row, col);
                 return;
             } else if (clickedPiece && clickedPiece.color === game.currentTurn) {
@@ -3305,38 +3529,23 @@ function handleSquareClick(row, col) {
         const targetMove = validMoves.find(m => m.row === row && m.col === col);
         
         if (targetMove) {
-            const result = game.makeMove(selectedSquare.row, selectedSquare.col, row, col);
-            
-            // Guardar último movimiento para resaltar
-            lastMoveSquares = {
-                from: { row: selectedSquare.row, col: selectedSquare.col },
-                to: { row: row, col: col }
-            };
-            
-            selectedSquare = null;
-            
-            // Iniciar reloj en el primer movimiento
-            if (!clockInterval) {
-                startClock();
+            const piece = game.getPiece(selectedSquare.row, selectedSquare.col);
+            const isPromotion = piece && piece.type === 'pawn' && (row === 0 || row === 7);
+
+            if (isPromotion) {
+                pendingPromotionMove = {
+                    fromRow: selectedSquare.row,
+                    fromCol: selectedSquare.col,
+                    toRow: row,
+                    toCol: col,
+                    isQuiz: false
+                };
+                selectedSquare = null;
+                showPromotionDialog(piece.color);
+                return;
             }
-            
-            // Agregar incremento al jugador que acaba de mover
-            addTimeIncrement();
-            
-            renderBoard();
-            updateCapturedPieces();
-            updateMoveHistory();
-            updateUndoButton();
-            
-            autoSaveGame();
-            detectOpening();
-            updateEvalBar();
-            
-            handleGameResult(result);
-            
-            if (!game.gameOver && game.currentTurn !== playerColor) {
-                setTimeout(() => makeAIMove(), 800);
-            }
+
+            executeMove(selectedSquare.row, selectedSquare.col, row, col);
         } else if (clickedPiece && clickedPiece.color === playerColor) {
             // Seleccionar otra pieza propia
             selectedSquare = { row, col };
@@ -3351,6 +3560,60 @@ function handleSquareClick(row, col) {
         selectedSquare = { row, col };
         highlightValidMoves(row, col);
     }
+}
+
+function executeMove(fromRow, fromCol, toRow, toCol, promotionPiece) {
+    const result = game.makeMove(fromRow, fromCol, toRow, toCol, promotionPiece);
+    lastMoveSquares = { from: { row: fromRow, col: fromCol }, to: { row: toRow, col: toCol } };
+    selectedSquare = null;
+    if (!clockInterval) startClock();
+    addTimeIncrement();
+    renderBoard();
+    updateCapturedPieces();
+    updateMoveHistory();
+    updateUndoButton();
+    autoSaveGame();
+    detectOpening();
+    updateEvalBar();
+    handleGameResult(result);
+    if (!game.gameOver && game.currentTurn !== playerColor) {
+        setTimeout(() => makeAIMove(), 800);
+    }
+}
+
+function showPromotionDialog(pieceColor) {
+    const overlay = document.getElementById('promotion-overlay');
+    const container = document.getElementById('promotion-pieces');
+    if (!overlay || !container) return;
+
+    const pieces = [
+        { type: 'queen', symbol: pieceColor === 'white' ? '♕' : '♛' },
+        { type: 'rook', symbol: pieceColor === 'white' ? '♖' : '♜' },
+        { type: 'bishop', symbol: pieceColor === 'white' ? '♗' : '♝' },
+        { type: 'knight', symbol: pieceColor === 'white' ? '♘' : '♞' }
+    ];
+
+    container.innerHTML = '';
+    pieces.forEach(p => {
+        const btn = document.createElement('button');
+        btn.className = 'promotion-piece-btn';
+        btn.textContent = p.symbol;
+        btn.title = p.type === 'queen' ? 'Dama' : p.type === 'rook' ? 'Torre' : p.type === 'bishop' ? 'Alfil' : 'Caballo';
+        btn.addEventListener('click', () => {
+            if (pendingPromotionMove) {
+                const { fromRow, fromCol, toRow, toCol, isQuiz } = pendingPromotionMove;
+                if (isQuiz) {
+                    quizCheckMove(fromRow, fromCol, toRow, toCol, p.type);
+                } else {
+                    executeMove(fromRow, fromCol, toRow, toCol, p.type);
+                }
+                pendingPromotionMove = null;
+                overlay.style.display = 'none';
+            }
+        });
+        container.appendChild(btn);
+    });
+    overlay.style.display = 'flex';
 }
 
 function highlightValidMoves(row, col) {
@@ -3402,7 +3665,7 @@ function addTimeIncrement() {
 function updateCapturedPieces() {
     const whiteElement = document.getElementById('captured-white');
     const blackElement = document.getElementById('captured-black');
-    
+    if (!whiteElement || !blackElement) return;
     whiteElement.textContent = game.capturedPieces.white.join(' ') || '-';
     blackElement.textContent = game.capturedPieces.black.join(' ') || '-';
 }

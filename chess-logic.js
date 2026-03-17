@@ -464,7 +464,7 @@ class ChessGame {
         return false;
     }
 
-    makeMove(fromRow, fromCol, toRow, toCol) {
+    makeMove(fromRow, fromCol, toRow, toCol, promotionPiece) {
         const piece = this.getPiece(fromRow, fromCol);
         const capturedPiece = this.getPiece(toRow, toCol);
         const move = this.getValidMoves(fromRow, fromCol).find(
@@ -532,9 +532,9 @@ class ChessGame {
 
         // Promoción de peón
         if (piece.type === 'pawn' && (toRow === 0 || toRow === 7)) {
-            this.promotePawn(toRow, toCol);
-            // Actualizar notación con promoción
-            notation += '=Q';
+            this.promotePawn(toRow, toCol, promotionPiece || 'queen');
+            const p = promotionPiece || 'queen';
+            notation += '=' + (p === 'knight' ? 'N' : p.charAt(0).toUpperCase());
         }
 
         // Cambiar turno
@@ -561,11 +561,14 @@ class ChessGame {
         return gameStatus;
     }
 
-    promotePawn(row, col) {
+    promotePawn(row, col, pieceType) {
+        pieceType = pieceType || 'queen';
         const piece = this.getPiece(row, col);
         const pieceSet = getPieceSet();
-        piece.type = 'queen';
-        piece.piece = piece.color === 'white' ? pieceSet.WHITE_QUEEN : pieceSet.BLACK_QUEEN;
+        const key = piece.color === 'white' ? 'WHITE_' : 'BLACK_';
+        const typeMap = { queen: 'QUEEN', rook: 'ROOK', bishop: 'BISHOP', knight: 'KNIGHT' };
+        piece.type = pieceType;
+        piece.piece = pieceSet[key + typeMap[pieceType]];
     }
 
     getMoveNotation(fromRow, fromCol, toRow, toCol, piece, capturedPiece) {

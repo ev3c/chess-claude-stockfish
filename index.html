@@ -8,12 +8,13 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>♟</text></svg>">
-    <link rel="stylesheet" href="style.css?v=19">
+    <link rel="stylesheet" href="style.css?v=20">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>♔ Ajedrez con IA ♚ <span class="version-tag">v1.7</span></h1>
+            <h1>♔ Ajedrez con IA ♚ <span class="version-tag">v1.8</span></h1>
+            <p id="famous-game-title" class="famous-game-title"></p>
         </header>
 
         <div class="game-container">
@@ -27,7 +28,7 @@
                             <option value="1">Nivel 1 - Muy Fácil (local, prof. 1)</option>
                             <option value="3">Nivel 3 - Fácil (local, prof. 2)</option>
                             <option value="5">Nivel 5 - Principiante (local, prof. 2)</option>
-                            <option value="8">Nivel 8 - Intermedio (local, prof. 2+)</option>
+                            <option value="8">Nivel 8 - Intermedio (local, prof. 3+Q)</option>
                             <option value="12">Nivel 12 - Avanzado (Stockfish 17, prof. 10 | local prof. 3+Q)</option>
                             <option value="15">Nivel 15 - Experto (Stockfish 17, prof. 13 | local prof. 4+Q)</option>
                             <option value="18">Nivel 18 - Maestro (Stockfish 17, prof. 16 | local prof. 4+Q)</option>
@@ -170,18 +171,43 @@
                     </div>
                 </div>
 
-                <div class="panel" id="captured-panel">
-                    <h2>Piezas Capturadas</h2>
-                    <div class="captured">
-                        <div class="captured-section">
-                            <strong>Blancas:</strong>
-                            <div id="captured-white"></div>
-                        </div>
-                        <div class="captured-section">
-                            <strong>Negras:</strong>
-                            <div id="captured-black"></div>
-                        </div>
+                <div class="panel">
+                    <h2>🏆 Partidas Famosas</h2>
+                    <div class="config-section">
+                        <label>Selecciona una partida:</label>
+                        <select id="famous-game-select" class="select">
+                            <option value="">— Elegir partida —</option>
+                            <optgroup label="Clásicas (s. XIX)">
+                                <option value="immortal">La Partida Inmortal (Anderssen vs Kieseritzky, 1851)</option>
+                                <option value="opera">La Partida de la Ópera (Morphy, 1858)</option>
+                                <option value="evergreen">La Siempre Verde (Anderssen vs Dufresne, 1852)</option>
+                                <option value="lasker-bauer">Lasker vs Bauer (1889) — Doble sacrificio de alfil</option>
+                                <option value="steinitz-mongredien">Steinitz vs Mongredien (1862)</option>
+                            </optgroup>
+                            <optgroup label="Época dorada (1900-1950)">
+                                <option value="rubinstein-immortal">La Inmortal de Rubinstein (Rotlewi vs Rubinstein, 1907)</option>
+                                <option value="lasker-capablanca">Lasker vs Capablanca, San Petersburgo 1914</option>
+                                <option value="torre-lasker">Torre vs Lasker (1925) — El Molino</option>
+                                <option value="bogolyubov-monticelli">Bogolyubov vs Monticelli (1930) — The Full Monti</option>
+                                <option value="game-of-century">La Partida del Siglo (Byrne vs Fischer, 1956)</option>
+                            </optgroup>
+                            <optgroup label="Modernas (1960-2000)">
+                                <option value="polugaevsky-tal">Polugaevsky vs Tal (1969)</option>
+                                <option value="fischer-spassky">Fischer vs Spassky, partida 6 (1972)</option>
+                                <option value="karpov-kasparov-85">Karpov vs Kasparov, partida 16 (1985) — Brisbane Bombshell</option>
+                                <option value="deepblue-kasparov-96">Deep Blue vs Kasparov, partida 1 (1996)</option>
+                                <option value="kasparov-deepblue">Kasparov vs Deep Blue, partida 6 (1997)</option>
+                                <option value="kasparov-topalov">Kasparov vs Topalov, Wijk aan Zee (1999)</option>
+                            </optgroup>
+                            <optgroup label="🇪🇸 Españolas">
+                                <option value="fischer-pomar-62">Fischer vs Pomar, Estocolmo 1962 — Jaque continuo</option>
+                                <option value="pomar-fischer">Pomar vs Fischer, Olimpiada La Habana 1966</option>
+                                <option value="vallejo-shirov">Vallejo vs Shirov, Linares 2002</option>
+                                <option value="illescas-karpov">Illescas vs Karpov, Linares 1994 — The Reign in Spain</option>
+                            </optgroup>
+                        </select>
                     </div>
+                    <button id="load-famous-game" class="btn btn-primary" disabled>Cargar Partida</button>
                 </div>
             </div>
 
@@ -213,6 +239,16 @@
                            <div id="move-history-display" class="move-history-display"></div>
                            <button id="nav-next" class="nav-btn" title="Siguiente movimiento">▶</button>
                            <button id="nav-last" class="nav-btn" title="Ir al final">⏭</button>
+                       </div>
+                       <div id="promotion-overlay" class="promotion-overlay" style="display: none;">
+                           <div class="promotion-dialog">
+                               <p class="promotion-title">Promocionar peón a:</p>
+                               <div class="promotion-pieces" id="promotion-pieces"></div>
+                           </div>
+                       </div>
+                       <div id="captured-below" class="captured-below">
+                           <span>Blancas: <span id="captured-white"></span></span>
+                           <span>Negras: <span id="captured-black"></span></span>
                        </div>
             </div>
 
@@ -264,8 +300,6 @@
                            <button id="resume-game" class="btn btn-success" disabled>▶ Continuar Partida</button>
                            <button id="undo-move" class="btn btn-primary">⬅ Deshacer Movimiento</button>
                            <button id="hint-move" class="btn btn-primary">💡 Sugerencia de IA</button>
-                           <button id="save-game" class="btn btn-primary">💾 Guardar Partida</button>
-                           <button id="load-game" class="btn btn-primary">📂 Cargar Partida</button>
                            <button id="export-pgn" class="btn btn-primary">📄 Exportar PGN</button>
                            <button id="import-pgn" class="btn btn-primary">📥 Importar PGN</button>
                        </div>
@@ -296,8 +330,8 @@
         <a href="mailto:ev3c.android@gmail.com">ev3c.android@gmail.com</a>
     </footer>
 
-    <script src="chess-logic.js?v=19"></script>
-    <script src="app.js?v=19"></script>
+    <script src="chess-logic.js?v=20"></script>
+    <script src="app.js?v=20"></script>
 </body>
 </html>
 
