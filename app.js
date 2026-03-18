@@ -1034,6 +1034,184 @@ async function getStockfishAPIMove() {
     return data.move;
 }
 
+// Analizar posición con Stockfish API
+async function analyzePosition(fen, depth = 12) {
+    const response = await fetch('https://chess-api.com/v1', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fen, depth })
+    });
+    if (!response.ok) throw new Error('API error');
+    return response.json();
+}
+
+// UCI a notación legible simplificada
+function uciToSan(uci) {
+    if (!uci || uci.length < 4) return uci;
+    const to = uci[2] + uci[3];
+    const promo = uci[4] ? '=' + (uci[4] === 'q' ? 'Q' : uci[4] === 'r' ? 'R' : uci[4] === 'b' ? 'B' : 'N') : '';
+    return to + promo;
+}
+
+// Análisis post-partida: errores, imprecisiones y mejores movimientos
+async function analyzeGamePostGame() {
+    if (!game || !game.gameStateHistory || game.gameStateHistory.length === 0) {
+        showMessage('No hay partida para analizar', 'warning', 2000);
+        return;
+    }
+    const uciMoves = game.moveHistoryUCI || [];
+    if (uciMoves.length === 0) {
+        showMessage('No hay movimientos para analizar', 'warning', 2000);
+        return;
+    }
+
+    const overlay = document.getElementById('analysis-overlay');
+    const loading = document.getElementById('analysis-loading');
+    const content = document.getElementById('analysis-content');
+    const summary = document.getElementById('analysis-summary');
+    const mistakes = document.getElementById('analysis-mistakes');
+
+    overlay.style.display = 'flex';
+    loading.style.display = 'block';
+    content.style.display = 'none';
+
+    const errors = []; // blunder > 2
+    const mistakesList = []; // mistake 0.5-2
+    const inaccuracies = []; // inaccuracy 0.25-0.5
+
+    let analyzed = 0;
+    const total = uciMoves.filter((_, i) => {
+        const turn = i % 2 === 0 ? 'white' : 'black';
+        return turn === playerColor;
+    }).length;
+
+    for (let i = 0; i < uciMoves.length; i++) {
+        const turn = i % 2 === 0 ? 'white' : 'black';
+        if (turn !== playerColor) continue;
+
+        const moveNum = Math.floor(i / 2) + 1;
+        const moveSuffix = turn === 'white' ? '' : '...';
+        const playerMove = uciMoves[i];
+
+        try {
+            const stateBefore = game.gameStateHistory[i];
+            const fullMove = Math.floor(i / 2) + 1;
+            const fenBefore = ChessGame.stateToFEN(stateBefore, fullMove);
+
+            const analysisBefore = await analyzePosition(fenBefore, 10);
+            const bestMove = (analysisBefore.move || '').toLowerCase();
+
+            if (bestMove && playerMove.toLowerCase() !== bestMove) {
+                const stateAfter = i + 1 < game.gameStateHistory.length ? game.gameStateHistory[i + 1] : null;
+                const fenAfter = stateAfter ? ChessGame.stateToFEN(stateAfter, fullMove) : game.toFEN();
+                const analysisAfter = await analyzePosition(fenAfter, 10);
+
+                const evalBest = parseFloat(analysisBefore.eval) || 0;
+                const evalPlayer = parseFloat(analysisAfter.eval) || 0;
+                const loss = turn === 'white' ? evalBest - evalPlayer : evalPlayer - evalBest;
+
+                if (loss >= 2) {
+                    errors.push({ moveNum, moveSuffix, playerMove, bestMove, loss, san: game.moveHistory[i], moveIndex: i });
+                } else if (loss >= 0.5) {
+                    mistakesList.push({ moveNum, moveSuffix, playerMove, bestMove, loss, san: game.moveHistory[i], moveIndex: i });
+                } else if (loss >= 0.25) {
+                    inaccuracies.push({ moveNum, moveSuffix, playerMove, bestMove, loss, san: game.moveHistory[i], moveIndex: i });
+                }
+            }
+
+            analyzed++;
+            loading.textContent = `Analizando... ${analyzed}/${total}`;
+            await new Promise(r => setTimeout(r, 300));
+        } catch (e) {
+            console.warn('Error analizando movimiento', i, e);
+            if (analyzed === 0 && e.message?.includes('API')) {
+                showAnalysisError();
+                return;
+            }
+        }
+    }
+
+    loading.style.display = 'none';
+    content.style.display = 'block';
+
+    let summaryHtml = '<div style="margin-bottom: 8px;"><strong>Resumen:</strong></div>';
+    summaryHtml += `<div>• Errores: ${errors.length}</div>`;
+    summaryHtml += `<div>• Imprecisiones: ${mistakesList.length}</div>`;
+    summaryHtml += `<div>• Pequeñas imprecisiones: ${inaccuracies.length}</div>`;
+
+    if (errors.length === 0 && mistakesList.length === 0 && inaccuracies.length === 0) {
+        summaryHtml += '<div style="margin-top: 10px; color: #059669; font-weight: 600;">¡Sin errores significativos!</div>';
+    }
+
+    summary.innerHTML = summaryHtml;
+
+    const all = [...errors.map(e => ({ ...e, type: 'blunder' })), ...mistakesList.map(m => ({ ...m, type: 'mistake' })), ...inaccuracies.map(i => ({ ...i, type: 'inaccuracy' }))].sort((a, b) => a.moveNum - b.moveNum || (a.moveSuffix ? 1 : -1));
+
+    mistakes.innerHTML = all.map(item => {
+        const bestSan = uciToSan(item.bestMove);
+        return `<div class="analysis-move ${item.type}" data-move-index="${item.moveIndex}" data-uci="${item.playerMove}" title="Clic para ver en el tablero">
+            <span class="move-num">${item.moveNum}${item.moveSuffix}</span>
+            <span class="move-text">${item.san || item.playerMove} → Mejor: ${bestSan}</span>
+            <span class="best-move">${item.loss.toFixed(1)}</span>
+        </div>`;
+    }).join('') || '<p style="color:#059669;">No se detectaron errores en tus movimientos.</p>';
+
+    mistakes.querySelectorAll('.analysis-move[data-move-index]').forEach(el => {
+        const moveIdx = parseInt(el.dataset.moveIndex);
+        const uci = el.dataset.uci;
+        if (moveIdx >= 0 && uci) {
+            el.style.cursor = 'pointer';
+            el.addEventListener('click', () => showAnalysisPositionOnBoard(moveIdx, uci));
+        }
+    });
+
+    document.getElementById('analysis-close').onclick = () => {
+        overlay.style.display = 'none';
+        clearAnalysisHighlight();
+    };
+}
+
+function showAnalysisPositionOnBoard(moveIndex, uciMove) {
+    if (!game || !game.gameStateHistory) return;
+    const overlay = document.getElementById('analysis-overlay');
+    if (overlay) overlay.style.display = 'none';
+
+    restoreGameState(moveIndex);
+    currentMoveIndex = moveIndex;
+    updateMoveHistory();
+    updateNavigationButtons();
+    updateCapturedPieces();
+    updateEvalBar();
+
+    const move = parseUCIMove(uciMove);
+    if (move) {
+        lastMoveSquares = { from: { row: move.fromRow, col: move.fromCol }, to: { row: move.toRow, col: move.toCol } };
+        renderBoard();
+        document.querySelector('.board-container')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+function clearAnalysisHighlight() {
+    lastMoveSquares = { from: null, to: null };
+    if (game) renderBoard();
+}
+
+function showAnalysisError() {
+    const overlay = document.getElementById('analysis-overlay');
+    const loading = document.getElementById('analysis-loading');
+    const content = document.getElementById('analysis-content');
+    const summary = document.getElementById('analysis-summary');
+    const mistakes = document.getElementById('analysis-mistakes');
+    if (overlay && loading && content && summary) {
+        loading.style.display = 'none';
+        content.style.display = 'block';
+        summary.innerHTML = '<p style="color:#ef4444;">No se pudo conectar con el servidor de análisis. Comprueba tu conexión e inténtalo de nuevo.</p>';
+        if (mistakes) mistakes.innerHTML = '';
+        const closeBtn = document.getElementById('analysis-close');
+        if (closeBtn) closeBtn.onclick = () => { overlay.style.display = 'none'; };
+    }
+}
+
 // Convertir estado del juego a notación FEN (DEPRECADO - usar game.toFEN())
 function gameToFEN() {
     return game.toFEN();
@@ -1861,7 +2039,9 @@ function resignGame() {
         stopClock();
         recordGameResult('loss');
         clearAutoSavedGame();
-        showMessage('Has abandonado la partida', 'error', 3000);
+        updateUndoButton();
+        showMessage('Has abandonado la partida', 'error', 0);
+        setTimeout(showAnalysisButton, 100);
     });
 }
 
@@ -1990,15 +2170,37 @@ document.addEventListener('DOMContentLoaded', () => {
         saveSettings();
     });
 
-    // Botones de acciones
-    document.getElementById('resign-game').addEventListener('click', resignGame);
-    document.getElementById('offer-draw').addEventListener('click', offerDraw);
-    document.getElementById('resume-game').addEventListener('click', function() {
-        if (this.onclick) return;
-        resumeGame();
+    // Botones de acciones (iconos debajo del tablero + texto en sidebar)
+    ['resign-game', 'resign-game-sidebar'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('click', resignGame);
     });
-    document.getElementById('undo-move').addEventListener('click', undoMove);
-    document.getElementById('hint-move').addEventListener('click', getHint);
+    ['offer-draw', 'offer-draw-sidebar'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('click', offerDraw);
+    });
+    document.getElementById('view-analysis').addEventListener('click', () => {
+        if (game && game.gameOver) analyzeGamePostGame();
+    });
+    ['resume-game', 'resume-game-sidebar'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('click', function() {
+            if (this.onclick) return;
+            resumeGame();
+        });
+    });
+    ['undo-move', 'undo-move-sidebar'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('click', undoMove);
+    });
+    ['hint-move', 'hint-move-sidebar'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('click', getHint);
+    });
+    ['analyze-game', 'analyze-game-sidebar'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('click', () => analyzeGamePostGame());
+    });
     document.getElementById('export-pgn').addEventListener('click', exportPGN);
     document.getElementById('import-pgn').addEventListener('click', importPGN);
 
@@ -2042,10 +2244,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     checkForGameInProgress();
     initCustomDropdowns();
-    window.addEventListener('resize', initCustomDropdowns);
+    window.addEventListener('resize', () => {
+        initCustomDropdowns();
+        updateEvalBar();
+    });
 
     document.addEventListener('click', (e) => {
-        if (e.target.closest('#new-game, #start-opening-training, #start-opening-quiz, #resume-game, #undo-move, #hint-move')) {
+        if (e.target.closest('#new-game, #start-opening-training, #start-opening-quiz, #resume-game, #resume-game-sidebar, #undo-move, #undo-move-sidebar, #hint-move, #hint-move-sidebar')) {
             if (window.matchMedia('(max-width: 768px)').matches) {
                 setTimeout(() => {
                     document.querySelector('.board-container')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2185,7 +2390,10 @@ function startNewGame() {
     updateMoveHistory();
     updateUndoButton();
     updateEvalBar();
-    document.getElementById('resume-game').disabled = true;
+    ['resume-game', 'resume-game-sidebar'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = true;
+    });
     
     if (playerColor === 'black') {
         setTimeout(() => makeAIMove(), 800);
@@ -2268,11 +2476,10 @@ function showLoadedGameMessage(title, isFinished) {
 }
 
 function showContinueButton() {
-    const resumeBtn = document.getElementById('resume-game');
-    resumeBtn.disabled = false;
-    resumeBtn.onclick = function() {
-        resumeBtn.disabled = true;
-        resumeBtn.onclick = null;
+    const resumeBtns = ['resume-game', 'resume-game-sidebar'].map(id => document.getElementById(id)).filter(Boolean);
+    resumeBtns.forEach(btn => { btn.disabled = false; });
+    const handler = function() {
+        resumeBtns.forEach(btn => { btn.disabled = true; btn.onclick = null; });
 
         // Restaurar a la última posición si se estaba navegando
         const states = game.gameStateHistory || [];
@@ -2308,6 +2515,7 @@ function showContinueButton() {
             }
         }
     };
+    resumeBtns.forEach(btn => { btn.onclick = handler; });
 }
 
 function startOpeningTraining() {
@@ -2525,8 +2733,15 @@ function undoMove() {
 }
 
 function updateUndoButton() {
-    const undoButton = document.getElementById('undo-move');
-    undoButton.disabled = !game.canUndo();
+    const canUndo = game && game.canUndo();
+    ['undo-move', 'undo-move-sidebar'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = !canUndo;
+    });
+    const analysisBtn = document.getElementById('view-analysis');
+    if (analysisBtn) {
+        analysisBtn.style.display = game && game.gameOver && (game.moveHistoryUCI || []).length > 0 ? 'block' : 'none';
+    }
 }
 
 async function getHint() {
@@ -3156,8 +3371,10 @@ function parseSANMove(san, gameState) {
 // Funciones para reanudar partida
 function checkForGameInProgress() {
     const autoSavedGame = localStorage.getItem('auto_saved_game');
-    const resumeButton = document.getElementById('resume-game');
-    resumeButton.disabled = !autoSavedGame;
+    ['resume-game', 'resume-game-sidebar'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = !autoSavedGame;
+    });
 }
 
 function resumeGame(silent) {
@@ -3305,6 +3522,7 @@ function startClock() {
                 }
                 
                 showMessage('¡Se acabó el tiempo de las blancas! Las negras ganan.', 'error', 0);
+                setTimeout(showAnalysisButton, 100);
                 return;
             }
         } else {
@@ -3322,6 +3540,7 @@ function startClock() {
                 }
                 
                 showMessage('¡Se acabó el tiempo de las negras! Las blancas ganan.', 'error', 0);
+                setTimeout(showAnalysisButton, 100);
                 return;
             }
         }
@@ -3864,6 +4083,7 @@ function handleGameResult(result) {
         
         setTimeout(() => {
             showMessage(`¡Jaque mate! ${winner} ganan.`, 'success', 0);
+            showAnalysisButton();
         }, 300);
     } else if (result.status === 'stalemate') {
         stopClock();
@@ -3874,10 +4094,28 @@ function handleGameResult(result) {
         
         setTimeout(() => {
             showMessage('¡Tablas por ahogado!', 'info', 0);
+            showAnalysisButton();
         }, 300);
     } else if (result.status === 'check') {
         console.log('¡Jaque!');
     }
+}
+
+function showAnalysisButton() {
+    const overlay = document.getElementById('message-overlay');
+    const box = overlay?.querySelector('.message-box');
+    if (!overlay || !box) return;
+    const existing = box.querySelector('.analysis-btn');
+    if (existing) return;
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-primary analysis-btn';
+    btn.style.marginTop = '12px';
+    btn.textContent = '📊 Ver análisis post-partida';
+    btn.onclick = () => {
+        overlay.style.display = 'none';
+        analyzeGamePostGame();
+    };
+    box.appendChild(btn);
 }
 
 async function makeAIMove() {
@@ -3942,11 +4180,18 @@ function updateEvalBar() {
     // Map ±10 to 0%-100% (50% = equal, 100% = white winning)
     const pct = Math.max(2, Math.min(98, 50 + evalPawns * 5));
 
-    const fill = document.getElementById('eval-bar-fill');
-    const label = document.getElementById('eval-bar-label');
+    const isHorizontal = window.matchMedia('(max-width: 600px)').matches;
+    const fill = document.getElementById(isHorizontal ? 'eval-bar-fill-mobile' : 'eval-bar-fill');
+    const label = document.getElementById(isHorizontal ? 'eval-bar-label-mobile' : 'eval-bar-label');
     if (!fill || !label) return;
 
-    fill.style.height = pct + '%';
+    if (isHorizontal) {
+        fill.style.width = pct + '%';
+        fill.style.height = '100%';
+    } else {
+        fill.style.height = pct + '%';
+        fill.style.width = '100%';
+    }
 
     const sign = evalPawns > 0 ? '+' : '';
     label.textContent = sign + evalPawns.toFixed(1);

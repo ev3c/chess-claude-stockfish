@@ -2,7 +2,11 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#e5e7eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>Ajedrez con IA</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -13,7 +17,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>♔ Ajedrez con IA ♚ <span class="version-tag">v1.8</span></h1>
+            <h1>♔ Ajedrez con IA ♚ <span class="version-tag">v1.9</span></h1>
             <p id="famous-game-title" class="famous-game-title"></p>
         </header>
 
@@ -227,11 +231,19 @@
                         </div>
                     </div>
                 </div>
+                       <!-- Botones de acción (solo iconos) debajo del tablero -->
+                       <div class="board-action-buttons">
+                           <button id="resign-game" class="btn-icon btn-danger" title="Abandonar">🏳️</button>
+                           <button id="offer-draw" class="btn-icon btn-warning" title="Pedir Tablas">🤝</button>
+                           <button id="resume-game" class="btn-icon btn-success" title="Continuar Partida" disabled>▶</button>
+                           <button id="undo-move" class="btn-icon btn-primary" title="Deshacer Movimiento">↺</button>
+                           <button id="hint-move" class="btn-icon btn-yellow" title="Sugerencia de IA">💡</button>
+                           <button id="analyze-game" class="btn-icon btn-orange" title="Analizar Partida">📊</button>
+                       </div>
                        <div id="thinking-indicator" class="thinking-indicator" style="display: none;">
                            <div class="spinner"></div>
                            <p>La IA está calculando...</p>
                        </div>
-                       
                        <!-- Historial de movimientos con navegación -->
                        <div class="move-navigator">
                            <button id="nav-first" class="nav-btn" title="Ir al inicio">⏮</button>
@@ -239,6 +251,13 @@
                            <div id="move-history-display" class="move-history-display"></div>
                            <button id="nav-next" class="nav-btn" title="Siguiente movimiento">▶</button>
                            <button id="nav-last" class="nav-btn" title="Ir al final">⏭</button>
+                       </div>
+                       <!-- Barra de evaluación horizontal (solo responsive, bajo movimientos) -->
+                       <div class="eval-bar-container eval-bar-mobile" id="eval-bar-mobile">
+                           <div class="eval-bar">
+                               <div class="eval-bar-fill" id="eval-bar-fill-mobile"></div>
+                               <div class="eval-bar-label" id="eval-bar-label-mobile">0.0</div>
+                           </div>
                        </div>
                        <div id="promotion-overlay" class="promotion-overlay" style="display: none;">
                            <div class="promotion-dialog">
@@ -295,11 +314,13 @@
 
                        <div class="panel">
                            <h2>Acciones</h2>
-                           <button id="resign-game" class="btn btn-danger">🏳️ Abandonar</button>
-                           <button id="offer-draw" class="btn btn-warning">🤝 Pedir Tablas</button>
-                           <button id="resume-game" class="btn btn-success" disabled>▶ Continuar Partida</button>
-                           <button id="undo-move" class="btn btn-primary">⬅ Deshacer Movimiento</button>
-                           <button id="hint-move" class="btn btn-primary">💡 Sugerencia de IA</button>
+                           <button id="resign-game-sidebar" class="btn btn-danger">🏳️ Abandonar</button>
+                           <button id="offer-draw-sidebar" class="btn btn-warning">🤝 Pedir Tablas</button>
+                           <button id="view-analysis" class="btn btn-primary" style="display: none;">📊 Ver análisis post-partida</button>
+                           <button id="resume-game-sidebar" class="btn btn-success" disabled>▶ Continuar Partida</button>
+                           <button id="undo-move-sidebar" class="btn btn-primary">↺ Deshacer Movimiento</button>
+                           <button id="hint-move-sidebar" class="btn btn-yellow">💡 Sugerencia de IA</button>
+                           <button id="analyze-game-sidebar" class="btn btn-orange">📊 Analizar Partida</button>
                            <button id="export-pgn" class="btn btn-primary">📄 Exportar PGN</button>
                            <button id="import-pgn" class="btn btn-primary">📥 Importar PGN</button>
                        </div>
@@ -329,6 +350,25 @@
     <footer class="app-footer">
         <a href="mailto:ev3c.android@gmail.com">ev3c.android@gmail.com</a>
     </footer>
+
+    <div id="rotate-device-overlay" class="rotate-device-overlay">
+        <div class="rotate-device-message">
+            <span class="rotate-icon">📱</span>
+            <p>Gira el dispositivo a vertical para jugar</p>
+        </div>
+    </div>
+
+    <div id="analysis-overlay" class="message-overlay analysis-overlay" style="display: none;">
+        <div class="analysis-modal">
+            <h3 class="analysis-title">📊 Análisis post-partida</h3>
+            <div id="analysis-loading" class="analysis-loading">Analizando con Stockfish...</div>
+            <div id="analysis-content" class="analysis-content" style="display: none;">
+                <div id="analysis-summary" class="analysis-summary"></div>
+                <div id="analysis-mistakes" class="analysis-mistakes"></div>
+                <button id="analysis-close" class="btn btn-primary">Cerrar</button>
+            </div>
+        </div>
+    </div>
 
     <script src="chess-logic.js?v=20"></script>
     <script src="app.js?v=20"></script>

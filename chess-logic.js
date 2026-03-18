@@ -481,7 +481,11 @@ class ChessGame {
         
         // Guardar en formato UCI para Stockfish
         const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-        const uciMove = files[fromCol] + (8 - fromRow) + files[toCol] + (8 - toRow);
+        let uciMove = files[fromCol] + (8 - fromRow) + files[toCol] + (8 - toRow);
+        if (piece.type === 'pawn' && (toRow === 0 || toRow === 7)) {
+            const p = (promotionPiece || 'queen').charAt(0);
+            uciMove += p;
+        }
         this.moveHistoryUCI.push(uciMove);
 
         // Actualizar derechos de enroque ANTES de mover piezas
@@ -676,6 +680,35 @@ class ChessGame {
         };
         const char = chars[piece.type];
         return piece.color === 'white' ? char.toUpperCase() : char;
+    }
+
+    static stateToFEN(state, fullMoveNumber = 1) {
+        let fen = '';
+        const chars = { 'king': 'k', 'queen': 'q', 'rook': 'r', 'bishop': 'b', 'knight': 'n', 'pawn': 'p' };
+        const getChar = (p) => (p.color === 'white' ? chars[p.type].toUpperCase() : chars[p.type]);
+        for (let row = 0; row < 8; row++) {
+            let empty = 0;
+            for (let col = 0; col < 8; col++) {
+                const p = state.board[row]?.[col];
+                if (!p) empty++;
+                else {
+                    if (empty > 0) { fen += empty; empty = 0; }
+                    fen += getChar(p);
+                }
+            }
+            if (empty > 0) fen += empty;
+            if (row < 7) fen += '/';
+        }
+        fen += ' ' + (state.currentTurn === 'white' ? 'w' : 'b');
+        let castling = '';
+        if (state.castlingRights.white.kingside) castling += 'K';
+        if (state.castlingRights.white.queenside) castling += 'Q';
+        if (state.castlingRights.black.kingside) castling += 'k';
+        if (state.castlingRights.black.queenside) castling += 'q';
+        fen += ' ' + (castling || '-');
+        fen += ' ' + (state.enPassantTarget ? String.fromCharCode(97 + state.enPassantTarget.col) + (8 - state.enPassantTarget.row) : '-');
+        fen += ' 0 ' + fullMoveNumber;
+        return fen;
     }
 
     saveGameState() {
