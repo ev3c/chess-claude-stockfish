@@ -17,7 +17,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>♔ Ajedrez con IA ♚ <span class="version-tag">v1.9</span></h1>
+            <h1>♔ Ajedrez con IA ♚ <span class="version-tag" id="app-version"></span></h1>
             <p id="famous-game-title" class="famous-game-title"></p>
         </header>
 
@@ -29,14 +29,14 @@
                     <div class="config-section" id="ai-settings">
                         <label>Nivel de Dificultad:</label>
                         <select id="ai-difficulty" class="select">
-                            <option value="1">Muy Fácil (local, prof. 1)</option>
+                            <option value="1" selected>Muy Fácil (local, prof. 1)</option>
                             <option value="3">Fácil (local, prof. 2)</option>
                             <option value="5">Principiante (local, prof. 2)</option>
                             <option value="8">Intermedio (local, prof. 3+Q)</option>
                             <option value="12">Avanzado (Stockfish 17, prof. 10)</option>
                             <option value="15">Experto (Stockfish 17, prof. 13)</option>
                             <option value="18">Maestro (Stockfish 17, prof. 16)</option>
-                            <option value="20" selected>Gran Maestro (Stockfish 17, prof. 18)</option>
+                            <option value="20">Gran Maestro (Stockfish 17, prof. 18)</option>
                         </select>
                     </div>
                     
@@ -63,7 +63,7 @@
                         <label>Estilo de Piezas:</label>
                         <select id="piece-style" class="select">
                             <option value="classic">Clásico Unicode</option>
-                            <option value="cburnett">Cburnett (Lichess)</option>
+                            <option value="cburnett" selected>Cburnett (Lichess)</option>
                             <option value="merida">Mérida</option>
                             <option value="pixel">Pixel Art</option>
                             <option value="fantasy">Fantasy</option>
@@ -231,6 +231,13 @@
                         </div>
                     </div>
                 </div>
+                       <!-- Navegación de errores del análisis (visible al analizar) -->
+                       <div id="analysis-errors-nav" class="analysis-errors-nav" style="display: none;">
+                           <button id="analysis-nav-prev" class="analysis-nav-btn" title="Error anterior">‹</button>
+                           <span id="analysis-nav-label" class="analysis-nav-label"></span>
+                           <button id="analysis-nav-next" class="analysis-nav-btn" title="Siguiente error">›</button>
+                           <button id="analysis-nav-close" class="analysis-nav-btn analysis-nav-list-btn" title="Cerrar análisis">✕</button>
+                       </div>
                        <!-- Botones de acción (solo iconos) debajo del tablero -->
                        <div class="board-action-buttons">
                            <button id="resign-game" class="btn-icon btn-danger" title="Abandonar">🏳️</button>
@@ -294,7 +301,7 @@
                             </optgroup>
                             <optgroup label="⚔️ Blitz">
                                 <option value="3+0">3 min</option>
-                                <option value="3+2" selected>3 min + 2 seg</option>
+                                <option value="3+2">3 min + 2 seg</option>
                                 <option value="5+0">5 min</option>
                                 <option value="5+3">5 min + 3 seg</option>
                             </optgroup>
@@ -305,7 +312,7 @@
                                 <option value="30+0">30 min</option>
                             </optgroup>
                             <optgroup label="♔ Clásicas">
-                                <option value="60+0">60 min</option>
+                                <option value="60+0" selected>60 min</option>
                                 <option value="90+30">90 min + 30 seg</option>
                             </optgroup>
                         </select>
@@ -361,7 +368,7 @@
     <div id="analysis-overlay" class="message-overlay analysis-overlay" style="display: none;">
         <div class="analysis-modal">
             <h3 class="analysis-title">📊 Análisis post-partida</h3>
-            <div id="analysis-loading" class="analysis-loading">Analizando con Stockfish...</div>
+            <div id="analysis-loading" class="analysis-loading">Movimientos analizados: 0 / 0</div>
             <div id="analysis-content" class="analysis-content" style="display: none;">
                 <div id="analysis-summary" class="analysis-summary"></div>
                 <div id="analysis-mistakes" class="analysis-mistakes"></div>

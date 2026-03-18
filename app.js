@@ -1,19 +1,32 @@
+const APP_VERSION = '2.0';
+
 let game = null;
 let playerColor = 'white';
 let selectedSquare = null;
 let gameMode = 'vs-ai'; // vs-ai, vs-human, puzzle
-let aiDifficulty = 20; // Nivel Stockfish (0-20)
+let aiDifficulty = 1; // Nivel Stockfish (0-20)
 let boardTheme = 'classic';
-let pieceStyle = 'classic'; // Estilo de piezas
+let pieceStyle = 'cburnett'; // Estilo de piezas
 let clockEnabled = true; // Reloj siempre activado
-let timePerPlayer = 3; // minutos (base)
-let incrementPerMove = 2; // segundos de incremento
-let whiteTime = 180; // segundos
-let blackTime = 180; // segundos
+let timePerPlayer = 60; // minutos (base)
+let incrementPerMove = 0; // segundos de incremento
+let whiteTime = 3600; // segundos
+let blackTime = 3600; // segundos
 let clockInterval = null;
 let lastMoveSquares = { from: null, to: null }; // Guardar último movimiento para resaltar
+let bestMoveSquares = { from: null, to: null }; // Movimiento recomendado por el análisis (verde)
 let currentMoveIndex = -1; // Índice del movimiento actual en visualización (-1 = posición actual)
 let gameStateSnapshots = []; // Estados del juego en cada movimiento
+let analysisErrorsList = []; // Errores e imprecisiones del análisis post-partida
+let analysisErrorsCurrentIndex = 0;
+let analysisActive = false;
+let dragState = null;
+
+const ANALYSIS_DISABLED_IDS = ['new-game', 'start-opening-training', 'start-opening-quiz', 'load-famous-game',
+    'resign-game', 'offer-draw', 'resume-game', 'undo-move', 'hint-move', 'analyze-game',
+    'resign-game-sidebar', 'offer-draw-sidebar', 'view-analysis', 'resume-game-sidebar', 'undo-move-sidebar', 'hint-move-sidebar', 'analyze-game-sidebar',
+    'export-pgn', 'import-pgn', 'reset-stats',
+    'nav-first', 'nav-prev', 'nav-next', 'nav-last'];
 
 // Estadísticas del jugador
 let stats = {
@@ -1039,10 +1052,41 @@ async function analyzePosition(fen, depth = 12) {
     const response = await fetch('https://chess-api.com/v1', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fen, depth })
+        body: JSON.stringify({ fen, depth, maxThinkingTime: 100 })
     });
     if (!response.ok) throw new Error('API error');
-    return response.json();
+    const data = await response.json();
+    if (data.type === 'error') throw new Error(data.text || data.error || 'API error');
+    return data;
+}
+
+function setAnalysisModeActive(active) {
+    analysisActive = active;
+    ANALYSIS_DISABLED_IDS.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (active) {
+            el.classList.add('analysis-locked');
+        } else {
+            el.classList.remove('analysis-locked');
+        }
+    });
+    if (!active) {
+        updateUndoButton();
+        checkForGameInProgress();
+        onFamousGameSelect();
+    }
+}
+
+// Actualizar etiqueta de la barra de errores: número, movimiento error, movimiento recomendado
+function updateAnalysisNavLabel(item) {
+    const navLabel = document.getElementById('analysis-nav-label');
+    if (!navLabel || !item) return;
+    const errorSan = item.san || uciToSan(item.playerMove);
+    const bestSan = uciToSan(item.bestMove);
+    navLabel.textContent = `${item.moveNum}${item.moveSuffix || ''} ${errorSan} → ${bestSan}`;
+    navLabel.classList.remove('blunder', 'imprecision');
+    navLabel.classList.add(item.type === 'blunder' ? 'blunder' : 'imprecision');
 }
 
 // UCI a notación legible simplificada
@@ -1071,30 +1115,31 @@ async function analyzeGamePostGame() {
     const summary = document.getElementById('analysis-summary');
     const mistakes = document.getElementById('analysis-mistakes');
 
+    const total = uciMoves.length;
+
+    setAnalysisModeActive(true);
     overlay.style.display = 'flex';
+    overlay.classList.add('analysis-loading-mode');
     loading.style.display = 'block';
     content.style.display = 'none';
+    loading.textContent = `Movimientos analizados: 0 / ${total}`;
 
     const errors = []; // blunder > 2
     const mistakesList = []; // mistake 0.5-2
     const inaccuracies = []; // inaccuracy 0.25-0.5
 
     let analyzed = 0;
-    const total = uciMoves.filter((_, i) => {
-        const turn = i % 2 === 0 ? 'white' : 'black';
-        return turn === playerColor;
-    }).length;
+    let apiErrors = 0;
 
     for (let i = 0; i < uciMoves.length; i++) {
         const turn = i % 2 === 0 ? 'white' : 'black';
-        if (turn !== playerColor) continue;
-
         const moveNum = Math.floor(i / 2) + 1;
         const moveSuffix = turn === 'white' ? '' : '...';
         const playerMove = uciMoves[i];
 
         try {
             const stateBefore = game.gameStateHistory[i];
+            if (!stateBefore) { apiErrors++; continue; }
             const fullMove = Math.floor(i / 2) + 1;
             const fenBefore = ChessGame.stateToFEN(stateBefore, fullMove);
 
@@ -1120,32 +1165,56 @@ async function analyzeGamePostGame() {
             }
 
             analyzed++;
-            loading.textContent = `Analizando... ${analyzed}/${total}`;
-            await new Promise(r => setTimeout(r, 300));
+            loading.textContent = `Movimientos analizados: ${analyzed} / ${total}`;
+            await new Promise(r => setTimeout(r, 500));
         } catch (e) {
+            apiErrors++;
             console.warn('Error analizando movimiento', i, e);
-            if (analyzed === 0 && e.message?.includes('API')) {
+            if (apiErrors >= 3 && analyzed === 0) {
                 showAnalysisError();
                 return;
             }
+            await new Promise(r => setTimeout(r, 2000));
         }
     }
 
+    overlay.classList.remove('analysis-loading-mode');
     loading.style.display = 'none';
     content.style.display = 'block';
 
-    let summaryHtml = '<div style="margin-bottom: 8px;"><strong>Resumen:</strong></div>';
-    summaryHtml += `<div>• Errores: ${errors.length}</div>`;
-    summaryHtml += `<div>• Imprecisiones: ${mistakesList.length}</div>`;
-    summaryHtml += `<div>• Pequeñas imprecisiones: ${inaccuracies.length}</div>`;
+    let summaryHtml = '';
+    if (analyzed === 0) {
+        summaryHtml = '<div style="color:#ef4444; font-weight:600; margin-bottom:8px;">No se pudieron analizar los movimientos.</div>';
+        summaryHtml += '<div style="font-size:0.9rem; color:#666;">El servidor de análisis no está disponible. Inténtalo más tarde.</div>';
+    } else {
+        summaryHtml = `<div style="margin-bottom: 8px;"><strong>Resumen</strong> <span style="color:#888; font-size:0.85rem;">(${analyzed}/${total} analizados)</span></div>`;
+        summaryHtml += `<div style="color:#dc2626;">• Errores graves: ${errors.length}</div>`;
+        summaryHtml += `<div style="color:#ea580c;">• Imprecisiones: ${mistakesList.length}</div>`;
+        summaryHtml += `<div style="color:#ca8a04;">• Pequeñas imprecisiones: ${inaccuracies.length}</div>`;
 
-    if (errors.length === 0 && mistakesList.length === 0 && inaccuracies.length === 0) {
-        summaryHtml += '<div style="margin-top: 10px; color: #059669; font-weight: 600;">¡Sin errores significativos!</div>';
+        if (errors.length === 0 && mistakesList.length === 0 && inaccuracies.length === 0) {
+            summaryHtml += '<div style="margin-top: 10px; color: #059669; font-weight: 600;">¡Partida sin errores significativos!</div>';
+        }
     }
 
     summary.innerHTML = summaryHtml;
 
     const all = [...errors.map(e => ({ ...e, type: 'blunder' })), ...mistakesList.map(m => ({ ...m, type: 'mistake' })), ...inaccuracies.map(i => ({ ...i, type: 'inaccuracy' }))].sort((a, b) => a.moveNum - b.moveNum || (a.moveSuffix ? 1 : -1));
+
+    analysisErrorsList = all;
+    analysisErrorsCurrentIndex = 0;
+    const navBar = document.getElementById('analysis-errors-nav');
+    const navLabel = document.getElementById('analysis-nav-label');
+    const navPrev = document.getElementById('analysis-nav-prev');
+    const navNext = document.getElementById('analysis-nav-next');
+    if (all.length > 0 && navBar) {
+        navBar.style.display = 'flex';
+        updateAnalysisNavLabel(all[0]);
+        if (navPrev) navPrev.disabled = true;
+        if (navNext) navNext.disabled = all.length <= 1;
+    } else if (navBar) {
+        navBar.style.display = 'none';
+    }
 
     mistakes.innerHTML = all.map(item => {
         const bestSan = uciToSan(item.bestMove);
@@ -1154,21 +1223,50 @@ async function analyzeGamePostGame() {
             <span class="move-text">${item.san || item.playerMove} → Mejor: ${bestSan}</span>
             <span class="best-move">${item.loss.toFixed(1)}</span>
         </div>`;
-    }).join('') || '<p style="color:#059669;">No se detectaron errores en tus movimientos.</p>';
+    }).join('') || '<p style="color:#059669;">No se detectaron errores en la partida.</p>';
 
-    mistakes.querySelectorAll('.analysis-move[data-move-index]').forEach(el => {
+    mistakes.querySelectorAll('.analysis-move[data-move-index]').forEach((el, idx) => {
         const moveIdx = parseInt(el.dataset.moveIndex);
         const uci = el.dataset.uci;
         if (moveIdx >= 0 && uci) {
             el.style.cursor = 'pointer';
-            el.addEventListener('click', () => showAnalysisPositionOnBoard(moveIdx, uci));
+            el.addEventListener('click', () => {
+                analysisErrorsCurrentIndex = idx;
+                updateAnalysisNavLabel(analysisErrorsList[idx]);
+                const navPrev = document.getElementById('analysis-nav-prev');
+                const navNext = document.getElementById('analysis-nav-next');
+                if (navPrev) navPrev.disabled = idx === 0;
+                if (navNext) navNext.disabled = idx === analysisErrorsList.length - 1;
+                showAnalysisPositionOnBoard(moveIdx, uci);
+            });
         }
     });
 
     document.getElementById('analysis-close').onclick = () => {
         overlay.style.display = 'none';
-        clearAnalysisHighlight();
+        if (analysisErrorsList.length > 0) {
+            showAnalysisPositionOnBoard(analysisErrorsList[0].moveIndex, analysisErrorsList[0].playerMove);
+            document.querySelector('.board-container')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+            document.getElementById('analysis-errors-nav').style.display = 'none';
+            clearAnalysisHighlight();
+            setAnalysisModeActive(false);
+        }
     };
+}
+
+function goToAnalysisError(delta) {
+    if (!analysisErrorsList.length) return;
+    const newIdx = analysisErrorsCurrentIndex + delta;
+    if (newIdx < 0 || newIdx >= analysisErrorsList.length) return;
+    analysisErrorsCurrentIndex = newIdx;
+    const item = analysisErrorsList[newIdx];
+    updateAnalysisNavLabel(item);
+    const navPrev = document.getElementById('analysis-nav-prev');
+    const navNext = document.getElementById('analysis-nav-next');
+    if (navPrev) navPrev.disabled = newIdx === 0;
+    if (navNext) navNext.disabled = newIdx === analysisErrorsList.length - 1;
+    showAnalysisPositionOnBoard(item.moveIndex, item.playerMove);
 }
 
 function showAnalysisPositionOnBoard(moveIndex, uciMove) {
@@ -1186,6 +1284,9 @@ function showAnalysisPositionOnBoard(moveIndex, uciMove) {
     const move = parseUCIMove(uciMove);
     if (move) {
         lastMoveSquares = { from: { row: move.fromRow, col: move.fromCol }, to: { row: move.toRow, col: move.toCol } };
+        const item = analysisErrorsList.find(a => a.moveIndex === moveIndex);
+        const bestMove = item ? parseUCIMove(item.bestMove) : null;
+        bestMoveSquares = bestMove ? { from: { row: bestMove.fromRow, col: bestMove.fromCol }, to: { row: bestMove.toRow, col: bestMove.toCol } } : { from: null, to: null };
         renderBoard();
         document.querySelector('.board-container')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
@@ -1193,15 +1294,20 @@ function showAnalysisPositionOnBoard(moveIndex, uciMove) {
 
 function clearAnalysisHighlight() {
     lastMoveSquares = { from: null, to: null };
+    bestMoveSquares = { from: null, to: null };
     if (game) renderBoard();
 }
 
 function showAnalysisError() {
+    setAnalysisModeActive(false);
     const overlay = document.getElementById('analysis-overlay');
+    overlay?.classList.remove('analysis-loading-mode');
     const loading = document.getElementById('analysis-loading');
     const content = document.getElementById('analysis-content');
     const summary = document.getElementById('analysis-summary');
     const mistakes = document.getElementById('analysis-mistakes');
+    const navBar = document.getElementById('analysis-errors-nav');
+    if (navBar) navBar.style.display = 'none';
     if (overlay && loading && content && summary) {
         loading.style.display = 'none';
         content.style.display = 'block';
@@ -1899,11 +2005,11 @@ function loadSavedSettings() {
             const settings = JSON.parse(savedSettings);
             
             playerColor = settings.playerColor ?? 'white';
-            aiDifficulty = settings.aiDifficulty ?? 20;
+            aiDifficulty = settings.aiDifficulty ?? 1;
             boardTheme = settings.boardTheme ?? 'classic';
-            pieceStyle = settings.pieceStyle ?? 'classic';
-            timePerPlayer = settings.timePerPlayer ?? 3;
-            incrementPerMove = settings.incrementPerMove ?? 2;
+            pieceStyle = settings.pieceStyle ?? 'cburnett';
+            timePerPlayer = settings.timePerPlayer ?? 60;
+            incrementPerMove = settings.incrementPerMove ?? 0;
             
             // Actualizar UI
             document.getElementById('player-color').value = playerColor;
@@ -2136,6 +2242,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Inicializar motor Stockfish
     initStockfish();
 
+    // Mostrar versión
+    const versionEl = document.getElementById('app-version');
+    if (versionEl) versionEl.textContent = 'v' + APP_VERSION;
+
     // Cargar configuraciones guardadas
     loadSavedSettings();
     
@@ -2222,6 +2332,17 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('nav-next').addEventListener('click', goToNextMove);
     document.getElementById('nav-last').addEventListener('click', goToLastMove);
 
+    // Navegación de errores del análisis
+    document.getElementById('analysis-nav-prev').addEventListener('click', () => goToAnalysisError(-1));
+    document.getElementById('analysis-nav-next').addEventListener('click', () => goToAnalysisError(1));
+    const navCloseBtn = document.getElementById('analysis-nav-close');
+    if (navCloseBtn) navCloseBtn.addEventListener('click', () => {
+        document.getElementById('analysis-errors-nav').style.display = 'none';
+        document.getElementById('analysis-overlay').style.display = 'none';
+        clearAnalysisHighlight();
+        setAnalysisModeActive(false);
+    });
+
     // Bloquear zoom con gesto de pinza en móviles
     document.addEventListener('touchmove', (e) => {
         if (e.touches.length > 1) e.preventDefault();
@@ -2248,6 +2369,18 @@ document.addEventListener('DOMContentLoaded', () => {
         initCustomDropdowns();
         updateEvalBar();
     });
+
+    document.addEventListener('click', (e) => {
+        if (analysisActive) {
+            const locked = e.target.closest('.analysis-locked');
+            if (locked) {
+                e.stopPropagation();
+                e.preventDefault();
+                showMessage('Cierra Modo Análisis para continuar', 'warning', 2000);
+                return;
+            }
+        }
+    }, true);
 
     document.addEventListener('click', (e) => {
         if (e.target.closest('#new-game, #start-opening-training, #start-opening-quiz, #resume-game, #resume-game-sidebar, #undo-move, #undo-move-sidebar, #hint-move, #hint-move-sidebar')) {
@@ -2368,11 +2501,15 @@ function startNewGame() {
     setFamousGameTitle('');
     document.getElementById('quiz-score').style.display = 'none';
     document.getElementById('opening-training-moves').style.display = '';
+    const navBar = document.getElementById('analysis-errors-nav');
+    if (navBar) navBar.style.display = 'none';
+    analysisErrorsList = [];
     clearAutoSavedGame();
     
     game = new ChessGame();
     selectedSquare = null;
     lastMoveSquares = { from: null, to: null };
+    bestMoveSquares = { from: null, to: null };
     currentMoveIndex = -1;
     currentOpeningName = '';
     lastOpeningMoveCount = 0;
@@ -3061,13 +3198,32 @@ function exportPGN() {
     }
 
     const pgn = buildPGNContent();
+    const filename = `partida_${new Date().toISOString().slice(0,10)}_${String(new Date().getHours()).padStart(2,'0')}${String(new Date().getMinutes()).padStart(2,'0')}.pgn`;
 
     if (window.matchMedia('(max-width: 768px)').matches) {
-        const defaultName = `partida_${new Date().toISOString().slice(0,10)}_${String(new Date().getHours()).padStart(2,'0')}${String(new Date().getMinutes()).padStart(2,'0')}.pgn`;
-        showExportPGNDialog(defaultName, pgn);
+        exportPGNDirectMobile(pgn, filename);
     } else {
-        doExportPGN(pgn, `partida_${new Date().getTime()}.pgn`);
-        showMessage('Archivo PGN exportado correctamente', 'success', 2000);
+        doExportPGN(pgn, filename);
+    }
+}
+
+async function exportPGNDirectMobile(pgn, suggestedName) {
+    try {
+        if ('showSaveFilePicker' in window) {
+            const handle = await window.showSaveFilePicker({
+                suggestedName: suggestedName,
+                types: [{ description: 'Archivo PGN', accept: { 'text/plain': ['.pgn'] } }]
+            });
+            const writable = await handle.createWritable();
+            await writable.write(pgn);
+            await writable.close();
+        } else {
+            doExportPGN(pgn, suggestedName);
+        }
+    } catch (err) {
+        if (err.name !== 'AbortError') {
+            doExportPGN(pgn, suggestedName);
+        }
     }
 }
 
@@ -3142,11 +3298,9 @@ function showExportPGNDialog(defaultName, pgn) {
             } else {
                 doExportPGN(pgn, filename);
             }
-            showMessage('Archivo PGN exportado correctamente', 'success', 2000);
         } catch (err) {
             if (err.name !== 'AbortError') {
                 doExportPGN(pgn, filename);
-                showMessage('Archivo PGN exportado correctamente', 'success', 2000);
             }
         }
     });
@@ -3253,22 +3407,21 @@ function parsePGNAndLoad(pgnText, gameTitle) {
             movesPlayed++;
         }
 
+        const isFinished = game.isCheckmate() || game.isStalemate();
+        game.gameOver = isFinished;
         game.gameStateHistory.push({
             board: JSON.parse(JSON.stringify(game.board)),
             currentTurn: game.currentTurn,
             capturedPieces: JSON.parse(JSON.stringify(game.capturedPieces)),
             enPassantTarget: game.enPassantTarget ? { ...game.enPassantTarget } : null,
             castlingRights: JSON.parse(JSON.stringify(game.castlingRights)),
-            gameOver: false
+            gameOver: isFinished
         });
 
         selectedSquare = null;
         lastMoveSquares = { from: null, to: null };
         const openingLog = document.getElementById('opening-log');
         if (openingLog) openingLog.remove();
-
-        const isFinished = game.isCheckmate() || game.isStalemate();
-        game.gameOver = isFinished;
 
         renderBoard();
         updateCapturedPieces();
@@ -3606,7 +3759,7 @@ function renderBoard() {
             const isLight = (displayRow + displayCol) % 2 === 0;
             square.classList.add(isLight ? 'light' : 'dark');
             
-            // Resaltar último movimiento
+            // Resaltar último movimiento (error del jugador)
             if (lastMoveSquares.from && 
                 lastMoveSquares.from.row === displayRow && 
                 lastMoveSquares.from.col === displayCol) {
@@ -3616,6 +3769,17 @@ function renderBoard() {
                 lastMoveSquares.to.row === displayRow && 
                 lastMoveSquares.to.col === displayCol) {
                 square.classList.add('last-move');
+            }
+            // Resaltar movimiento recomendado por el análisis (verde)
+            if (bestMoveSquares.from && 
+                bestMoveSquares.from.row === displayRow && 
+                bestMoveSquares.from.col === displayCol) {
+                square.classList.add('best-move');
+            }
+            if (bestMoveSquares.to && 
+                bestMoveSquares.to.row === displayRow && 
+                bestMoveSquares.to.col === displayCol) {
+                square.classList.add('best-move');
             }
             
             // Agregar coordenadas en la esquina superior derecha
@@ -3665,6 +3829,8 @@ function renderBoard() {
             
             // Event listener para clics
             square.addEventListener('click', () => handleSquareClick(displayRow, displayCol));
+
+            square.addEventListener('mousedown', (e) => handleDragStart(e, displayRow, displayCol));
             
             boardElement.appendChild(square);
         }
@@ -3703,6 +3869,8 @@ function renderCoordinateLabels() {
 }
 
 function handleSquareClick(row, col) {
+    if (dragState) return;
+    if (analysisActive) return;
     if (game.gameOver) return;
 
     // Quiz mode: player must play both white and black moves
@@ -3780,6 +3948,118 @@ function handleSquareClick(row, col) {
         highlightValidMoves(row, col);
     }
 }
+
+// --- Drag & Drop ---
+
+function handleDragStart(e, row, col) {
+    if (e.button !== 0) return;
+    if (analysisActive || !game || game.gameOver) return;
+    if ('ontouchstart' in window && e.pointerType === 'touch') return;
+
+    const piece = game.getPiece(row, col);
+    if (!piece) return;
+
+    const allowedColor = quizMode ? game.currentTurn : playerColor;
+    if (piece.color !== allowedColor) return;
+    if (!quizMode && game.currentTurn !== playerColor) return;
+
+    e.preventDefault();
+
+    const squareEl = e.currentTarget;
+    const pieceEl = squareEl.querySelector('.piece, .piece-svg');
+    if (!pieceEl) return;
+
+    const rect = squareEl.getBoundingClientRect();
+    const ghost = pieceEl.cloneNode(true);
+    ghost.className = pieceEl.className + ' drag-ghost';
+    ghost.style.width = rect.width * 0.85 + 'px';
+    ghost.style.height = rect.height * 0.85 + 'px';
+    ghost.style.left = (e.clientX - rect.width * 0.425) + 'px';
+    ghost.style.top = (e.clientY - rect.height * 0.425) + 'px';
+    document.body.appendChild(ghost);
+
+    pieceEl.style.opacity = '0.25';
+
+    const validMoves = game.getValidMoves(row, col);
+
+    selectedSquare = { row, col };
+    highlightValidMoves(row, col);
+
+    const newPieceEl = document.querySelector(`.square[data-row="${row}"][data-col="${col}"] .piece, .square[data-row="${row}"][data-col="${col}"] .piece-svg`);
+    if (newPieceEl) newPieceEl.style.opacity = '0.25';
+
+    dragState = {
+        fromRow: row,
+        fromCol: col,
+        ghost,
+        validMoves,
+        squareSize: rect.width
+    };
+}
+
+function handleDragMove(e) {
+    if (!dragState) return;
+    e.preventDefault();
+    const sz = dragState.squareSize;
+    dragState.ghost.style.left = (e.clientX - sz * 0.425) + 'px';
+    dragState.ghost.style.top = (e.clientY - sz * 0.425) + 'px';
+}
+
+function handleDragEnd(e) {
+    if (!dragState) return;
+
+    const { fromRow, fromCol, ghost, validMoves } = dragState;
+    ghost.remove();
+    dragState = null;
+
+    const boardEl = document.getElementById('chess-board');
+    const boardRect = boardEl.getBoundingClientRect();
+    const x = e.clientX - boardRect.left;
+    const y = e.clientY - boardRect.top;
+
+    if (x < 0 || y < 0 || x > boardRect.width || y > boardRect.height) {
+        selectedSquare = null;
+        renderBoard();
+        return;
+    }
+
+    const squareSize = boardRect.width / 8;
+    let gridCol = Math.floor(x / squareSize);
+    let gridRow = Math.floor(y / squareSize);
+    gridCol = Math.max(0, Math.min(7, gridCol));
+    gridRow = Math.max(0, Math.min(7, gridRow));
+
+    const isFlipped = playerColor === 'black';
+    const dropCol = isFlipped ? 7 - gridCol : gridCol;
+    const dropRow = gridRow;
+
+    if (dropRow === fromRow && dropCol === fromCol) {
+        return;
+    }
+
+    const targetMove = validMoves.find(m => m.row === dropRow && m.col === dropCol);
+    if (targetMove) {
+        const piece = game.getPiece(fromRow, fromCol);
+        const isPromotion = piece && piece.type === 'pawn' && (dropRow === 0 || dropRow === 7);
+        if (isPromotion) {
+            pendingPromotionMove = { fromRow, fromCol, toRow: dropRow, toCol: dropCol, isQuiz: quizMode };
+            selectedSquare = null;
+            showPromotionDialog(piece.color);
+            return;
+        }
+        if (quizMode) {
+            quizCheckMove(fromRow, fromCol, dropRow, dropCol);
+        } else {
+            executeMove(fromRow, fromCol, dropRow, dropCol);
+        }
+    } else {
+        selectedSquare = null;
+        renderBoard();
+    }
+}
+
+document.addEventListener('mousemove', handleDragMove);
+document.addEventListener('mouseup', handleDragEnd);
 
 function executeMove(fromRow, fromCol, toRow, toCol, promotionPiece) {
     const result = game.makeMove(fromRow, fromCol, toRow, toCol, promotionPiece);
@@ -4061,6 +4341,7 @@ function restoreGameState(stateIndex) {
     game.capturedPieces = JSON.parse(JSON.stringify(state.capturedPieces));
     game.enPassantTarget = state.enPassantTarget ? { ...state.enPassantTarget } : null;
     game.castlingRights = JSON.parse(JSON.stringify(state.castlingRights));
+    game.gameOver = state.gameOver ?? false;
     
     renderBoard();
     updateCapturedPieces();
@@ -4172,7 +4453,7 @@ function showThinkingIndicator(show) {
 }
 
 function updateEvalBar() {
-    if (!game || game.gameOver) return;
+    if (!game) return;
 
     const rawScore = evaluatePosition('white');
     // Convert centipawns to pawns, clamp to ±10
