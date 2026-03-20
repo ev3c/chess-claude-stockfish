@@ -1,4 +1,4 @@
-const APP_VERSION = '2.0';
+const APP_VERSION = '2.1';
 
 let game = null;
 let playerColor = 'white';

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ajedrez-ia-v2.0';
+const CACHE_NAME = 'ajedrez-ia-v2.1';
 
 const ASSETS_TO_CACHE = [
     './',
