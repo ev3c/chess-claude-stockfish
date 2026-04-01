@@ -1,0 +1,47 @@
+0000000000000000000000000000000000000000 074ce0d9d87aa92c0a17f7bb0871d8e87676c26c ev3c <ev3c.android@gmail.com> 1760358371 +0200	clone: from https://github.com/ev3c/chess-claude.git
+074ce0d9d87aa92c0a17f7bb0871d8e87676c26c 2892ffcfa04294e7f5f455fc318a26b4238ca0fd ev3c <ev3c.android@gmail.com> 1760359049 +0200	pull --ff --recurse-submodules --progress origin: Fast-forward
+2892ffcfa04294e7f5f455fc318a26b4238ca0fd c8474570fc5c0cd16150ff21831b35943e706c74 ev3c <ev3c.android@gmail.com> 1760361013 +0200	commit: clock
+c8474570fc5c0cd16150ff21831b35943e706c74 987331af936a99a70ed07008f40ea01d1aece529 ev3c <ev3c.android@gmail.com> 1760365730 +0200	commit: millores
+987331af936a99a70ed07008f40ea01d1aece529 29c76a6780d74bf6ef040bef45e6be7779dc39d0 ev3c <ev3c.android@gmail.com> 1760385459 +0200	commit: lichess
+29c76a6780d74bf6ef040bef45e6be7779dc39d0 b553836b76a3b4ba705c9b42b05c045b9ea79fac ev3c <ev3c.android@gmail.com> 1760392114 +0200	commit: millores
+b553836b76a3b4ba705c9b42b05c045b9ea79fac 9b8c0db8e4b8358f7bac8c1efa8212781ee1bdd4 ev3c <ev3c.android@gmail.com> 1760566544 +0200	commit: main
+9b8c0db8e4b8358f7bac8c1efa8212781ee1bdd4 9ddc3244449bb8afa082c54887a57e5bf22270e3 ev3c <ev3c.android@gmail.com> 1760569238 +0200	commit: vertical horizontal
+9ddc3244449bb8afa082c54887a57e5bf22270e3 4d0316581487291858185bf395ff402fa282d29c ev3c <ev3c.android@gmail.com> 1760569739 +0200	commit: changes
+4d0316581487291858185bf395ff402fa282d29c 12717ed95d32d36894e9bfb7f3ed1153ef6b2c30 ev3c <ev3c.android@gmail.com> 1760722480 +0200	commit: clock
+12717ed95d32d36894e9bfb7f3ed1153ef6b2c30 c31367c8be0208a523b560b8abc7ac48f132c5ef ev3c <ev3c.android@gmail.com> 1772140989 +0100	commit: engine update
+c31367c8be0208a523b560b8abc7ac48f132c5ef 0a2ac4071f08ff7c9d4d0475d6f5001aae3d2f52 ev3c <ev3c.android@gmail.com> 1772292035 +0100	commit: pieces
+0a2ac4071f08ff7c9d4d0475d6f5001aae3d2f52 9dcff16cfbde7ec6263e342f22d9b84b51f7de0c ev3c <ev3c.android@gmail.com> 1772293432 +0100	commit: v1.1
+9dcff16cfbde7ec6263e342f22d9b84b51f7de0c 2672f6d0000feafed037d52731f4aa754a954254 ev3c <ev3c.android@gmail.com> 1772294425 +0100	commit: Update app.js
+2672f6d0000feafed037d52731f4aa754a954254 ae03ab9d8a399e695992bad6eb6f28d087afcf29 ev3c <ev3c.android@gmail.com> 1772316776 +0100	commit: opertures
+ae03ab9d8a399e695992bad6eb6f28d087afcf29 1487c109ac89670964482c74cb0fdd44d5d74f22 ev3c <ev3c.android@gmail.com> 1772316856 +0100	commit: v1.2
+1487c109ac89670964482c74cb0fdd44d5d74f22 292e9728f6f816505978a4c9b52675231641deeb ev3c <ev3c.android@gmail.com> 1772400235 +0100	commit: v1.3
+292e9728f6f816505978a4c9b52675231641deeb 53ed691386ccf831fbc0145a0b7cfdd8600e5ead ev3c <ev3c.android@gmail.com> 1772400693 +0100	commit: v1.4
+53ed691386ccf831fbc0145a0b7cfdd8600e5ead aef4f3adb68f43a4e208536bbe73b710d5beacc9 ev3c <ev3c.android@gmail.com> 1772401199 +0100	commit: zoom off
+aef4f3adb68f43a4e208536bbe73b710d5beacc9 e47e397f9a1df4536fcf7ca88379df01681bb240 ev3c <ev3c.android@gmail.com> 1773522974 +0100	commit: v1.5
+e47e397f9a1df4536fcf7ca88379df01681bb240 f86d38b301749c022735e175e89620dd2bf04b2f ev3c <ev3c.android@gmail.com> 1773525110 +0100	commit: aperturas
+f86d38b301749c022735e175e89620dd2bf04b2f ddd2b5d0b622ed0af1f51ec6ac9ed6722cc8b32a ev3c <ev3c.android@gmail.com> 1773603079 +0100	commit: openings
+ddd2b5d0b622ed0af1f51ec6ac9ed6722cc8b32a 83701af54088700155f2a36ab8ee103d840172ec ev3c <ev3c.android@gmail.com> 1773603563 +0100	commit: v1.6
+83701af54088700155f2a36ab8ee103d840172ec c3398d8410ded0393b81cf8c8404a21866307101 ev3c <ev3c.android@gmail.com> 1773694721 +0100	commit: v1.7 quiz
+c3398d8410ded0393b81cf8c8404a21866307101 f26f6a990420f9bd9bd9704f64562308ee3de325 ev3c <ev3c.android@gmail.com> 1773694876 +0100	commit: textsize
+f26f6a990420f9bd9bd9704f64562308ee3de325 12cf5dacdd20a86d0aa377dcce5a95627bbc6540 ev3c <ev3c.android@gmail.com> 1773695220 +0100	commit: combobox
+12cf5dacdd20a86d0aa377dcce5a95627bbc6540 0f926991e0e0555440e50a624bccfaa63063936a ev3c <ev3c.android@gmail.com> 1773696027 +0100	commit: responsive.01
+0f926991e0e0555440e50a624bccfaa63063936a 3946048ee6f513edc529af831dc938b202ed9b68 ev3c <ev3c.android@gmail.com> 1773696852 +0100	commit: responsive.02
+3946048ee6f513edc529af831dc938b202ed9b68 d6fd259e3bbeeeafaca415c62c3479d773614d67 ev3c <ev3c.android@gmail.com> 1773697843 +0100	commit: scrollup
+d6fd259e3bbeeeafaca415c62c3479d773614d67 be0d45e3f99c7bcfef2df16ff05ec7f7d8f809bf ev3c <ev3c.android@gmail.com> 1773761274 +0100	commit: v1.8 famouse games
+be0d45e3f99c7bcfef2df16ff05ec7f7d8f809bf c827ea27cdce50cfb769b03b32c62f7da8b30c1b ev3c <ev3c.android@gmail.com> 1773762264 +0100	commit: levels
+c827ea27cdce50cfb769b03b32c62f7da8b30c1b 9299d76cd405b532fedf96f9beebe1c82b2119bf ev3c <ev3c.android@gmail.com> 1773825020 +0100	commit: v1.9 analize
+9299d76cd405b532fedf96f9beebe1c82b2119bf 2551e61dfa03e6135100e136a18cf0b0d54df024 ev3c <ev3c.android@gmail.com> 1773863741 +0100	commit: v2.0 analisis
+2551e61dfa03e6135100e136a18cf0b0d54df024 a9db8d6db32196bb35cdeeccc4439f503d7227a6 ev3c <ev3c.android@gmail.com> 1774037268 +0100	commit: analytics
+a9db8d6db32196bb35cdeeccc4439f503d7227a6 801ea6cb028d08712a57c8f60583ee6690b44962 ev3c <ev3c.android@gmail.com> 1774038209 +0100	commit: PWA
+801ea6cb028d08712a57c8f60583ee6690b44962 a9080a80b6831203e54bce2ace9b30b60140a39b ev3c <ev3c.android@gmail.com> 1774038296 +0100	commit: v2.1
+a9080a80b6831203e54bce2ace9b30b60140a39b d9b65e50fbdff2e61c4eb114c5d19e599594594c ev3c <ev3c.android@gmail.com> 1774041331 +0100	commit: icons
+d9b65e50fbdff2e61c4eb114c5d19e599594594c f163c53faf522d5a815ffdea0169a7786c11ebfe Esteve Valentí <ev3c.android@gmail.com> 1774349528 +0100	commit: v2.2
+f163c53faf522d5a815ffdea0169a7786c11ebfe 49c2d0e67d69a320af7889e841218165843b209c ev3c <ev3c.android@gmail.com> 1774645213 +0100	commit: v2.3
+49c2d0e67d69a320af7889e841218165843b209c acba57698a07fcbfbc3779b381ce72cb345d884f ev3c <ev3c.android@gmail.com> 1774683064 +0100	commit: v2.3.1
+acba57698a07fcbfbc3779b381ce72cb345d884f 055eb96884aa61838fa11db4e0ef7b65a13ff3d2 ev3c <ev3c.android@gmail.com> 1774806040 +0200	commit: v2.4
+055eb96884aa61838fa11db4e0ef7b65a13ff3d2 32f36b55fd8673116a0dc67b486553399a0b270f ev3c <ev3c.android@gmail.com> 1774806928 +0200	commit: v2.4.1
+32f36b55fd8673116a0dc67b486553399a0b270f ec400051e94f1b3aeb22ad34d7b54254a85fa47d ev3c <ev3c.android@gmail.com> 1774969097 +0200	commit: v2.4.3
+ec400051e94f1b3aeb22ad34d7b54254a85fa47d a60d83d907f6b72814d8033a13e63a9e2e3c2ec7 ev3c <ev3c.android@gmail.com> 1774979544 +0200	commit: PWA cache_name
+a60d83d907f6b72814d8033a13e63a9e2e3c2ec7 2f34e7d5bba12da6c2ccceb711519578cfb3cee7 ev3c <ev3c.android@gmail.com> 1774981838 +0200	commit: v2.4.5
+2f34e7d5bba12da6c2ccceb711519578cfb3cee7 d2f77cc0b9971384c3929e91df978991abd7f6a8 ev3c <ev3c.android@gmail.com> 1775049007 +0200	commit: v2.4.6 test aperturas
+d2f77cc0b9971384c3929e91df978991abd7f6a8 9aabfc96d44fe44fcda8d425b899b1c8ea066506 ev3c <ev3c.android@gmail.com> 1775066696 +0200	commit: v2.4.6

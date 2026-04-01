@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-NHGN2N3T');</script>
+    <!-- End Google Tag Manager -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#e5e7eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>AjedrezIA</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="icon" href="icons/icon-192.png" type="image/png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css?v=20">
+</head>
+<body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NHGN2N3T"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+    <div class="container">
+        <header>
+            <h1>♔ AjedrezIA ♚ <span class="version-tag" id="app-version"></span></h1>
+            <p id="famous-game-title" class="famous-game-title"></p>
+        </header>
+
+        <div class="game-container">
+            <div class="sidebar sidebar-left">
+                <div class="panel panel-collapsible collapsed" id="config-panel">
+                    <h2 class="panel-toggle" id="config-toggle">Configuración <span class="panel-arrow">▲</span></h2>
+                    <div class="panel-body" id="config-body">
+
+                    <div class="config-section" id="ai-settings">
+                        <label>Nivel de Dificultad:</label>
+                        <select id="ai-difficulty" class="select">
+                            <option value="1" selected>Muy Fácil (~400 ELO)</option>
+                            <option value="2">Fácil (~700 ELO)</option>
+                            <option value="3">Principiante (~1000 ELO)</option>
+                            <option value="4">Intermedio (~1200 ELO)</option>
+                            <option value="5">Avanzado (~1500 ELO)</option>
+                            <option value="6">Experto (~1800 ELO)</option>
+                            <option value="7">Maestro (~2200 ELO)</option>
+                            <option value="8">Gran Maestro (~2500 ELO)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="config-section config-player-color">
+                        <div class="config-row-player-color">
+                            <label>Juegas con:</label>
+                            <div class="player-color-picker" id="player-color-picker" role="group" aria-label="Juegas con">
+                                <button type="button" class="player-color-option player-color-option--selected" data-color="white" id="player-color-btn-white" title="Blancas" aria-label="Jugar con blancas" aria-pressed="true">
+                                    <span class="player-color-pawn-wrap">
+                                        <img id="player-color-pawn-white" class="player-color-pawn-img" src="pieces/cburnett/wP.svg" alt="">
+                                        <span id="player-color-pawn-white-txt" class="player-color-pawn-txt" aria-hidden="true"></span>
+                                    </span>
+                                </button>
+                                <button type="button" class="player-color-option" data-color="black" id="player-color-btn-black" title="Negras" aria-label="Jugar con negras" aria-pressed="false">
+                                    <span class="player-color-pawn-wrap">
+                                        <img id="player-color-pawn-black" class="player-color-pawn-img" src="pieces/cburnett/bP.svg" alt="">
+                                        <span id="player-color-pawn-black-txt" class="player-color-pawn-txt" aria-hidden="true"></span>
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                        <input type="hidden" id="player-color" value="white">
+                    </div>
+
+                    <div class="config-section">
+                        <label>Tema del Tablero:</label>
+                        <select id="board-theme" class="select">
+                            <option value="classic">Clásico</option>
+                            <option value="wood">Madera</option>
+                            <option value="blue">Azul</option>
+                            <option value="green">Verde</option>
+                            <option value="gray">Gris</option>
+                        </select>
+                    </div>
+
+                    <div class="config-section">
+                        <label>Estilo de Piezas:</label>
+                        <div class="piece-style-wrapper">
+                            <img id="piece-style-preview" class="piece-style-preview" src="pieces/cburnett/bP.svg" alt="Preview">
+                            <select id="piece-style" class="select">
+                                <option value="cburnett" selected>Cburnett (Lichess)</option>
+                                <option value="merida">Mérida</option>
+                                <option value="alpha">Alpha</option>
+                                <option value="california">California</option>
+                                <option value="maestro">Maestro</option>
+                                <option value="staunty">Staunty</option>
+                                <option value="companion">Companion</option>
+                                <option value="tatiana">Tatiana</option>
+                                <option value="leipzig">Leipzig</option>
+                                <option value="horsey">Horsey</option>
+                                <option value="pixel">Pixel Art</option>
+                                <option value="fantasy">Fantasy</option>
+                                <option value="letter">Letras</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="config-section config-checkbox">
+                        <label><input type="checkbox" id="show-coordinates"> Coordenadas en Casillas</label>
+                    </div>
+
+                    <div class="config-section config-checkbox">
+                        <label><input type="checkbox" id="show-move-insights"> Mensajes de Ayuda</label>
+                    </div>
+
+                    </div>
+                    <button id="new-game" class="btn btn-success">Nueva Partida</button>
+                </div>
+
+                <div class="panel panel-collapsible collapsed" id="openings-panel">
+                    <h2 class="panel-toggle">📖 Entrenar Aperturas <span class="panel-arrow">▲</span></h2>
+                    <button id="start-opening-training" class="btn btn-primary" style="margin-bottom:8px;margin-top:8px;width:100%">♟ Iniciar Entrenamiento</button>
+                    <div class="panel-body">
+                    <div class="config-section">
+                        <label>Selecciona una apertura:</label>
+                        <select id="opening-select" class="select">
+                            <option value="">— Modo libre —</option>
+                            <optgroup label="1.e4 — Juego Abierto">
+                                <option value="italiana">Apertura Italiana (Giuoco Piano) [C54]</option>
+                                <option value="italiana-pianissimo">Giuoco Pianissimo (mov.8) [C50]</option>
+                                <option value="gambito-evans">Gambito Evans [C51]</option>
+                                <option value="gambito-evans-deep">Gambito Evans Aceptado (mov.6) [C52]</option>
+                                <option value="española">Apertura Española (Ruy López) [C60]</option>
+                                <option value="española-cerrada">Española Cerrada Tabiya (mov.9) [C84]</option>
+                                <option value="española-breyer">Española Breyer (mov.10) [C94]</option>
+                                <option value="española-chigorin">Española Chigorin (mov.11) [C99]</option>
+                                <option value="española-marshall">Gambito Marshall (mov.10) [C89]</option>
+                                <option value="española-berlinesa">Berlinesa: Muro de Berlín (mov.6) [C67]</option>
+                                <option value="espanola-cambio">Española Cambio (mov.4) [C68]</option>
+                                <option value="berlinesa">Berlinesa: Muro de Berlín (mov.8) [C67]</option>
+                                <option value="espanola-breyer">Española Breyer (mov.10) [C94]</option>
+                                <option value="espanola-marshall">Gambito Marshall (mov.9) [C89]</option>
+                                <option value="escocesa">Apertura Escocesa [C45]</option>
+                                <option value="escocesa-clasica">Escocesa Clásica Ac5 (mov.4) [C45]</option>
+                                <option value="escocesa-gambito">Gambito Escocés (mov.4) [C44]</option>
+                                <option value="petrov">Defensa Petrov [C42]</option>
+                                <option value="petrov-deep">Petrov Clásica (mov.6) [C42]</option>
+                                <option value="cuatro-caballos">Cuatro Caballos [C47]</option>
+                                <option value="vienesa">Apertura Vienesa [C25]</option>
+                                <option value="gambito-rey">Gambito de Rey [C30]</option>
+                                <option value="gambito-rey-aceptado">Gambito de Rey Aceptado (mov.3) [C33]</option>
+                                <option value="gambito-rey-rehusado">Gambito de Rey Rehusado [C30]</option>
+                                <option value="falkbeer">Contragambito Falkbeer [C31]</option>
+                                <option value="dos-caballos">Dos Caballos [C55]</option>
+                                <option value="philidor">Defensa Philidor [C41]</option>
+                                <option value="philidor-hanham">Philidor Hanham (mov.4) [C41]</option>
+                            </optgroup>
+                            <optgroup label="1.e4 — Semiabiertas">
+                                <option value="siciliana-najdorf">Siciliana Najdorf [B90]</option>
+                                <option value="najdorf-ag5">Najdorf 6.Ag5 Envenenado (mov.8) [B97]</option>
+                                <option value="najdorf-ae3">Najdorf 6.Ae3 (mov.7) [B90]</option>
+                                <option value="siciliana-dragon">Siciliana Dragón [B70]</option>
+                                <option value="dragon-yugoslavo">Dragón Yugoslavo (mov.9) [B77]</option>
+                                <option value="siciliana-sveshnikov">Siciliana Sveshnikov [B33]</option>
+                                <option value="sveshnikov-deep">Sveshnikov Cdb5 (mov.8) [B33]</option>
+                                <option value="siciliana-scheveningen">Siciliana Scheveningen [B80]</option>
+                                <option value="siciliana-clasica">Siciliana Clásica [B56]</option>
+                                <option value="siciliana-kan">Siciliana Kan [B41]</option>
+                                <option value="siciliana-taimanov">Siciliana Taimanov [B46]</option>
+                                <option value="siciliana-acelerada">Siciliana Acelerada del Dragón [B35]</option>
+                                <option value="siciliana-cerrada">Siciliana Cerrada [B23]</option>
+                                <option value="siciliana-grand-prix">Gambito Grand Prix [B21]</option>
+                                <option value="siciliana-alapin">Siciliana Alapin [B22]</option>
+                                <option value="siciliana-smith-morra">Gambito Smith-Morra [B21]</option>
+                                <option value="siciliana-smith-morra-deep">Smith-Morra Aceptado (mov.4) [B21]</option>
+                                <option value="francesa-winawer">Francesa Winawer [C15]</option>
+                                <option value="winawer-deep">Winawer con Dg4 (mov.7) [C18]</option>
+                                <option value="francesa-clasica">Francesa Clásica [C11]</option>
+                                <option value="francesa-clasica-deep">Francesa Clásica McCutcheon (mov.6) [C12]</option>
+                                <option value="francesa-avance">Francesa Avance [C02]</option>
+                                <option value="francesa-avance-deep">Francesa Avance Db6 (mov.6) [C02]</option>
+                                <option value="francesa-tarrasch">Francesa Tarrasch [C03]</option>
+                                <option value="francesa-rubinstein">Francesa Rubinstein (mov.4) [C10]</option>
+                                <option value="caro-kann-clasica">Caro-Kann Clásica [B18]</option>
+                                <option value="caro-kann-deep">Caro-Kann Clásica h4 (mov.7) [B18]</option>
+                                <option value="caro-kann-avance">Caro-Kann Avance [B12]</option>
+                                <option value="caro-kann-avance-deep">Caro-Kann Avance Ae2 (mov.5) [B12]</option>
+                                <option value="caro-kann-panov">Caro-Kann Panov (mov.5) [B13]</option>
+                                <option value="panov">Caro-Kann Panov Profunda (mov.6) [B14]</option>
+                                <option value="escandinava">Defensa Escandinava [B01]</option>
+                                <option value="escandinava-clasica">Escandinava Clásica Da5 (mov.5) [B01]</option>
+                                <option value="pirc">Defensa Pirc [B07]</option>
+                                <option value="alekhine">Defensa Alekhine [B02]</option>
+                                <option value="alekhine-moderna">Alekhine Moderna (mov.4) [B04]</option>
+                                <option value="alekhine-4peones">Alekhine Cuatro Peones (mov.5) [B03]</option>
+                                <option value="moderna">Defensa Moderna [B06]</option>
+                            </optgroup>
+                            <optgroup label="1.d4 — Gambito de Dama">
+                                <option value="gda">Gambito de Dama Aceptado [D20]</option>
+                                <option value="gda-deep">GDA Línea Principal (mov.5) [D27]</option>
+                                <option value="gdr-ortodoxa">GDR Ortodoxa [D60]</option>
+                                <option value="gdr-ortodoxa-deep">GDR Ortodoxa Tabiya (mov.9) [D63]</option>
+                                <option value="ragozin">GDR Ragozin (mov.4) [D38]</option>
+                                <option value="eslava">Defensa Eslava [D10]</option>
+                                <option value="eslava-checa">Eslava Checa Af5 (mov.6) [D17]</option>
+                                <option value="semi-eslava">Semi-Eslava [D43]</option>
+                                <option value="semi-eslava-meran">Semi-Eslava Meran b5 (mov.8) [D47]</option>
+                                <option value="grunfeld">Defensa Grünfeld [D85]</option>
+                                <option value="grunfeld-cambio">Grünfeld Cambio (mov.6) [D85]</option>
+                                <option value="grunfeld-rusa">Grünfeld Línea Rusa (mov.5) [D97]</option>
+                            </optgroup>
+                            <optgroup label="1.d4 — Defensas Indias">
+                                <option value="india-rey">India de Rey [E60]</option>
+                                <option value="india-rey-clasica">India de Rey Clásica (mov.7) [E92]</option>
+                                <option value="india-rey-mar-plata">India de Rey Mar del Plata (mov.9) [E97]</option>
+                                <option value="india-rey-samisch">India de Rey Sämisch (mov.7) [E80]</option>
+                                <option value="india-rey-averbakh">India de Rey Averbakh (mov.5) [E73]</option>
+                                <option value="india-rey-fianchetto">India de Rey Fianchetto (mov.6) [E62]</option>
+                                <option value="india-rey-petrosian">India de Rey Petrosián (mov.9) [E93]</option>
+                                <option value="india-rey-bayoneta">India de Rey Bayoneta (mov.9) [E97]</option>
+                                <option value="nimzo-india">Nimzo-India [E20]</option>
+                                <option value="nimzo-rubinstein">Nimzo-India Rubinstein (mov.7) [E46]</option>
+                                <option value="nimzo-clasica">Nimzo-India Clásica Dc2 (mov.5) [E32]</option>
+                                <option value="nimzo-samisch">Nimzo-India Sämisch (mov.5) [E25]</option>
+                                <option value="nimzo-fischer">Nimzo-India Fischer (mov.4) [E36]</option>
+                                <option value="nimzo-hubner">Nimzo-India Hübner (mov.4) [E41]</option>
+                                <option value="india-dama">India de Dama [E12]</option>
+                                <option value="india-dama-petrosian">India de Dama Petrosian (mov.4) [E12]</option>
+                                <option value="bogo-india">Bogo-India [E11]</option>
+                                <option value="benoni">Benoni Moderna [A60]</option>
+                                <option value="benoni-deep">Benoni Clásica Fianchetto (mov.7) [A70]</option>
+                                <option value="benoni-cuatro-peones">Benoni Cuatro Peones (mov.7) [A68]</option>
+                                <option value="benoni-fianchetto">Benoni Fianchetto (mov.8) [A70]</option>
+                                <option value="budapest">Gambito Budapest [A52]</option>
+                                <option value="holandesa">Defensa Holandesa [A80]</option>
+                                <option value="holandesa-leningrado">Holandesa Leningrado (mov.4) [A87]</option>
+                                <option value="holandesa-muro">Holandesa Muro de Piedra (mov.4) [A84]</option>
+                                <option value="holandesa-staunton">Gambito Staunton (mov.2) [A82]</option>
+                            </optgroup>
+                            <optgroup label="1.d4 — Sistemas">
+                                <option value="londres">Sistema Londres [D02]</option>
+                                <option value="londres-deep">Londres Línea Principal (mov.5) [D02]</option>
+                                <option value="colle">Sistema Colle [D05]</option>
+                                <option value="colle-zukertort">Colle-Zukertort (mov.5) [D05]</option>
+                                <option value="trompowsky">Apertura Trompowsky [A45]</option>
+                                <option value="torre">Ataque Torre [A46]</option>
+                            </optgroup>
+                            <optgroup label="Otras Aperturas">
+                                <option value="inglesa">Apertura Inglesa [A20]</option>
+                                <option value="inglesa-4caballos">Inglesa Cuatro Caballos (mov.5) [A28]</option>
+                                <option value="reti">Apertura Réti [A09]</option>
+                                <option value="catalana">Apertura Catalana [E01]</option>
+                                <option value="catalana-abierta">Catalana Abierta (mov.6) [E04]</option>
+                                <option value="catalana-cerrada">Catalana Cerrada (mov.6) [E06]</option>
+                                <option value="larsen">Apertura Larsen [A01]</option>
+                                <option value="bird">Apertura Bird [A02]</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div id="opening-training-info" class="opening-training-info" style="display:none;">
+                        <p id="opening-training-name" class="training-name"></p>
+                        <p id="opening-training-moves" class="training-moves"></p>
+                        <p id="opening-training-desc" class="training-desc"></p>
+                        <div id="opening-winrate" class="opening-winrate" style="display:none;"></div>
+                    </div>
+                    <button id="show-known-variants" class="btn btn-secondary" disabled>📖 Variantes Conocidas</button>
+                    <button id="view-opening" class="btn btn-info" disabled>👁 Ver Apertura</button>
+                    <button id="start-opening-quiz" class="btn btn-warning" disabled>🧠 Quiz: Adivina el Movimiento</button>
+                    <div id="quiz-score" class="quiz-score" style="display:none;">
+                        <span class="quiz-correct">✓ <span id="quiz-correct-count">0</span></span>
+                        <span class="quiz-wrong">✗ <span id="quiz-wrong-count">0</span></span>
+                    </div>
+                    </div>
+                </div>
+
+                <div class="panel panel-collapsible collapsed" id="puzzles-panel">
+                    <h2 class="panel-toggle">🧩 Problemas de Ajedrez <span class="panel-arrow">▲</span></h2>
+                    <div class="panel-body">
+                    <div class="config-section">
+                        <label>Categoría:</label>
+                        <select id="puzzle-theme-select" class="select">
+                            <option value="all">— Todas —</option>
+                            <option value="mate1">♔ Mate en 1</option>
+                            <option value="mate2">♔ Mate en 2</option>
+                            <option value="mate3">♔ Mate en 3+</option>
+                            <option value="fork">⚔️ Horquilla / Doble ataque</option>
+                            <option value="pin">📌 Clavada</option>
+                            <option value="sacrifice">💎 Sacrificio</option>
+                            <option value="attack">⚡ Ataque</option>
+                            <option value="defense">🛡️ Defensa</option>
+                            <option value="endgame">♟ Finales</option>
+                            <option value="center">🎯 Control central</option>
+                            <option value="capture">🔄 Captura táctica</option>
+                            <option value="development">📐 Desarrollo</option>
+                            <option value="tactic">🧠 Táctica general</option>
+                        </select>
+                    </div>
+                    <div class="config-section">
+                        <label>Dificultad:</label>
+                        <select id="puzzle-difficulty-select" class="select">
+                            <option value="all">— Todas —</option>
+                            <option value="1">⭐ Fácil</option>
+                            <option value="2">⭐⭐ Media</option>
+                            <option value="3">⭐⭐⭐ Difícil</option>
+                            <option value="4">⭐⭐⭐⭐ Experto</option>
+                        </select>
+                    </div>
+                    <button id="start-puzzle" class="btn btn-primary" style="margin-top:6px;width:100%">🧩 Nuevo Problema</button>
+                    <div id="puzzle-info" style="display:none;">
+                        <p id="puzzle-title" class="training-name" style="margin-top:8px;"></p>
+                        <p id="puzzle-theme-label" class="training-moves"></p>
+                        <p id="puzzle-instruction" class="training-desc" style="font-style:normal;color:#1e40af;font-weight:600;"></p>
+                        <div id="puzzle-feedback" class="puzzle-feedback" style="display:none;"></div>
+                        <div class="puzzle-actions" style="margin-top:6px;">
+                            <button id="puzzle-hint" class="btn btn-yellow btn-sm">💡 Pista</button>
+                            <button id="puzzle-solution" class="btn btn-secondary btn-sm">👁 Ver solución</button>
+                            <button id="puzzle-skip" class="btn btn-secondary btn-sm">⏭ Saltar</button>
+                        </div>
+                    </div>
+                    <div id="puzzle-stats" class="puzzle-stats">
+                        <span class="puzzle-stat-item puzzle-solved">✓ <span id="puzzle-solved-count">0</span></span>
+                        <span class="puzzle-stat-item puzzle-failed">✗ <span id="puzzle-failed-count">0</span></span>
+                        <span class="puzzle-stat-item puzzle-streak">🔥 <span id="puzzle-streak-count">0</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel panel-collapsible collapsed" id="famous-panel">
+                    <h2 class="panel-toggle">🏆 Partidas Maestras <span class="panel-arrow">▲</span></h2>
+                    <div class="panel-body">
+                    <div class="config-section">
+                        <label>Selecciona un jugador:</label>
+                        <select id="famous-player-select" class="select">
+                            <option value="">— Todos los jugadores —</option>
+                        </select>
+                    </div>
+                    <div class="config-section">
+                        <label>Selecciona una partida:</label>
+                        <select id="famous-game-select" class="select">
+                            <option value="">— Elegir partida —</option>
+                            <optgroup label="⚔️ Campeonatos del Mundo">
+                                <option value="steinitz-zukertort-86">Steinitz vs Zukertort, 1886 G1 — Primer campeonato</option>
+                                <option value="spassky-fischer-72-g1">Spassky vs Fischer, 1972 G1</option>
+                                <option value="fischer-spassky">Fischer vs Spassky, 1972 G6</option>
+                                <option value="korchnoi-karpov-78">Korchnoi vs Karpov, 1978 G17</option>
+                                <option value="karpov-kasparov-85">Karpov vs Kasparov, 1985 G16</option>
+                                <option value="karpov-kasparov-85-g24">Karpov vs Kasparov, 1985 G24</option>
+                                <option value="karpov-kasparov-87">Karpov vs Kasparov, 1987 G24 Sevilla</option>
+                                <option value="kasparov-karpov-90">Kasparov vs Karpov, 1990 G20 Lyon</option>
+                                <option value="kasparov-anand-95">Kasparov vs Anand, PCA 1995 G10</option>
+                                <option value="anand-karpov-98">Anand vs Karpov, FIDE 1998</option>
+                                <option value="kramnik-kasparov-2000">Kramnik vs Kasparov, 2000 G10</option>
+                                <option value="tal-botvinnik-60">Tal vs Botvinnik, 1960 G6</option>
+                                <option value="carlsen-anand-13">Carlsen vs Anand, 2013 G6</option>
+                                <option value="anand-carlsen-14">Anand vs Carlsen, 2014 G11</option>
+                                <option value="carlsen-karjakin-16">Carlsen vs Karjakin, 2016 Desempate G4</option>
+                                <option value="carlsen-caruana-18">Carlsen vs Caruana, 2018 Desempate</option>
+                                <option value="ding-nepomniachtchi-23">Ding Liren vs Nepomniachtchi, 2023 G12</option>
+                                <option value="capablanca-alekhine-27">Capablanca vs Alekhine, 1927 G34</option>
+                                <option value="petrosian-spassky-66">Petrosian vs Spassky, 1966 G10</option>
+                            </optgroup>
+                            <optgroup label="♔ Partidas Inmortales y Clásicas">
+                                <option value="immortal">La Partida Inmortal (Anderssen, 1851)</option>
+                                <option value="evergreen">La Siempre Verde (Anderssen, 1852)</option>
+                                <option value="opera">La Partida de la Ópera (Morphy, 1858)</option>
+                                <option value="game-of-century">La Partida del Siglo (Fischer, 1956)</option>
+                                <option value="rubinstein-immortal">La Inmortal de Rubinstein (1907)</option>
+                                <option value="najdorf-polish-immortal">La Inmortal Polaca (Najdorf, 1929)</option>
+                                <option value="anand-immortal">La Inmortal de Anand (2013)</option>
+                                <option value="ding-liren-immortal">La Inmortal de Ding Liren (2017)</option>
+                                <option value="nezhmetdinov-chernikov">Nezhmetdinov vs Chernikov (1962)</option>
+                                <option value="mcdonell-labourdonnais">McDonnell vs La Bourdonnais (1834)</option>
+                            </optgroup>
+                            <optgroup label="👑 Kasparov (11)">
+                                <option value="kasparov-topalov">vs Topalov, Wijk aan Zee 1999</option>
+                                <option value="kasparov-shirov-94">vs Shirov, Horgen 1994</option>
+                                <option value="kasparov-portisch-83">vs Portisch, Niksic 1983</option>
+                                <option value="kasparov-kramnik-96">vs Kramnik, Dos Hermanas 1996</option>
+                                <option value="kasparov-karpov-90">vs Karpov, Mundial 1990 G20</option>
+                                <option value="kasparov-anand-95">vs Anand, Mundial 1995 G10</option>
+                                <option value="karpov-kasparov-85">Karpov vs Kasparov, 1985 G16</option>
+                                <option value="karpov-kasparov-85-g24">Karpov vs Kasparov, 1985 G24</option>
+                                <option value="karpov-kasparov-87">Karpov vs Kasparov, 1987 G24</option>
+                                <option value="kasparov-deepblue">vs Deep Blue, 1997</option>
+                                <option value="polgar-kasparov">Polgar vs Kasparov, 2002</option>
+                            </optgroup>
+                            <optgroup label="👑 Fischer (10)">
+                                <option value="game-of-century">vs D. Byrne, 1956 — Partida del Siglo</option>
+                                <option value="byrne-fischer-63">R. Byrne vs Fischer, 1963 — Brillantez</option>
+                                <option value="fischer-spassky">vs Spassky, Mundial 1972 G6</option>
+                                <option value="fischer-taimanov-71">vs Taimanov, Candidatos 1971</option>
+                                <option value="fischer-larsen-71">vs Larsen, Candidatos 1971</option>
+                                <option value="fischer-petrosian-71">vs Petrosian, Candidatos 1971 G7</option>
+                                <option value="fischer-reshevsky-61">vs Reshevsky, US Ch. 1961</option>
+                                <option value="fischer-11-0">vs Benko, US Ch. 1963</option>
+                                <option value="fischer-pomar-62">vs Pomar, Estocolmo 1962</option>
+                                <option value="pomar-fischer">Pomar vs Fischer, La Habana 1966</option>
+                            </optgroup>
+                            <optgroup label="👑 Carlsen (6)">
+                                <option value="carlsen-ernst">vs Ernst, Wijk aan Zee 2004</option>
+                                <option value="carlsen-anand-13">vs Anand, Mundial 2013 G6</option>
+                                <option value="carlsen-karjakin-16">vs Karjakin, Mundial 2016 Desempate</option>
+                                <option value="carlsen-caruana-18">vs Caruana, Mundial 2018 Desempate</option>
+                                <option value="carlsen-nakamura-11">vs Nakamura, Londres 2011</option>
+                                <option value="nakamura-carlsen-16">Nakamura vs Carlsen, Zúrich 2014</option>
+                            </optgroup>
+                            <optgroup label="👑 Tal (6)">
+                                <option value="tal-botvinnik-60">vs Botvinnik, Mundial 1960 G6</option>
+                                <option value="tal-larsen-65">vs Larsen, Candidatos 1965</option>
+                                <option value="tal-hecht-62">vs Hecht, Olimpiada 1962</option>
+                                <option value="tal-tringov-64">vs Tringov, Ámsterdam 1964</option>
+                                <option value="tal-flesch-81">vs Flesch, Riga 1981 — 18 mov.</option>
+                                <option value="polugaevsky-tal">Polugaevsky vs Tal, 1969</option>
+                            </optgroup>
+                            <optgroup label="👑 Karpov (7)">
+                                <option value="karpov-unzicker">vs Unzicker, Olimpiada 1974</option>
+                                <option value="karpov-spassky-74">vs Spassky, Candidatos 1974</option>
+                                <option value="karpov-kasparov-85">vs Kasparov, Mundial 1985 G16</option>
+                                <option value="karpov-kasparov-87">vs Kasparov, Mundial 1987 G24</option>
+                                <option value="korchnoi-karpov-78">Korchnoi vs Karpov, 1978</option>
+                                <option value="illescas-karpov">Illescas vs Karpov, 1994</option>
+                                <option value="anand-karpov-98">Anand vs Karpov, 1998</option>
+                            </optgroup>
+                            <optgroup label="👑 Morphy (5)">
+                                <option value="opera">Partida de la Ópera, 1858</option>
+                                <option value="morphy-consultants">vs Consultantes, 1858</option>
+                                <option value="morphy-paulsen">vs Paulsen, Nueva York 1857</option>
+                                <option value="morphy-anderssen-58">vs Anderssen, París 1858</option>
+                                <option value="mcconnell-morphy">McConnell vs Morphy, 1849</option>
+                            </optgroup>
+                            <optgroup label="👑 Capablanca (4)">
+                                <option value="capablanca-marshall">vs Marshall, NY 1918</option>
+                                <option value="capablanca-tartakower">vs Tartakower, NY 1924</option>
+                                <option value="capablanca-alekhine-27">vs Alekhine, Mundial 1927 G34</option>
+                                <option value="bernstein-capablanca">Bernstein vs Capablanca, 1914</option>
+                            </optgroup>
+                            <optgroup label="👑 Alekhine (4)">
+                                <option value="reti-alekhine">Réti vs Alekhine, 1925</option>
+                                <option value="alekhine-bogoljubov">vs Bogoljubov, 1922</option>
+                                <option value="alekhine-nimzowitsch">vs Nimzowitsch, San Remo 1930</option>
+                                <option value="alekhine-lasker-14">vs Lasker, San Petersburgo 1914</option>
+                            </optgroup>
+                            <optgroup label="👑 Anand (4)">
+                                <option value="anand-immortal">Inmortal de Anand (2013)</option>
+                                <option value="anand-karpov-98">vs Karpov, FIDE 1998</option>
+                                <option value="anand-topalov-05">vs Topalov, Sofía 2005</option>
+                                <option value="anand-carlsen-14">vs Carlsen, Mundial 2014 G11</option>
+                            </optgroup>
+                            <optgroup label="👑 Kramnik (3)">
+                                <option value="kramnik-kasparov-2000">vs Kasparov, Mundial 2000 G10</option>
+                                <option value="kramnik-aronian-07">vs Aronian, Wijk aan Zee 2007</option>
+                                <option value="kasparov-kramnik-96">Kasparov vs Kramnik, 1996</option>
+                            </optgroup>
+                            <optgroup label="👑 Spassky (5)">
+                                <option value="spassky-bronstein">vs Bronstein, 1960</option>
+                                <option value="spassky-tal-73">vs Tal, Tallín 1973</option>
+                                <option value="spassky-fischer-72-g1">vs Fischer, Mundial 1972 G1</option>
+                                <option value="keres-spassky-55">Keres vs Spassky, 1955</option>
+                                <option value="larsen-spassky-70">Larsen vs Spassky, 1970</option>
+                            </optgroup>
+                            <optgroup label="👑 Lasker / Steinitz / Botvinnik">
+                                <option value="lasker-bauer">Lasker vs Bauer, 1889</option>
+                                <option value="lasker-capablanca">Lasker vs Capablanca, 1914</option>
+                                <option value="steinitz-mongredien">Steinitz vs Mongredien, 1862</option>
+                                <option value="steinitz-zukertort-86">Zukertort vs Steinitz, 1886</option>
+                                <option value="botvinnik-capablanca">Botvinnik vs Capablanca, 1938</option>
+                                <option value="smyslov-reshevsky">Smyslov vs Reshevsky, 1945</option>
+                            </optgroup>
+                            <optgroup label="🌟 Otros Maestros">
+                                <option value="bronstein-ljubojevic-73">Bronstein vs Ljubojevic, 1973</option>
+                                <option value="short-timman">Short vs Timman, 1991</option>
+                                <option value="topalov-shirov">Topalov vs Shirov, 1998</option>
+                                <option value="ivanchuk-yusupov">Ivanchuk vs Yusupov, 1991</option>
+                                <option value="polgar-kasparov">Polgar vs Kasparov, 2002</option>
+                                <option value="geller-euwe">Geller vs Euwe, 1953</option>
+                                <option value="deepblue-kasparov-96">Deep Blue vs Kasparov, 1996</option>
+                                <option value="bogolyubov-monticelli">Bogolyubov vs Monticelli, 1930</option>
+                                <option value="torre-lasker">Torre vs Lasker, 1925</option>
+                                <option value="vallejo-shirov">Vallejo vs Shirov, 2002</option>
+                                <option value="illescas-karpov">Illescas vs Karpov, 1994</option>
+                                <option value="ding-nepomniachtchi-23">Ding Liren vs Nepomniachtchi, 2023</option>
+                                <option value="fischer-reshevsky-61">Fischer vs Reshevsky, 1961</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <button id="load-famous-game" class="btn btn-primary" disabled>Cargar Partida</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="board-container">
+                <div class="board-wrapper">
+                    <div class="board-with-coords">
+                        <div class="eval-bar-container">
+                            <div class="eval-bar">
+                                <div class="eval-bar-fill" id="eval-bar-fill"></div>
+                                <div class="eval-bar-label" id="eval-bar-label">0.0</div>
+                            </div>
+                        </div>
+                        <div class="rank-labels" id="rank-labels-left"></div>
+                        <div class="board-and-files">
+                            <div id="chess-board" class="chess-board"></div>
+                            <div id="board-banner" class="board-banner"></div>
+                            <div id="move-insight" class="move-insight"></div>
+                            <div class="file-labels" id="file-labels-bottom"></div>
+                        </div>
+                    </div>
+                </div>
+                       <!-- Navegación de errores del análisis (visible al analizar) -->
+                       <div id="analysis-errors-nav" class="analysis-errors-nav" style="display: none;">
+                           <button id="analysis-nav-summary" class="analysis-nav-btn analysis-nav-summary-btn" title="Ver resumen del análisis">📊</button>
+                           <button id="analysis-nav-prev" class="analysis-nav-btn" title="Error anterior">‹</button>
+                           <span id="analysis-nav-label" class="analysis-nav-label"></span>
+                           <button id="analysis-nav-next" class="analysis-nav-btn" title="Siguiente error">›</button>
+                           <button id="analysis-nav-close" class="analysis-nav-btn analysis-nav-list-btn" title="Cerrar análisis">✕</button>
+                       </div>
+                       <!-- Mini-reloj compacto (solo visible en responsive) -->
+                       <div class="mini-clock" id="mini-clock">
+                           <div class="mini-clock-player" id="mini-clock-white">
+                               <span class="mini-clock-label">♔</span>
+                               <span class="mini-clock-time" id="mini-white-time">3:00</span>
+                           </div>
+                           <div class="mini-clock-player" id="mini-clock-black">
+                               <span class="mini-clock-label">♚</span>
+                               <span class="mini-clock-time" id="mini-black-time">3:00</span>
+                           </div>
+                       </div>
+                       <div id="captured-below" class="captured-below">
+                           <span>Blancas: <span id="captured-white"></span></span>
+                           <span>Negras: <span id="captured-black"></span></span>
+                       </div>
+                       <!-- Botones de acción (solo iconos) debajo del tablero -->
+                       <div class="board-action-buttons">
+                           <button id="resign-game" class="btn-icon btn-danger" title="Abandonar">🏳️</button>
+                           <button id="offer-draw" class="btn-icon btn-warning" title="Pedir Tablas">🤝</button>
+                           <button id="resume-game" class="btn-icon btn-success" title="Continuar Partida" disabled>▶</button>
+                           <button id="undo-move" class="btn-icon btn-primary" title="Deshacer Movimiento">↺</button>
+                           <button id="hint-move" class="btn-icon btn-yellow" title="Sugerencia de IA">💡</button>
+                           <button id="analyze-game" class="btn-icon btn-orange" title="Analizar Partida">📊</button>
+                           <button id="copy-pgn-board" class="btn-icon btn-primary" title="Copiar PGN">📋</button>
+                </div>
+                       <div id="thinking-indicator" class="thinking-indicator" style="display: none;">
+                           <div class="spinner"></div>
+                           <p>La IA está calculando...</p>
+                       </div>
+                       <!-- Historial de movimientos con navegación -->
+                       <div class="move-navigator">
+                           <button id="nav-first" class="nav-btn" title="Ir al inicio">⏮</button>
+                           <button id="nav-prev" class="nav-btn" title="Movimiento anterior">◀</button>
+                           <div id="move-history-display" class="move-history-display"></div>
+                           <button id="nav-next" class="nav-btn" title="Siguiente movimiento">▶</button>
+                           <button id="nav-last" class="nav-btn" title="Ir al final">⏭</button>
+                       </div>
+                       <!-- Barra de evaluación horizontal (solo responsive, bajo movimientos) -->
+                       <div class="eval-bar-container eval-bar-mobile" id="eval-bar-mobile">
+                           <div class="eval-bar">
+                               <div class="eval-bar-fill" id="eval-bar-fill-mobile"></div>
+                               <div class="eval-bar-label" id="eval-bar-label-mobile">0.0</div>
+                           </div>
+                       </div>
+                       <div id="promotion-overlay" class="promotion-overlay" style="display: none;">
+                           <div class="promotion-dialog">
+                               <p class="promotion-title">Promocionar peón a:</p>
+                               <div class="promotion-pieces" id="promotion-pieces"></div>
+                           </div>
+                       </div>
+            </div>
+
+            <div class="sidebar sidebar-right">
+                <div class="panel" id="clock-panel">
+                    <h2>⏱️ Reloj de Ajedrez</h2>
+                    <div id="chess-clock" class="chess-clock">
+                        <div class="clock-player">
+                            <div class="clock-label">Blancas</div>
+                            <div class="clock-time" id="white-time">3:00</div>
+                        </div>
+                        <div class="clock-player">
+                            <div class="clock-label">Negras</div>
+                            <div class="clock-time" id="black-time">3:00</div>
+                        </div>
+                    </div>
+                    <div class="clock-controls">
+                        <label for="time-control">Control de Tiempo:</label>
+                        <select id="time-control" class="select">
+                            <optgroup label="⚡ Bullet">
+                                <option value="1+0">1 min</option>
+                                <option value="1+1">1 min + 1 seg</option>
+                                <option value="2+1">2 min + 1 seg</option>
+                            </optgroup>
+                            <optgroup label="⚔️ Blitz">
+                                <option value="3+0">3 min</option>
+                                <option value="3+2">3 min + 2 seg</option>
+                                <option value="5+0">5 min</option>
+                                <option value="5+3">5 min + 3 seg</option>
+                            </optgroup>
+                            <optgroup label="🎯 Rápidas">
+                                <option value="10+0">10 min</option>
+                                <option value="10+5">10 min + 5 seg</option>
+                                <option value="15+10">15 min + 10 seg</option>
+                                <option value="30+0">30 min</option>
+                            </optgroup>
+                            <optgroup label="♔ Clásicas">
+                                <option value="60+0" selected>60 min</option>
+                                <option value="90+30">90 min + 30 seg</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                </div>
+
+                       <div class="panel panel-collapsible collapsed" id="actions-panel">
+                           <h2 class="panel-toggle">Acciones <span class="panel-arrow">▲</span></h2>
+                           <div class="panel-body">
+                           <button id="resign-game-sidebar" class="btn btn-danger">🏳️ Abandonar</button>
+                           <button id="offer-draw-sidebar" class="btn btn-warning">🤝 Pedir Tablas</button>
+                           <button id="view-analysis" class="btn btn-primary" style="display: none;">📊 Ver análisis post-partida</button>
+                           <button id="resume-game-sidebar" class="btn btn-success" disabled>▶ Continuar Partida</button>
+                           <button id="undo-move-sidebar" class="btn btn-primary">↺ Deshacer Movimiento</button>
+                           <button id="hint-move-sidebar" class="btn btn-yellow">💡 Sugerencia de IA</button>
+                           <button id="analyze-game-sidebar" class="btn btn-orange">📊 Analizar Partida</button>
+                           <button id="copy-pgn" class="btn btn-primary">📋 Copiar PGN</button>
+                           <button id="export-pgn" class="btn btn-primary">📄 Exportar PGN</button>
+                           <button id="import-pgn" class="btn btn-primary">📥 Importar PGN</button>
+                           </div>
+                       </div>
+
+                       <div class="panel panel-collapsible collapsed" id="stats-panel">
+                           <h2 class="panel-toggle">📊 Estadísticas <span class="panel-arrow">▲</span></h2>
+                           <div class="panel-body">
+                           <div class="stats-container">
+                               <div class="stat-item stat-wins">
+                                   <div class="stat-label">Ganadas</div>
+                                   <div class="stat-value" id="stat-wins">0</div>
+                               </div>
+                               <div class="stat-item stat-draws">
+                                   <div class="stat-label">Tablas</div>
+                                   <div class="stat-value" id="stat-draws">0</div>
+                               </div>
+                               <div class="stat-item stat-losses">
+                                   <div class="stat-label">Perdidas</div>
+                                   <div class="stat-value" id="stat-losses">0</div>
+                               </div>
+                           </div>
+                           <button id="reset-stats" class="btn btn-secondary">🔄 Reiniciar Estadísticas</button>
+                           </div>
+                       </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="app-footer">
+        <a href="mailto:ev3c.android@gmail.com">ev3c.android@gmail.com</a>
+    </footer>
+
+    <div id="rotate-device-overlay" class="rotate-device-overlay">
+        <div class="rotate-device-message">
+            <span class="rotate-icon">📱</span>
+            <p>Gira el dispositivo a vertical para jugar</p>
+        </div>
+    </div>
+
+    <div id="analysis-overlay" class="message-overlay analysis-overlay" style="display: none;">
+        <div class="analysis-modal">
+            <h3 class="analysis-title">📊 Análisis post-partida</h3>
+            <div id="analysis-loading" class="analysis-loading">Movimientos analizados: 0 / 0</div>
+            <div id="analysis-content" class="analysis-content" style="display: none;">
+                <div id="analysis-summary" class="analysis-summary"></div>
+                <div id="analysis-mistakes" class="analysis-mistakes"></div>
+                <button id="analysis-close" class="btn btn-primary">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="chess-logic.js?v=20"></script>
+    <script src="app.js?v=20"></script>
+</body>
+</html>
+

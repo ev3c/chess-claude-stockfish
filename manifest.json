@@ -1,0 +1,26 @@
+{
+    "name": "AjedrezIA",
+    "short_name": "AjedrezIA",
+    "description": "Juega al ajedrez contra Stockfish con análisis de partidas",
+    "start_url": "./index.html",
+    "display": "standalone",
+    "orientation": "any",
+    "background_color": "#e5e7eb",
+    "theme_color": "#1f2937",
+    "lang": "es",
+    "icons": [
+        {
+            "src": "icons/icon-192.png",
+            "sizes": "256x256",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        }
+    ],
+    "categories": ["games", "entertainment"]
+}

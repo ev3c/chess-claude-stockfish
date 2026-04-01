@@ -1,0 +1,21 @@
+{
+  "name": "chess-claude-stockfish",
+  "version": "1.0.0",
+  "description": "Una aplicación web interactiva para jugar al ajedrez contra el motor Stockfish.",
+  "main": "chess-logic.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ev3c/chess-claude-stockfish.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/ev3c/chess-claude-stockfish/issues"
+  },
+  "homepage": "https://github.com/ev3c/chess-claude-stockfish#readme"
+}
